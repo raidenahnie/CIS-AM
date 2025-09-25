@@ -9,8 +9,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-gradient-to-br from-slate-100 to-blue-50 min-h-screen flex")
+<body class="bg-gradient-to-br from-slate-100 to-blue-50 min-h-screen flex">
 
     <!-- Enhanced Sidebar -->
     <aside class="w-72 bg-white shadow-xl h-screen fixed border-r border-gray-200">
@@ -788,6 +789,53 @@
         .section-content.hidden {
             display: none;
         }
+        
+        /* Map marker styles */
+        .user-location-marker {
+            position: relative;
+        }
+        
+        .user-location-marker::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 2px solid #3b82f6;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.1);
+            animation: pulse-ring 2s infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .work-location-marker,
+        .office-marker,
+        .employee-marker {
+            position: relative;
+        }
+        
+        /* Leaflet popup customization */
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .leaflet-popup-content {
+            margin: 12px 16px;
+            font-family: inherit;
+        }
     </style>
 
     <script>
@@ -843,8 +891,11 @@
             // Initialize charts placeholder
             initializeCharts();
             
-            // Start location tracking (placeholder)
+            // Start location tracking
             startLocationTracking();
+            
+            // Start auto-refresh for real-time updates
+            startAutoRefresh();
         });
         
         // Chart initialization
@@ -891,43 +942,490 @@
             }
         }
         
+        // Global variables for maps and location
+        let userLocation = null;
+        let checkinMap = null;
+        let realtimeMap = null;
+        let watchId = null;
+        
+        // Predefined work locations (example coordinates - you can modify these)
+        const workLocations = {
+            mainOffice: {
+                lat: 14.5995,
+                lng: 120.9842,
+                name: 'Main Office',
+                address: '123 Business St.',
+                radius: 100 // meters
+            },
+            remoteZone: {
+                lat: 14.6091,
+                lng: 121.0223,
+                name: 'Remote Work Zone',
+                address: 'Home/Remote Area',
+                radius: 50 // meters
+            }
+        };
+        
         // Location tracking
         function startLocationTracking() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        updateLocationStatus('success', position);
-                    },
-                    function(error) {
-                        updateLocationStatus('error', null);
-                    }
-                );
+            if (!navigator.geolocation) {
+                updateLocationStatus('error', null, 'Geolocation not supported');
+                return;
             }
+            
+            // Request high accuracy location
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            };
+            
+            // Get current position
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    userLocation = position;
+                    updateLocationStatus('success', position);
+                    initializeMaps();
+                    updateGeofenceStatus(position);
+                },
+                function(error) {
+                    updateLocationStatus('error', null, error.message);
+                },
+                options
+            );
+            
+            // Watch for location changes
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    userLocation = position;
+                    updateUserLocationOnMaps(position);
+                    updateGeofenceStatus(position);
+                },
+                function(error) {
+                    console.error('Location watch error:', error);
+                },
+                options
+            );
         }
         
-        function updateLocationStatus(status, position) {
+        function updateLocationStatus(status, position, errorMessage = null) {
             const badge = document.getElementById('location-badge');
             const location = document.getElementById('current-location');
+            const sidebarStatus = document.getElementById('location-status');
             
             if (status === 'success' && position) {
                 badge.className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
                 badge.textContent = 'Location Found';
                 location.innerHTML = '<i class="fas fa-map-marker-alt text-green-600 mr-2"></i>Location: ' + 
-                                   position.coords.latitude.toFixed(4) + ', ' + position.coords.longitude.toFixed(4);
+                                   position.coords.latitude.toFixed(6) + ', ' + position.coords.longitude.toFixed(6);
+                sidebarStatus.textContent = 'Location Active';
             } else {
                 badge.className = 'px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium';
                 badge.textContent = 'Location Error';
-                location.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>Unable to get location';
+                location.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>' + 
+                                   (errorMessage || 'Unable to get location');
+                sidebarStatus.textContent = 'Location Unavailable';
             }
         }
         
-        // Placeholder functions
+        // Calculate distance between two coordinates (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+            
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            
+            return R * c; // Distance in meters
+        }
+        
+        // Update geofence status and distances
+        function updateGeofenceStatus(position) {
+            if (!position) return;
+            
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            
+            // Calculate distances to work locations
+            const officeDistance = calculateDistance(
+                userLat, userLng, 
+                workLocations.mainOffice.lat, workLocations.mainOffice.lng
+            );
+            const remoteDistance = calculateDistance(
+                userLat, userLng, 
+                workLocations.remoteZone.lat, workLocations.remoteZone.lng
+            );
+            
+            // Update distance displays
+            document.getElementById('office-distance').textContent = Math.round(officeDistance) + 'm';
+            document.getElementById('remote-distance').textContent = Math.round(remoteDistance) + 'm';
+            
+            // Check if user is within any geofence
+            const inOfficeGeofence = officeDistance <= workLocations.mainOffice.radius;
+            const inRemoteGeofence = remoteDistance <= workLocations.remoteZone.radius;
+            const canCheckin = inOfficeGeofence || inRemoteGeofence;
+            
+            // Update check-in button
+            const checkinBtn = document.getElementById('checkin-btn');
+            if (canCheckin) {
+                checkinBtn.className = 'w-full py-4 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors duration-200';
+                checkinBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Check In Now';
+                checkinBtn.disabled = false;
+                checkinBtn.onclick = performCheckin;
+            } else {
+                checkinBtn.className = 'w-full py-4 bg-red-500 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
+                checkinBtn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Outside Work Area';
+                checkinBtn.disabled = true;
+                checkinBtn.onclick = null;
+            }
+            
+            // Update location badge color based on geofence status
+            const badge = document.getElementById('location-badge');
+            if (canCheckin) {
+                badge.className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
+                badge.textContent = 'In Work Area';
+            } else {
+                badge.className = 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium';
+                badge.textContent = 'Outside Work Area';
+            }
+        }
+        
+        // Check-in functionality
+        function performCheckin() {
+            if (!userLocation) {
+                alert('Location not available. Please ensure GPS is enabled.');
+                return;
+            }
+            
+            // Show loading state
+            const checkinBtn = document.getElementById('checkin-btn');
+            const originalContent = checkinBtn.innerHTML;
+            checkinBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking In...';
+            checkinBtn.disabled = true;
+            
+            // Simulate check-in process (replace with actual API call)
+            setTimeout(() => {
+                // Update button to success state
+                checkinBtn.className = 'w-full py-4 bg-green-600 text-white rounded-lg font-semibold text-lg';
+                checkinBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Checked In Successfully!';
+                
+                // Update today's activity
+                updateTodaysActivity();
+                
+                // Show success message
+                showNotification('Check-in successful!', 'success');
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    checkinBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Check Out';
+                    checkinBtn.onclick = performCheckout;
+                }, 3000);
+            }, 2000);
+        }
+        
+        function performCheckout() {
+            const checkinBtn = document.getElementById('checkin-btn');
+            checkinBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking Out...';
+            checkinBtn.disabled = true;
+            
+            setTimeout(() => {
+                checkinBtn.className = 'w-full py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors duration-200';
+                checkinBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Check In Now';
+                checkinBtn.onclick = performCheckin;
+                checkinBtn.disabled = false;
+                
+                showNotification('Check-out successful!', 'success');
+                updateTodaysActivity('checkout');
+            }, 2000);
+        }
+        
+        function updateTodaysActivity(type = 'checkin') {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            // You can implement more sophisticated activity tracking here
+            console.log(`${type} recorded at ${timeString}`);
+        }
+        
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Map utility functions
         function refreshMap() {
-            console.log('Refreshing map...');
+            if (realtimeMap) {
+                // Clear existing employee markers
+                realtimeMap.eachLayer(function(layer) {
+                    if (layer.options && layer.options.icon && layer.options.icon.options.className === 'employee-marker') {
+                        realtimeMap.removeLayer(layer);
+                    }
+                });
+                
+                // Re-add employee markers with updated positions
+                addSampleEmployeeMarkers();
+                
+                // Update last refresh time
+                document.getElementById('last-update').textContent = 'Just now';
+                
+                showNotification('Map refreshed successfully!', 'success');
+            }
         }
         
         function focusOnEmployee(employeeId) {
-            console.log('Focusing on employee:', employeeId);
+            if (!realtimeMap) return;
+            
+            // Find employee marker by ID
+            realtimeMap.eachLayer(function(layer) {
+                if (layer.employeeId === employeeId) {
+                    const latlng = layer.getLatLng();
+                    realtimeMap.setView(latlng, 16);
+                    layer.openPopup();
+                }
+            });
+        }
+        
+        // Auto-refresh real-time map every 30 seconds
+        function startAutoRefresh() {
+            setInterval(() => {
+                if (document.getElementById('realtime-map-section').classList.contains('hidden') === false) {
+                    // Only refresh if real-time section is visible
+                    const now = new Date();
+                    document.getElementById('last-update').textContent = now.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    }) + ' ago';
+                }
+            }, 30000); // 30 seconds
+        }        // Initialize maps
+        function initializeMaps() {
+            initializeCheckinMap();
+            initializeRealtimeMap();
+        }
+        
+        // Initialize GPS Check-in Map
+        function initializeCheckinMap() {
+            if (!userLocation) return;
+            
+            const lat = userLocation.coords.latitude;
+            const lng = userLocation.coords.longitude;
+            
+            // Initialize map centered on user location
+            checkinMap = L.map('checkin-map').setView([lat, lng], 16);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(checkinMap);
+            
+            // Add user location marker
+            const userMarker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'user-location-marker',
+                    html: '<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(checkinMap);
+            
+            userMarker.bindPopup('Your Current Location').openPopup();
+            
+            // Add work location markers and geofence circles
+            Object.keys(workLocations).forEach(key => {
+                const location = workLocations[key];
+                
+                // Add location marker
+                const workMarker = L.marker([location.lat, location.lng], {
+                    icon: L.divIcon({
+                        className: 'work-location-marker',
+                        html: '<div style="background: #10b981; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    })
+                }).addTo(checkinMap);
+                
+                workMarker.bindPopup(`<b>${location.name}</b><br>${location.address}`);
+                
+                // Add geofence circle
+                L.circle([location.lat, location.lng], {
+                    color: '#10b981',
+                    fillColor: '#10b981',
+                    fillOpacity: 0.1,
+                    radius: location.radius,
+                    weight: 2,
+                    dashArray: '5, 5'
+                }).addTo(checkinMap);
+            });
+        }
+        
+        // Initialize Real-time Map
+        function initializeRealtimeMap() {
+            // Default center (Manila, Philippines - adjust as needed)
+            const defaultLat = 14.5995;
+            const defaultLng = 120.9842;
+            
+            // Use user location if available, otherwise use default
+            const mapLat = userLocation ? userLocation.coords.latitude : defaultLat;
+            const mapLng = userLocation ? userLocation.coords.longitude : defaultLng;
+            
+            // Initialize real-time map
+            realtimeMap = L.map('realtime-map').setView([mapLat, mapLng], 13);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(realtimeMap);
+            
+            // Add sample employee locations (you can replace with real data)
+            addSampleEmployeeMarkers();
+            
+            // Add work location markers
+            Object.keys(workLocations).forEach(key => {
+                const location = workLocations[key];
+                
+                const workMarker = L.marker([location.lat, location.lng], {
+                    icon: L.divIcon({
+                        className: 'office-marker',
+                        html: '<div style="background: #6366f1; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"><i class="fas fa-building" style="color: white; font-size: 10px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></i></div>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                }).addTo(realtimeMap);
+                
+                workMarker.bindPopup(`<b>${location.name}</b><br>${location.address}`);
+            });
+        }
+        
+        // Add sample employee markers to real-time map
+        function addSampleEmployeeMarkers() {
+            const sampleEmployees = [
+                {
+                    id: 'john-doe',
+                    name: 'John Doe',
+                    status: 'online',
+                    lat: 14.5995 + (Math.random() - 0.5) * 0.01,
+                    lng: 120.9842 + (Math.random() - 0.5) * 0.01,
+                    location: 'Main Office'
+                },
+                {
+                    id: 'jane-smith',
+                    name: 'Jane Smith',
+                    status: 'field',
+                    lat: 14.6091 + (Math.random() - 0.5) * 0.01,
+                    lng: 121.0223 + (Math.random() - 0.5) * 0.01,
+                    location: 'Client Site A'
+                },
+                {
+                    id: 'mike-brown',
+                    name: 'Mike Brown',
+                    status: 'break',
+                    lat: 14.5995 + (Math.random() - 0.5) * 0.02,
+                    lng: 120.9842 + (Math.random() - 0.5) * 0.02,
+                    location: 'Main Office - Cafeteria'
+                },
+                {
+                    id: 'sarah-adams',
+                    name: 'Sarah Adams',
+                    status: 'offline',
+                    lat: 14.5900 + (Math.random() - 0.5) * 0.02,
+                    lng: 120.9800 + (Math.random() - 0.5) * 0.02,
+                    location: 'Last known: Home'
+                }
+            ];
+            
+            sampleEmployees.forEach(employee => {
+                let markerColor = '#6b7280'; // default gray
+                let statusText = 'Unknown';
+                
+                switch(employee.status) {
+                    case 'online':
+                        markerColor = '#10b981';
+                        statusText = 'Online';
+                        break;
+                    case 'field':
+                        markerColor = '#3b82f6';
+                        statusText = 'Field Work';
+                        break;
+                    case 'break':
+                        markerColor = '#f59e0b';
+                        statusText = 'On Break';
+                        break;
+                    case 'offline':
+                        markerColor = '#ef4444';
+                        statusText = 'Offline';
+                        break;
+                }
+                
+                const marker = L.marker([employee.lat, employee.lng], {
+                    icon: L.divIcon({
+                        className: 'employee-marker',
+                        html: `<div style="background: ${markerColor}; width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;">${employee.name.split(' ').map(n => n[0]).join('')}</div>`,
+                        iconSize: [18, 18],
+                        iconAnchor: [9, 9]
+                    })
+                }).addTo(realtimeMap);
+                
+                marker.bindPopup(`
+                    <div style="text-align: center;">
+                        <h4 style="margin: 0 0 5px 0; font-weight: bold;">${employee.name}</h4>
+                        <p style="margin: 0; color: ${markerColor}; font-weight: 600;">${statusText}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">${employee.location}</p>
+                    </div>
+                `);
+                
+                // Store reference for focusing
+                marker.employeeId = employee.id;
+            });
+        }
+        
+        // Update user location on maps
+        function updateUserLocationOnMaps(position) {
+            if (!position) return;
+            
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            // Update check-in map if it exists
+            if (checkinMap) {
+                checkinMap.setView([lat, lng], checkinMap.getZoom());
+                
+                // Find and update user marker (you might want to store reference)
+                checkinMap.eachLayer(function(layer) {
+                    if (layer.options && layer.options.icon && layer.options.icon.options.className === 'user-location-marker') {
+                        layer.setLatLng([lat, lng]);
+                    }
+                });
+            }
         }
     </script>
 
