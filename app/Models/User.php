@@ -20,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -43,5 +44,72 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Check if the user is an admin.
+     *
+     * @return bool
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if the user is a regular user.
+     *
+     * @return bool
+     */
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
+
+    /**
+     * Scope a query to only include admin users.
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->where('role', 'admin');
+    }
+
+    /**
+     * Scope a query to only include regular users.
+     */
+    public function scopeUsers($query)
+    {
+        return $query->where('role', 'user');
+    }
+
+    /**
+     * Get the workplaces assigned to this user.
+     */
+    public function workplaces()
+    {
+        return $this->belongsToMany(Workplace::class, 'user_workplaces')
+                    ->withPivot(['role', 'is_primary', 'assigned_at', 'effective_from', 'effective_until'])
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the primary workplace for this user.
+     */
+    public function primaryWorkplace()
+    {
+        return $this->workplaces()->wherePivot('is_primary', true)->first();
+    }
+
+    /**
+     * Get all active workplaces for this user.
+     */
+    public function activeWorkplaces()
+    {
+        return $this->workplaces()
+                    ->wherePivot('effective_from', '<=', now())
+                    ->where(function ($query) {
+                        $query->wherePivotNull('effective_until')
+                              ->orWherePivot('effective_until', '>', now());
+                    });
     }
 }

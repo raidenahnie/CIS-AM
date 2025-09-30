@@ -477,4 +477,79 @@ class DashboardController extends Controller
             'completed_today' => $todaysLogs->count() >= 4
         ]);
     }
+
+    /**
+     * Get all workplaces assigned to a user
+     */
+    public function getUserWorkplaces($userId = 1)
+    {
+        $user = User::with(['workplaces' => function($query) {
+            $query->where('is_active', true);
+        }])->find($userId);
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        $workplaces = $user->workplaces->map(function($workplace) {
+            return [
+                'id' => $workplace->id,
+                'name' => $workplace->name,
+                'address' => $workplace->address,
+                'latitude' => (float)$workplace->latitude,
+                'longitude' => (float)$workplace->longitude,
+                'radius' => $workplace->radius,
+                'is_primary' => (bool)$workplace->pivot->is_primary,
+                'role' => $workplace->pivot->role ?? 'employee',
+                'assigned_at' => $workplace->pivot->assigned_at ? 
+                    \Carbon\Carbon::parse($workplace->pivot->assigned_at)->format('M j, Y') : null
+            ];
+        });
+
+        return response()->json([
+            'workplaces' => $workplaces,
+            'count' => $workplaces->count(),
+            'primary_workplace' => $workplaces->firstWhere('is_primary', true)
+        ]);
+    }
+
+    /**
+     * Set a workplace as primary for a user
+     */
+    public function setPrimaryWorkplace(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'workplace_id' => 'required|exists:workplaces,id'
+        ]);
+
+        $userId = $request->user_id;
+        $workplaceId = $request->workplace_id;
+
+        // Verify user is assigned to this workplace
+        $assignment = DB::table('user_workplaces')
+            ->where('user_id', $userId)
+            ->where('workplace_id', $workplaceId)
+            ->first();
+
+        if (!$assignment) {
+            return response()->json(['error' => 'User is not assigned to this workplace'], 400);
+        }
+
+        // Remove primary status from all other workplaces for this user
+        DB::table('user_workplaces')
+            ->where('user_id', $userId)
+            ->update(['is_primary' => false]);
+
+        // Set the selected workplace as primary
+        DB::table('user_workplaces')
+            ->where('user_id', $userId)
+            ->where('workplace_id', $workplaceId)
+            ->update(['is_primary' => true, 'updated_at' => now()]);
+
+        return response()->json([
+            'message' => 'Primary workplace updated successfully',
+            'workplace_id' => $workplaceId
+        ]);
+    }
 }

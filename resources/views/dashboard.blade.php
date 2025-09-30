@@ -29,9 +29,9 @@
                 <i class="fas fa-home w-5"></i>
                 <span>My Dashboard</span>
             </a>
-            <a href="#workplace-setup" class="sidebar-link" data-section="workplace-setup">
+            <a href="#my-workplace" class="sidebar-link" data-section="my-workplace">
                 <i class="fas fa-map-marked-alt w-5"></i>
-                <span>Workplace Setup</span>
+                <span>My Workplace</span>
             </a>
             <a href="#gps-checkin" class="sidebar-link" data-section="gps-checkin">
                 <i class="fas fa-map-pin w-5"></i>
@@ -71,7 +71,13 @@
                     <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </div>
-                    <div class="border-l border-gray-200 pl-4">
+                    <div class="flex items-center space-x-3 border-l border-gray-200 pl-4">
+                        @if(Auth::user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:bg-indigo-600 transition-colors duration-200 flex items-center">
+                                <i class="fas fa-user-shield mr-2"></i>
+                                Admin
+                            </a>
+                        @endif
                         <a href="{{ route('logout.get') }}" class="px-6 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-200 flex items-center">
                             <i class="fas fa-sign-out-alt mr-2"></i>
                             Logout
@@ -175,145 +181,89 @@
                 </div>
             </div>
 
-            <!-- Workplace Setup Section -->
-            <div id="workplace-setup-section" class="section-content hidden">
+            <!-- My Workplace Section -->
+            <div id="my-workplace-section" class="section-content hidden">
                 <div class="mb-6">
-                    <!-- Location Permission Request -->
-                    <div id="location-permission-request" class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-6 rounded-lg hidden">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-building text-indigo-600 mr-3"></i>
+                        My Workplace
+                    </h2>
+                    <p class="text-gray-600">Select and view your assigned workplace locations.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- Assigned Workplaces -->
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-map-marked-alt text-green-600 mr-3"></i>
+                            Assigned Workplaces
+                        </h3>
+                        
+                        <div id="assigned-workplaces-list" class="space-y-4">
+                            <!-- Workplaces will be loaded here dynamically -->
+                            <div class="flex items-center justify-center p-8 text-gray-500">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin text-3xl mb-3 text-gray-300"></i>
+                                    <p>Loading your workplaces...</p>
+                                </div>
                             </div>
-                            <div class="ml-3 flex-1">
-                                <h3 class="text-lg font-medium text-yellow-800 mb-2">Location Access Required</h3>
-                                <p class="text-yellow-700 mb-4">To use the attendance system, we need access to your device's location. Please click "Allow" when prompted by your browser.</p>
-                                <button id="request-location-btn" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
-                                    <i class="fas fa-location-dot mr-2"></i>Enable Location Access
+                        </div>
+                        
+                        <!-- No workplaces message -->
+                        <div id="no-workplaces-message" class="hidden text-center p-8">
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3"></i>
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">No Workplaces Assigned</h4>
+                                <p class="text-gray-600 mb-4">You haven't been assigned to any workplace yet. Please contact your administrator to assign you to a workplace.</p>
+                                <button onclick="refreshWorkplaces()" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                                    <i class="fas fa-refresh mr-2"></i>Refresh
                                 </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Setup Steps -->
-                    <div class="grid lg:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
-                            <div class="text-center">
-                                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-location-dot text-2xl text-blue-600"></i>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Step 1: Enable Location</h3>
-                                <p class="text-gray-600 text-sm">Allow your browser to access your current location</p>
-                                <div class="mt-3">
-                                    <span id="step1-status" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">Pending</span>
-                                </div>
+                    
+                    <!-- Selected Workplace Details -->
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                            Workplace Details
+                        </h3>
+                        
+                        <div id="selected-workplace-details">
+                            <div class="text-center p-8 text-gray-500">
+                                <i class="fas fa-building text-3xl mb-3 text-gray-300"></i>
+                                <p>Select a workplace to view details</p>
                             </div>
                         </div>
                         
-                        <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
-                            <div class="text-center">
-                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-map-marker-alt text-2xl text-green-600"></i>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Step 2: Set Work Location</h3>
-                                <p class="text-gray-600 text-sm">Mark your workplace on the map</p>
-                                <div class="mt-3">
-                                    <span id="step2-status" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">Pending</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500">
-                            <div class="text-center">
-                                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-check-circle text-2xl text-indigo-600"></i>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Step 3: Complete Setup</h3>
-                                <p class="text-gray-600 text-sm">Save your workplace settings</p>
-                                <div class="mt-3">
-                                    <span id="step3-status" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">Pending</span>
+                        <!-- Workplace Map -->
+                        <div id="workplace-map-container" class="hidden">
+                            <div class="mt-6">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-3">Location Map</h4>
+                                <div id="workplace-map" class="w-full h-64 bg-gray-200 rounded-lg relative overflow-hidden">
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <i class="fas fa-map text-3xl text-gray-400 mb-2"></i>
+                                            <p class="text-gray-500">Loading map...</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid lg:grid-cols-2 gap-8">
-                    <!-- Workplace Configuration -->
-                    <div class="bg-white rounded-xl shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-building text-indigo-600 mr-3"></i>
-                            Workplace Configuration
-                        </h2>
-                        
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Workplace Name</label>
-                                <input type="text" id="workplace-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="e.g., Main Office, Home Office">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                <textarea id="workplace-address" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" rows="3" placeholder="Enter your workplace address"></textarea>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Check-in Radius (meters)</label>
-                                <select id="workplace-radius" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <option value="50">50 meters (Small office)</option>
-                                    <option value="100" selected>100 meters (Medium building)</option>
-                                    <option value="200">200 meters (Large complex)</option>
-                                    <option value="500">500 meters (Campus/Remote work)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="border-t border-gray-200 pt-6">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Current Location</h3>
-                                <div id="current-location-display" class="p-4 bg-gray-50 rounded-lg">
-                                    <p class="text-gray-600 text-sm mb-2">Latitude: <span id="current-lat">--</span></p>
-                                    <p class="text-gray-600 text-sm mb-2">Longitude: <span id="current-lng">--</span></p>
-                                    <p class="text-gray-600 text-sm">Accuracy: <span id="current-accuracy">--</span> meters</p>
-                                </div>
-                                
-                                <button id="use-current-location" class="mt-4 w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" disabled>
-                                    <i class="fas fa-crosshairs mr-2"></i>Use Current Location as Workplace
-                                </button>
-                            </div>
-                            
-                            <div class="flex space-x-4 pt-6">
-                                <button id="save-workplace" class="flex-1 py-3 px-6 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors" disabled>
-                                    <i class="fas fa-save mr-2"></i>Save Workplace
-                                </button>
-                                <button id="reset-workplace" class="py-3 px-6 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors">
-                                    <i class="fas fa-redo mr-2"></i>Reset
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Primary Workplace Section -->
+                <div class="mt-8 bg-white rounded-xl shadow-lg p-8">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-star text-yellow-500 mr-3"></i>
+                        Primary Workplace
+                    </h3>
                     
-                    <!-- Interactive Map -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <h3 class="text-lg font-semibold mb-4 flex items-center">
-                            <i class="fas fa-map text-indigo-600 mr-2"></i>
-                            Select Workplace Location
-                        </h3>
-                        <div id="setup-map" class="w-full h-96 bg-gray-200 rounded-lg relative overflow-hidden">
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="text-center">
-                                    <i class="fas fa-location-dot text-3xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">Click to enable location access</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Map Instructions -->
-                        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-                            <h4 class="text-sm font-medium text-blue-800 mb-2">Instructions:</h4>
-                            <ul class="text-xs text-blue-700 space-y-1">
-                                <li>• Click anywhere on the map to set your workplace location</li>
-                                <li>• The circle shows your check-in radius</li>
-                                <li>• Use current location button for quick setup</li>
-                                <li>• Adjust radius based on your workplace size</li>
-                            </ul>
+                    <div id="primary-workplace-info" class="grid md:grid-cols-2 gap-6">
+                        <div class="text-center p-6 text-gray-500">
+                            <i class="fas fa-star text-3xl mb-3 text-gray-300"></i>
+                            <p>No primary workplace set</p>
                         </div>
                     </div>
                 </div>
@@ -333,20 +283,57 @@
                                 <p class="text-gray-600">Verify your location and check-in to start your work day</p>
                             </div>
                             
-                            <!-- Location Status -->
-                            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-gray-700">Location Status:</span>
-                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium" id="location-badge">
-                                        Checking...
-                                    </span>
-                                </div>
-                                <div class="text-sm text-gray-600" id="current-location">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>Getting your location...
-                                </div>
-                            </div>
-                            
-                            <!-- Geofence Status -->
+            <!-- Location Status -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Location Status:</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium" id="location-badge">
+                            Checking...
+                        </span>
+                        <button onclick="showLocationTroubleshooting()" class="text-xs text-gray-500 hover:text-gray-700" title="Location Help">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-600 mb-2" id="current-location">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>Getting your location...
+                </div>
+                
+                <!-- Location troubleshooting panel (hidden by default) -->
+                <div id="location-troubleshooting" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 class="text-sm font-medium text-blue-900 mb-2">Location Troubleshooting</h4>
+                    <div class="space-y-2 text-xs text-blue-800">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-blue-600 mr-2"></i>
+                            <span>Make sure location services are enabled on your device</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-wifi text-blue-600 mr-2"></i>
+                            <span>Check that you have a good internet connection</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt text-blue-600 mr-2"></i>
+                            <span>Allow location access when prompted by your browser</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-mobile-alt text-blue-600 mr-2"></i>
+                            <span>For best accuracy, use on mobile device with GPS</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 mt-3">
+                        <button onclick="retryLocationAccess()" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-redo mr-1"></i>Try Again
+                        </button>
+                        <button onclick="clearLocationCache()" class="px-3 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700 transition-colors">
+                            <i class="fas fa-trash mr-1"></i>Clear Cache
+                        </button>
+                        <button onclick="toggleLocationTroubleshooting()" class="px-3 py-1 border border-blue-300 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>                            <!-- Geofence Status -->
                             <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <h3 class="font-semibold text-blue-800 mb-2">Your Workplace:</h3>
                                 <div class="space-y-2">
@@ -392,15 +379,23 @@
                     
                     <!-- Location Map -->
                     <div class="bg-white rounded-xl shadow-lg p-6">
-                        <h3 class="text-lg font-semibold mb-4 flex items-center">
-                            <i class="fas fa-map text-indigo-600 mr-2"></i>
-                            Location Verification
-                        </h3>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold flex items-center">
+                                <i class="fas fa-map text-indigo-600 mr-2"></i>
+                                Location Verification
+                            </h3>
+                            <button onclick="initializeCheckinMap()" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-sm hover:bg-indigo-200 transition-colors">
+                                <i class="fas fa-redo mr-1"></i>Reload Map
+                            </button>
+                        </div>
                         <div id="checkin-map" class="w-full h-96 bg-gray-200 rounded-lg relative overflow-hidden">
                             <div class="absolute inset-0 flex items-center justify-center">
                                 <div class="text-center">
-                                    <i class="fas fa-spinner fa-spin text-3xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">Loading map...</p>
+                                    <i class="fas fa-map text-3xl text-gray-400 mb-3"></i>
+                                    <p class="text-gray-500 mb-2">Map will load when you visit this section</p>
+                                    <button onclick="initializeCheckinMap()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+                                        <i class="fas fa-play mr-2"></i>Load Map Now
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -435,7 +430,27 @@
                             <i class="fas fa-history text-indigo-600 mr-3"></i>
                             My Attendance History
                         </h2>
-                        <div class="flex space-x-2">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-600">View:</span>
+                                <div class="flex bg-gray-100 rounded-lg p-1">
+                                    <button id="detailed-view-btn" class="px-3 py-1 text-sm rounded-md bg-indigo-600 text-white transition-colors" onclick="switchAttendanceView('detailed')">
+                                        Detailed Logs
+                                    </button>
+                                    <button id="summary-view-btn" class="px-3 py-1 text-sm rounded-md text-gray-600 hover:bg-white transition-colors" onclick="switchAttendanceView('summary')">
+                                        Daily Summary
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label for="records-per-page" class="text-sm text-gray-600">Records per page:</label>
+                                <select id="records-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-indigo-500" onchange="changeRecordsPerPage(this.value)">
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
                             <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
                                 <option value="thisweek">This Week</option>
                                 <option value="lastweek">Last Week</option>
@@ -491,9 +506,9 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check In</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check Out</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Hours</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift Type</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 </tr>
@@ -511,15 +526,28 @@
                         </table>
                     </div>
                     
-                    <div class="mt-6 flex items-center justify-between">
-                        <div class="text-sm text-gray-500">
-                            Showing recent 5 records
+                    <div class="mt-6 flex items-center justify-between" id="attendance-pagination">
+                        <div class="text-sm text-gray-500" id="pagination-info">
+                            No records to show
                         </div>
-                        <div class="flex space-x-2">
-                            <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Previous</button>
-                            <button class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">1</button>
-                            <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">2</button>
-                            <button class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Next</button>
+                        <div class="flex space-x-2" id="pagination-controls">
+                            <button 
+                                id="prev-btn" 
+                                class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                onclick="changePage(-1)"
+                                disabled>
+                                Previous
+                            </button>
+                            <div id="page-numbers" class="flex space-x-1">
+                                <!-- Page numbers will be dynamically generated -->
+                            </div>
+                            <button 
+                                id="next-btn" 
+                                class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                onclick="changePage(1)"
+                                disabled>
+                                Next
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -628,7 +656,7 @@
             // Update page title and subtitle
             const titles = {
                 'dashboard': ['My Dashboard', 'Welcome to your attendance management portal'],
-                'workplace-setup': ['Workplace Setup', 'Configure your workplace location for attendance tracking'],
+                'my-workplace': ['My Workplace', 'View and select your assigned workplace locations'],
                 'gps-checkin': ['Check In/Out', 'GPS location verification for attendance tracking'],
                 'attendance-history': ['My Attendance History', 'View your detailed attendance records and summaries']
             };
@@ -636,6 +664,45 @@
             if (titles[sectionName]) {
                 document.getElementById('page-title').textContent = titles[sectionName][0];
                 document.getElementById('page-subtitle').textContent = titles[sectionName][1];
+            }
+            
+            // Refresh data when switching to attendance history
+            if (sectionName === 'attendance-history') {
+                console.log('Refreshing attendance history data...');
+                fetchAttendanceHistory();
+            }
+            
+            // Refresh data when switching to my-workplace
+            if (sectionName === 'my-workplace') {
+                console.log('Loading workplace data...');
+                fetchUserWorkplaces();
+            }
+            
+            // Initialize GPS check-in map only when user switches to that section
+            if (sectionName === 'gps-checkin') {
+                console.log('Initializing GPS check-in section...');
+                setTimeout(() => {
+                    initializeCheckinMap();
+                    
+                    // Refresh location and status when entering GPS check-in section
+                    if (userLocation && hasLocationPermission) {
+                        console.log('Refreshing location status for GPS check-in section...');
+                        updateLocationStatus('success', userLocation);
+                        updateGeofenceStatus(userLocation);
+                        fetchCurrentStatus();
+                    } else {
+                        console.log('No location available, initializing location tracking...');
+                        initializeSmartLocation();
+                    }
+                }, 100); // Small delay to ensure DOM is ready
+            }
+            
+            // Refresh other sections as needed
+            if (sectionName === 'dashboard') {
+                fetchUserStats();
+                fetchTodaysActivity();
+                fetchTodaysSchedule();
+                fetchCurrentStatus();
             }
         }
         
@@ -699,60 +766,63 @@
         async function fetchAttendanceHistory(userId = null) {
             userId = userId || getCurrentUserId();
             try {
-                const response = await fetch(`/api/attendance-history/${userId}`);
-                const data = await response.json();
+                // Fetch summary data and current status in parallel
+                const [summaryResponse, statusResponse] = await Promise.all([
+                    fetch(`/api/attendance-history/${userId}`),
+                    fetch(`/api/current-status/${userId}`)
+                ]);
                 
-                // Update attendance history table
-                const tbody = document.getElementById('attendance-history-tbody');
-                if (tbody) {
-                    if (data && data.length > 0) {
-                        tbody.innerHTML = '';
+                const summaryData = await summaryResponse.json();
+                let logsData = [];
+                
+                // Get today's detailed logs from current status API
+                if (statusResponse.ok) {
+                    const statusData = await statusResponse.json();
+                    if (statusData.logs && statusData.logs.length > 0) {
+                        // Process today's logs with proper formatting
+                        logsData = statusData.logs.map(log => ({
+                            action: log.action,
+                            timestamp: log.timestamp,
+                            shift_type: log.shift_type || 'regular',
+                            location: 'Workplace',
+                            date: new Date().toLocaleDateString(),
+                            date_raw: new Date().toISOString().split('T')[0]
+                        }));
                         
-                        data.forEach(attendance => {
-                            const row = document.createElement('tr');
-                            row.className = 'hover:bg-gray-50';
-                            row.innerHTML = `
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    ${attendance.date_raw === new Date().toISOString().split('T')[0] ? 'Today' : attendance.date}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.check_in || '--'}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    ${attendance.check_out === 'Still working' ? '<span class="text-blue-600 font-medium">Still working</span>' : (attendance.check_out || '--')}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.total_hours}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.location}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${attendance.status_class}">
-                                        ${attendance.status}
-                                    </span>
-                                </td>
-                            `;
-                            tbody.appendChild(row);
-                        });
-                        
-                        // Update weekly summary based on data
-                        updateWeeklySummary(data);
-                    } else {
-                        // Show empty state
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                    <div class="flex flex-col items-center">
-                                        <i class="fas fa-calendar-times text-3xl mb-3 text-gray-300"></i>
-                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Attendance Records</h3>
-                                        <p class="text-gray-500">You haven't checked in yet. Visit the Check In/Out section to get started.</p>
-                                        <button onclick="switchToSection('gps-checkin')" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                                            Go to Check In
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                        
-                        // Update weekly summary with zeros
-                        updateWeeklySummary([]);
+                        console.log('Today\'s detailed logs:', logsData);
                     }
                 }
+                
+                // Try to get historical logs if endpoint exists
+                try {
+                    const logsResponse = await fetch(`/api/attendance-logs/${userId}`);
+                    if (logsResponse.ok) {
+                        const historicalLogs = await logsResponse.json();
+                        // Merge historical logs with today's logs
+                        logsData = [...historicalLogs, ...logsData];
+                    }
+                } catch (logError) {
+                    console.log('Historical logs endpoint not available, showing only today\'s logs');
+                }
+                
+                // If no detailed logs available, create mock detailed logs from summary data
+                if (logsData.length === 0 && summaryData.length > 0) {
+                    logsData = createDetailedLogsFromSummary(summaryData);
+                }
+                
+                // Cache the data
+                cachedAttendanceData.summary = summaryData;
+                cachedAttendanceData.logs = logsData;
+                
+                // Reset pagination when new data is loaded
+                attendancePagination.currentPage = 1;
+                
+                // Display based on current view mode
+                displayAttendanceData();
+                
+                // Update weekly summary based on summary data
+                updateWeeklySummary(summaryData);
+                
             } catch (error) {
                 console.error('Failed to fetch attendance history:', error);
                 // Show error state
@@ -770,6 +840,371 @@
                     `;
                 }
             }
+        }
+
+        function createDetailedLogsFromSummary(summaryData) {
+            // Create mock detailed logs from summary data to provide better detail view
+            const detailedLogs = [];
+            
+            summaryData.forEach(attendance => {
+                const date = attendance.date_raw || new Date().toISOString().split('T')[0];
+                const displayDate = attendance.date || new Date().toLocaleDateString();
+                
+                // Add check-in log
+                if (attendance.check_in && attendance.check_in !== '--') {
+                    detailedLogs.push({
+                        action: 'check_in',
+                        timestamp: attendance.check_in,
+                        shift_type: 'regular',
+                        location: attendance.location || 'Workplace',
+                        date: displayDate,
+                        date_raw: date
+                    });
+                }
+                
+                // Add check-out log if available
+                if (attendance.check_out && attendance.check_out !== '--' && attendance.check_out !== 'Still working') {
+                    detailedLogs.push({
+                        action: 'check_out',
+                        timestamp: attendance.check_out,
+                        shift_type: 'regular',
+                        location: attendance.location || 'Workplace',
+                        date: displayDate,
+                        date_raw: date
+                    });
+                }
+            });
+            
+            return detailedLogs;
+        }
+
+        function displayAttendanceData() {
+            const tbody = document.getElementById('attendance-history-tbody');
+            if (!tbody) return;
+            
+            const logsData = cachedAttendanceData.logs;
+            const summaryData = cachedAttendanceData.summary;
+            
+            if (currentAttendanceView === 'detailed' && logsData.length > 0) {
+                updateTableHeaders('detailed');
+                displayDetailedAttendanceLogs(logsData, tbody);
+            } else if (summaryData.length > 0) {
+                updateTableHeaders('summary');
+                displaySummaryAttendanceData(summaryData, tbody);
+            } else {
+                // Show empty state
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-calendar-times text-3xl mb-3 text-gray-300"></i>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">No Attendance Records</h3>
+                                <p class="text-gray-500">You haven't checked in yet. Visit the Check In/Out section to get started.</p>
+                                <button onclick="switchToSection('gps-checkin')" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                    Go to Check In
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                updatePaginationControls(0);
+            }
+        }
+
+        function switchAttendanceView(viewType) {
+            currentAttendanceView = viewType;
+            
+            // Reset pagination when switching views
+            attendancePagination.currentPage = 1;
+            
+            // Update button styles
+            const detailedBtn = document.getElementById('detailed-view-btn');
+            const summaryBtn = document.getElementById('summary-view-btn');
+            
+            if (viewType === 'detailed') {
+                detailedBtn.className = 'px-3 py-1 text-sm rounded-md bg-indigo-600 text-white transition-colors';
+                summaryBtn.className = 'px-3 py-1 text-sm rounded-md text-gray-600 hover:bg-white transition-colors';
+            } else {
+                detailedBtn.className = 'px-3 py-1 text-sm rounded-md text-gray-600 hover:bg-white transition-colors';
+                summaryBtn.className = 'px-3 py-1 text-sm rounded-md bg-indigo-600 text-white transition-colors';
+            }
+            
+            // Redisplay data with new view
+            displayAttendanceData();
+        }
+
+        function updateTableHeaders(viewType) {
+            const headerRow = document.querySelector('#attendance-history-section thead tr');
+            if (!headerRow) return;
+            
+            if (viewType === 'detailed') {
+                headerRow.innerHTML = `
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                `;
+            } else {
+                headerRow.innerHTML = `
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check In</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check Out</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Hours</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                `;
+            }
+        }
+
+        function displayDetailedAttendanceLogs(logs, tbody) {
+            tbody.innerHTML = ''; // Clear existing content
+            
+            const actionIcons = {
+                'check_in': 'fa-sign-in-alt',
+                'break_start': 'fa-utensils',
+                'break_end': 'fa-play',
+                'check_out': 'fa-sign-out-alt',
+                'lunch_start': 'fa-utensils',
+                'lunch_end': 'fa-play',
+                'start_lunch': 'fa-utensils',
+                'end_lunch': 'fa-play'
+            };
+            
+            const actionColors = {
+                'check_in': 'bg-green-100 text-green-800',
+                'break_start': 'bg-yellow-100 text-yellow-800',
+                'break_end': 'bg-blue-100 text-blue-800',
+                'check_out': 'bg-red-100 text-red-800',
+                'lunch_start': 'bg-yellow-100 text-yellow-800',
+                'lunch_end': 'bg-blue-100 text-blue-800',
+                'start_lunch': 'bg-yellow-100 text-yellow-800',
+                'end_lunch': 'bg-blue-100 text-blue-800'
+            };
+            
+            const actionLabels = {
+                'check_in': 'Check In',
+                'break_start': 'Start Lunch Break',
+                'break_end': 'End Lunch Break',
+                'check_out': 'Check Out',
+                'lunch_start': 'Start Lunch Break',
+                'lunch_end': 'End Lunch Break',
+                'start_lunch': 'Start Lunch Break',
+                'end_lunch': 'End Lunch Break'
+            };
+            
+            console.log('Displaying detailed logs:', logs);
+            
+            // Group logs by date for better organization
+            const logsByDate = {};
+            logs.forEach(log => {
+                const date = log.date || new Date(log.timestamp).toLocaleDateString();
+                if (!logsByDate[date]) {
+                    logsByDate[date] = [];
+                }
+                logsByDate[date].push(log);
+            });
+            
+            // Sort dates in reverse order (newest first)
+            const sortedDates = Object.keys(logsByDate).sort((a, b) => {
+                const dateA = new Date(logsByDate[a][0].date_raw || a);
+                const dateB = new Date(logsByDate[b][0].date_raw || b);
+                return dateB - dateA;
+            });
+            
+            // Flatten all logs into a single array for pagination
+            let allLogs = [];
+            sortedDates.forEach(date => {
+                const dateLogs = logsByDate[date];
+                
+                // Sort logs by timestamp within each date
+                dateLogs.sort((a, b) => {
+                    const timeA = new Date('1970/01/01 ' + (a.timestamp || '00:00')).getTime();
+                    const timeB = new Date('1970/01/01 ' + (b.timestamp || '00:00')).getTime();
+                    return timeA - timeB;
+                });
+                
+                // Add date marker and append logs
+                allLogs.push(...dateLogs.map((log, index) => ({ ...log, isFirstOfDate: index === 0, displayDate: log.date_raw === new Date().toISOString().split('T')[0] ? 'Today' : date })));
+            });
+            
+            // Get paginated logs
+            const paginatedLogs = getPaginatedData(allLogs);
+            
+            // Display paginated logs
+            paginatedLogs.forEach((log) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const icon = actionIcons[log.action] || 'fa-clock';
+                const colorClass = actionColors[log.action] || 'bg-gray-100 text-gray-800';
+                const actionLabel = actionLabels[log.action] || log.action.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${log.isFirstOfDate ? log.displayDate : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex items-center">
+                            <i class="fas ${icon} mr-2 text-gray-600"></i>
+                            ${actionLabel}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${log.timestamp || log.time || '--'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${log.shift_type ? log.shift_type.toUpperCase() + ' Shift' : 'Regular'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${log.location || 'Workplace'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">
+                            ${actionLabel}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update pagination controls
+            updatePaginationControls(allLogs.length);
+            
+            // If no logs found, show message and update pagination
+            if (logs.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-info-circle text-2xl mb-2 text-gray-300"></i>
+                            <p>No detailed logs available yet.</p>
+                            <p class="text-sm text-gray-400 mt-1">Perform some actions to see them here.</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                updatePaginationControls(0);
+            }
+        }
+
+        function displaySummaryAttendanceData(summaryData, tbody) {
+            tbody.innerHTML = ''; // Clear existing content
+            
+            // Get paginated data
+            const paginatedData = getPaginatedData(summaryData);
+            
+            paginatedData.forEach(attendance => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${attendance.date_raw === new Date().toISOString().split('T')[0] ? 'Today' : attendance.date}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.check_in || '--'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${attendance.check_out === 'Still working' ? '<span class="text-blue-600 font-medium">Still working</span>' : (attendance.check_out || '--')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.total_hours}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${attendance.location}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${attendance.status_class}">
+                            ${attendance.status}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update pagination after displaying data
+            updatePaginationControls(summaryData.length);
+        }
+
+        // Pagination Functions
+        function getPaginatedData(data) {
+            const startIndex = (attendancePagination.currentPage - 1) * attendancePagination.recordsPerPage;
+            const endIndex = startIndex + attendancePagination.recordsPerPage;
+            return data.slice(startIndex, endIndex);
+        }
+
+        function updatePaginationControls(totalRecords) {
+            attendancePagination.totalRecords = totalRecords;
+            attendancePagination.totalPages = Math.ceil(totalRecords / attendancePagination.recordsPerPage);
+            
+            // Update pagination info text
+            const paginationInfo = document.getElementById('pagination-info');
+            if (paginationInfo) {
+                if (totalRecords === 0) {
+                    paginationInfo.textContent = 'No records to show';
+                } else {
+                    const startRecord = (attendancePagination.currentPage - 1) * attendancePagination.recordsPerPage + 1;
+                    const endRecord = Math.min(attendancePagination.currentPage * attendancePagination.recordsPerPage, totalRecords);
+                    paginationInfo.textContent = `Showing ${startRecord} to ${endRecord} of ${totalRecords} records`;
+                }
+            }
+            
+            // Update pagination buttons
+            updatePaginationButtons();
+        }
+
+        function updatePaginationButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const pageNumbers = document.getElementById('page-numbers');
+            
+            // Update Previous button
+            if (prevBtn) {
+                prevBtn.disabled = attendancePagination.currentPage <= 1;
+            }
+            
+            // Update Next button
+            if (nextBtn) {
+                nextBtn.disabled = attendancePagination.currentPage >= attendancePagination.totalPages;
+            }
+            
+            // Generate page number buttons
+            if (pageNumbers) {
+                pageNumbers.innerHTML = '';
+                
+                // Show up to 5 page numbers
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, attendancePagination.currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(attendancePagination.totalPages, startPage + maxVisiblePages - 1);
+                
+                // Adjust start page if we're near the end
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.onclick = () => goToPage(i);
+                    
+                    if (i === attendancePagination.currentPage) {
+                        pageBtn.className = 'px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700';
+                    } else {
+                        pageBtn.className = 'px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50';
+                    }
+                    
+                    pageNumbers.appendChild(pageBtn);
+                }
+            }
+        }
+
+        function changePage(direction) {
+            const newPage = attendancePagination.currentPage + direction;
+            if (newPage >= 1 && newPage <= attendancePagination.totalPages) {
+                goToPage(newPage);
+            }
+        }
+
+        function goToPage(pageNumber) {
+            if (pageNumber >= 1 && pageNumber <= attendancePagination.totalPages) {
+                attendancePagination.currentPage = pageNumber;
+                displayAttendanceData(); // Refresh the display with new page
+            }
+        }
+
+        function changeRecordsPerPage(newRecordsPerPage) {
+            attendancePagination.recordsPerPage = parseInt(newRecordsPerPage);
+            attendancePagination.currentPage = 1; // Reset to first page
+            displayAttendanceData(); // Refresh the display
         }
         
         function updateWeeklySummary(attendanceData) {
@@ -850,11 +1285,11 @@
                     // Update workplace display
                     updateWorkplaceDisplay();
                     
-                    // Refresh maps if they exist
-                    if (checkinMap) {
-                        initializeCheckinMap();
+                    // Refresh existing maps if they are active
+                    if (checkinMap && mapInitializationState.checkinMap) {
+                        refreshCheckinMapData();
                     }
-                    if (setupMap) {
+                    if (setupMap && mapInitializationState.setupMap) {
                         populateWorkplaceForm(workLocations.mainOffice);
                         if (workLocations.mainOffice.lat && workLocations.mainOffice.lng) {
                             setWorkplaceLocation(workLocations.mainOffice.lat, workLocations.mainOffice.lng, false);
@@ -865,6 +1300,100 @@
                 }
             } catch (error) {
                 console.error('Failed to fetch workplace:', error);
+            }
+        }
+        
+        async function fetchUserWorkplaces(userId = null) {
+            userId = userId || getCurrentUserId();
+            console.log('Fetching workplaces for user:', userId);
+            
+            try {
+                const response = await fetch(`/api/user-workplaces/${userId}`);
+                console.log('Workplace API response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Workplace API data received:', data);
+                
+                const workplacesList = document.getElementById('assigned-workplaces-list');
+                const noWorkplacesMessage = document.getElementById('no-workplaces-message');
+                
+                if (data.workplaces && data.workplaces.length > 0) {
+                    // Hide no workplaces message
+                    noWorkplacesMessage.classList.add('hidden');
+                    
+                    // Display workplaces
+                    let html = '';
+                    data.workplaces.forEach(workplace => {
+                        const isPrimary = workplace.is_primary;
+                        html += `
+                            <div class="workplace-item border rounded-lg p-4 hover:bg-gray-50 cursor-pointer ${isPrimary ? 'border-green-500 bg-green-50' : 'border-gray-200'}" 
+                                 data-workplace-id="${workplace.id}" 
+                                 onclick="selectWorkplace(${workplace.id}, '${workplace.name}', '${workplace.address}', ${workplace.latitude}, ${workplace.longitude}, ${workplace.radius}, ${isPrimary})">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center">
+                                            <h4 class="font-semibold text-gray-900">${workplace.name}</h4>
+                                            ${isPrimary ? '<span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Primary</span>' : ''}
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">${workplace.address || 'No address provided'}</p>
+                                        <div class="flex items-center text-xs text-gray-500 mt-2">
+                                            <i class="fas fa-map-marker-alt mr-1"></i>
+                                            <span>Radius: ${workplace.radius}m</span>
+                                            ${workplace.assigned_at ? `<span class="ml-3"><i class="fas fa-calendar mr-1"></i>Assigned: ${workplace.assigned_at}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        ${!isPrimary ? `<button onclick="event.stopPropagation(); setPrimaryWorkplace(${workplace.id}, '${workplace.name}')" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-xs hover:bg-indigo-200 transition-colors">Set Primary</button>` : ''}
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    workplacesList.innerHTML = html;
+                    
+                    // Update primary workplace info
+                    updatePrimaryWorkplaceInfo(data.primary_workplace);
+                    
+                } else {
+                    // Show no workplaces message
+                    workplacesList.innerHTML = '';
+                    noWorkplacesMessage.classList.remove('hidden');
+                    
+                    // Clear primary workplace info
+                    updatePrimaryWorkplaceInfo(null);
+                }
+                
+                console.log('Workplaces loaded:', data);
+                
+            } catch (error) {
+                console.error('Failed to fetch user workplaces:', error);
+                const workplacesList = document.getElementById('assigned-workplaces-list');
+                const noWorkplacesMessage = document.getElementById('no-workplaces-message');
+                
+                if (workplacesList) {
+                    workplacesList.innerHTML = `
+                        <div class="flex items-center justify-center p-8 text-red-500">
+                            <div class="text-center">
+                                <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
+                                <p>Failed to load workplaces</p>
+                                <p class="text-sm text-gray-500 mt-1">${error.message}</p>
+                                <button onclick="fetchUserWorkplaces()" class="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                    Try Again
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (noWorkplacesMessage) {
+                    noWorkplacesMessage.classList.add('hidden');
+                }
             }
         }
         
@@ -916,9 +1445,9 @@
                     showNotification(result.error || 'Check-in failed', 'error');
                     
                     // Handle specific error cases
-                    if (result.redirect === 'workplace-setup') {
+                    if (result.redirect === 'my-workplace') {
                         setTimeout(() => {
-                            switchToSection('workplace-setup');
+                            switchToSection('my-workplace');
                         }, 2000);
                     }
                     
@@ -1090,9 +1619,9 @@
                     showNotification(result.error || 'Action failed', 'error');
                     
                     // Handle specific error cases
-                    if (result.redirect === 'workplace-setup') {
+                    if (result.redirect === 'my-workplace') {
                         setTimeout(() => {
-                            switchToSection('workplace-setup');
+                            switchToSection('my-workplace');
                         }, 2000);
                     }
                     
@@ -1343,8 +1872,8 @@
                                 <i class="fas fa-map-marker-alt text-3xl mb-3 text-gray-300"></i>
                                 <h4 class="font-medium text-gray-800 mb-2">No Workflow Available</h4>
                                 <p class="text-gray-500 mb-4">Set up your workplace first to see your daily workflow</p>
-                                <button onclick="switchToSection('workplace-setup')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                                    Setup Workplace
+                                <button onclick="switchToSection('my-workplace')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                    Select Workplace
                                 </button>
                             </div>
                         </div>
@@ -1388,17 +1917,8 @@
             fetchCurrentStatus(); // New: Fetch current work status
             updateWorkplaceDisplay();
             
-            // Initialize location permission check with better error handling
-            checkLocationPermission().then((hasPermission) => {
-                if (hasPermission && !userLocation) {
-                    // If permission is granted but no location yet, start tracking
-                    return startLocationTracking();
-                }
-            }).catch(error => {
-                console.warn('Location permission issue:', error.message);
-                // Show permission request UI but don't block the rest of the app
-                updateLocationStatus('error', null, error.message);
-            });
+            // Initialize location with smart approach
+            initializeSmartLocation();
             
             // Setup workplace event handlers
             document.getElementById('request-location-btn').addEventListener('click', function() {
@@ -1449,17 +1969,220 @@
         let workplaceCircle = null;
         let hasLocationPermission = false;
         let isCurrentlyCheckedIn = false; // Track check-in status
+        let currentAttendanceView = 'detailed'; // Track current view mode
+        let cachedAttendanceData = { logs: [], summary: [] }; // Cache fetched data
+        let attendancePagination = {
+            currentPage: 1,
+            recordsPerPage: 5,
+            totalRecords: 0,
+            totalPages: 1
+        }; // Pagination state
         
         // Get current user ID from meta tag
         function getCurrentUserId() {
             return document.querySelector('meta[name="user-id"]')?.getAttribute('content') || 1;
         }
         
-        // Storage keys for workplace data
+        // Storage keys for workplace data and location caching
         const STORAGE_KEYS = {
             workplace: 'cid_ams_workplace_data',
-            locationPermission: 'cid_ams_location_permission'
+            locationPermission: 'cid_ams_location_permission',
+            cachedLocation: 'cid_ams_cached_location',
+            locationTimestamp: 'cid_ams_location_timestamp'
         };
+        
+        // Location caching functions
+        function cacheLocation(position) {
+            try {
+                const locationData = {
+                    coords: {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        altitude: position.coords.altitude,
+                        altitudeAccuracy: position.coords.altitudeAccuracy,
+                        heading: position.coords.heading,
+                        speed: position.coords.speed
+                    },
+                    timestamp: position.timestamp
+                };
+                
+                localStorage.setItem(STORAGE_KEYS.cachedLocation, JSON.stringify(locationData));
+                localStorage.setItem(STORAGE_KEYS.locationTimestamp, Date.now().toString());
+                console.log('Location cached successfully');
+            } catch (error) {
+                console.warn('Failed to cache location:', error);
+            }
+        }
+        
+        function getCachedLocation() {
+            try {
+                const cached = localStorage.getItem(STORAGE_KEYS.cachedLocation);
+                if (cached) {
+                    const locationData = JSON.parse(cached);
+                    // Reconstruct the position object format expected by the app
+                    return {
+                        coords: locationData.coords,
+                        timestamp: locationData.timestamp
+                    };
+                }
+            } catch (error) {
+                console.warn('Failed to retrieve cached location:', error);
+            }
+            return null;
+        }
+        
+        function isCachedLocationValid(cachedLocation) {
+            if (!cachedLocation) return false;
+            
+            const cacheTimestamp = localStorage.getItem(STORAGE_KEYS.locationTimestamp);
+            if (!cacheTimestamp) return false;
+            
+            const cacheAge = Date.now() - parseInt(cacheTimestamp);
+            const maxCacheAge = 10 * 60 * 1000; // 10 minutes
+            
+            return cacheAge < maxCacheAge;
+        }
+        
+        function clearLocationCache() {
+            localStorage.removeItem(STORAGE_KEYS.cachedLocation);
+            localStorage.removeItem(STORAGE_KEYS.locationTimestamp);
+            console.log('Location cache cleared');
+            showNotification('Location cache cleared. Requesting fresh location...', 'info');
+            
+            // Restart location tracking
+            userLocation = null;
+            retryLocationAccess();
+        }
+        
+        // Location troubleshooting functions
+        function showLocationTroubleshooting() {
+            const panel = document.getElementById('location-troubleshooting');
+            if (panel) {
+                panel.classList.remove('hidden');
+            }
+        }
+        
+        function toggleLocationTroubleshooting() {
+            const panel = document.getElementById('location-troubleshooting');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        }
+        
+        function retryLocationAccess() {
+            console.log('Retrying location access...');
+            
+            // Hide troubleshooting panel
+            toggleLocationTroubleshooting();
+            
+            // Clear any existing watch
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            
+            // Reset state
+            userLocation = null;
+            hasLocationPermission = false;
+            
+            // Show loading state
+            updateLocationStatus('loading', null, 'Retrying location access...');
+            
+            // Start fresh location tracking
+            startLocationTracking().then(() => {
+                showNotification('Location access restored!', 'success');
+            }).catch(error => {
+                console.error('Retry failed:', error);
+                showNotification('Location retry failed. Please check your settings.', 'error');
+            });
+        }
+        
+        // Enhanced browser-specific location tips
+        function getBrowserLocationHelp() {
+            const userAgent = navigator.userAgent;
+            let tips = [];
+            
+            if (userAgent.includes('Chrome')) {
+                tips = [
+                    'Click the location icon in the address bar',
+                    'Select "Always allow" for this site',
+                    'Check Chrome Settings > Privacy > Location'
+                ];
+            } else if (userAgent.includes('Firefox')) {
+                tips = [
+                    'Click the shield icon in the address bar',
+                    'Select "Allow location access"',
+                    'Check Firefox Preferences > Privacy & Security'
+                ];
+            } else if (userAgent.includes('Safari')) {
+                tips = [
+                    'Check Safari > Preferences > Websites > Location',
+                    'Set this website to "Allow"',
+                    'Restart Safari if needed'
+                ];
+            } else if (userAgent.includes('Edge')) {
+                tips = [
+                    'Click the location icon in the address bar',
+                    'Select "Allow" when prompted',
+                    'Check Edge Settings > Site Permissions'
+                ];
+            } else {
+                tips = [
+                    'Look for location icon in address bar',
+                    'Allow location access when prompted',
+                    'Check browser location settings'
+                ];
+            }
+            
+            return tips;
+        }
+        
+        // Smart location initialization - only requests when needed
+        function initializeSmartLocation() {
+            console.log('Initializing smart location system...');
+            
+            // Check if we have a recent cached location
+            const cached = getCachedLocation();
+            if (cached && isCachedLocationValid(cached)) {
+                console.log('Using valid cached location');
+                userLocation = cached;
+                hasLocationPermission = true;
+                updateLocationStatus('success', cached, 'Using cached location');
+                updateCurrentLocationDisplay(cached);
+                updateGeofenceStatus(cached);
+                
+                // Get fresh location in background
+                setTimeout(() => {
+                    if (navigator.geolocation) {
+                        getOptimizedLocation().then(fresh => {
+                            console.log('Background location update successful');
+                            userLocation = fresh;
+                            updateLocationStatus('success', fresh);
+                            updateCurrentLocationDisplay(fresh);
+                            updateGeofenceStatus(fresh);
+                        }).catch(error => {
+                            console.log('Background update failed, keeping cached location');
+                        });
+                    }
+                }, 2000);
+                return;
+            }
+            
+            // No valid cache - check permission and get location
+            checkLocationPermission().then((hasPermission) => {
+                if (hasPermission && !userLocation) {
+                    // Permission granted, get location immediately
+                    return startLocationTracking();
+                }
+            }).catch(error => {
+                console.warn('Location initialization failed:', error.message);
+                updateLocationStatus('error', null, error.message);
+                
+                // Still allow app to function with fallback location
+                console.log('App will use fallback coordinates when needed');
+            });
+        }
         
         // Default and stored work locations
         let workLocations = {
@@ -1503,53 +2226,206 @@
         function checkLocationPermission() {
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
-                    reject(new Error('Geolocation not supported'));
+                    reject(new Error('Geolocation not supported by your browser'));
                     return;
                 }
                 
-                // Try to get location immediately to test permission status
+                // Check if we have a cached location first
+                const cachedLocation = getCachedLocation();
+                if (cachedLocation && isCachedLocationValid(cachedLocation)) {
+                    console.log('Using cached location while getting fresh location...');
+                    userLocation = cachedLocation;
+                    hasLocationPermission = true;
+                    resolve(true);
+                    
+                    // Still get fresh location in background for accuracy
+                    getOptimizedLocation().catch(error => {
+                        console.warn('Background location update failed:', error);
+                    });
+                    return;
+                }
+                
+                // Try quick location check with relaxed accuracy first
+                getQuickLocation().then(position => {
+                    hasLocationPermission = true;
+                    resolve(true);
+                }).catch(error => {
+                    hasLocationPermission = false;
+                    let errorMsg = 'Unable to get location';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = 'Location access denied. Please allow location access for attendance tracking.';
+                            showLocationPermissionRequest();
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = 'Location information unavailable. Please check your device settings.';
+                            showLocationPermissionRequest();
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = 'Location request timed out. Trying with cached location...';
+                            // Try with any cached location as fallback
+                            const oldCached = getCachedLocation();
+                            if (oldCached) {
+                                console.log('Using older cached location as fallback');
+                                userLocation = oldCached;
+                                hasLocationPermission = true;
+                                resolve(true);
+                                return;
+                            }
+                            showLocationPermissionRequest();
+                            break;
+                    }
+                    
+                    reject(new Error(errorMsg));
+                });
+            });
+        }
+        
+        // Fast location acquisition with progressive enhancement
+        function getQuickLocation() {
+            return new Promise((resolve, reject) => {
+                // First try: Quick location with lower accuracy
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
-                        // Permission granted and location obtained
-                        hasLocationPermission = true;
-                        resolve(true);
+                        console.log('Quick location obtained:', position.coords.accuracy + 'm accuracy');
+                        userLocation = position;
+                        cacheLocation(position);
+                        resolve(position);
+                        
+                        // Background improvement: Get more accurate location
+                        setTimeout(() => {
+                            getOptimizedLocation().then(accuratePosition => {
+                                console.log('Improved location accuracy:', accuratePosition.coords.accuracy + 'm');
+                                userLocation = accuratePosition;
+                                cacheLocation(accuratePosition);
+                                
+                                // Update maps if they exist
+                                if (checkinMap && mapInitializationState.checkinMap) {
+                                    refreshCheckinMapData();
+                                }
+                            }).catch(error => {
+                                console.log('Accuracy improvement failed, keeping quick location');
+                            });
+                        }, 1000);
                     },
                     function(error) {
-                        hasLocationPermission = false;
-                        let errorMsg = 'Unable to get location';
-                        
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMsg = 'Location access denied by user';
-                                showLocationPermissionRequest();
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMsg = 'Location information unavailable';
-                                break;
-                            case error.TIMEOUT:
-                                errorMsg = 'Location request timed out - please try again';
-                                break;
-                        }
-                        
-                        // For timeout or unavailable, still show permission request as it might help
-                        if (error.code !== error.PERMISSION_DENIED) {
-                            showLocationPermissionRequest();
-                        }
-                        
-                        reject(new Error(errorMsg));
+                        reject(error);
+                    },
+                    {
+                        enableHighAccuracy: false, // Start with low accuracy for speed
+                        timeout: 5000, // Quick 5-second timeout
+                        maximumAge: 300000 // Accept 5-minute old location for speed
+                    }
+                );
+            });
+        }
+        
+        // More accurate location (used as background improvement)
+        function getOptimizedLocation() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        userLocation = position;
+                        cacheLocation(position);
+                        resolve(position);
+                    },
+                    function(error) {
+                        reject(error);
                     },
                     {
                         enableHighAccuracy: true,
-                        timeout: 10000, // 10 second timeout
-                        maximumAge: 60000 // Accept 1 minute old location
+                        timeout: 15000, // Longer timeout for accuracy
+                        maximumAge: 60000 // Accept 1-minute old accurate location
                     }
                 );
             });
         }
         
         function showLocationPermissionRequest() {
-            document.getElementById('location-permission-request').classList.remove('hidden');
-            updateStepStatus('step1-status', 'pending', 'Needs Permission');
+            // Show enhanced permission request with clear workplace context
+            const locationRequest = document.getElementById('location-permission-request');
+            if (locationRequest) {
+                locationRequest.classList.remove('hidden');
+                updateStepStatus('step1-status', 'pending', 'Needs Permission');
+                
+                // Add workplace context to the permission request
+                showLocationPermissionModal();
+            }
+        }
+        
+        function showLocationPermissionModal() {
+            // Create a modal with clear explanation
+            const modal = document.createElement('div');
+            modal.id = 'location-permission-modal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl p-8 m-4 max-w-md w-full">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-map-marker-alt text-blue-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Location Access Required</h3>
+                        <p class="text-gray-600 text-sm">This attendance system needs your location to:</p>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Verify you're at your workplace when checking in</span>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-shield-alt text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Ensure accurate attendance tracking</span>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-building text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Show your distance from workplace</span>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-lock text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Location is used only for work verification</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-600 mr-2 mt-0.5"></i>
+                            <div class="text-xs text-blue-800">
+                                <p class="font-medium mb-1">Privacy Notice:</p>
+                                <p>Your location is only accessed during work hours and is used solely for attendance verification. No tracking occurs outside of work activities.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="requestLocationPermission()" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-location-arrow mr-2"></i>Allow Location
+                        </button>
+                        <button onclick="closeLocationModal()" class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            Later
+                        </button>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 text-center mt-4">
+                        You can change this permission anytime in your browser settings
+                    </p>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function closeLocationModal() {
+            const modal = document.getElementById('location-permission-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        function requestLocationPermission() {
+            closeLocationModal();
+            startLocationTracking();
         }
         
         function hideLocationPermissionRequest() {
@@ -1571,106 +2447,209 @@
         function startLocationTracking() {
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
-                    updateLocationStatus('error', null, 'Geolocation not supported');
+                    updateLocationStatus('error', null, 'Geolocation not supported by your browser');
                     reject(new Error('Geolocation not supported'));
                     return;
                 }
                 
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 60000
-                };
+                console.log('Starting optimized location tracking...');
+                updateLocationStatus('loading', null, 'Getting your location...');
                 
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        userLocation = position;
-                        hasLocationPermission = true;
-                        hideLocationPermissionRequest();
-                        updateLocationStatus('success', position);
+                // Use the optimized quick location method
+                getQuickLocation().then(position => {
+                    userLocation = position;
+                    hasLocationPermission = true;
+                    hideLocationPermissionRequest();
+                    
+                    console.log('Location tracking started successfully', position);
+                    
+                    // Update all location-related UI elements
+                    updateLocationStatus('success', position);
+                    
+                    // Small delay to ensure DOM elements are ready
+                    setTimeout(() => {
                         updateCurrentLocationDisplay(position);
-                        
-                        // Initialize maps after getting location
-                        initializeMaps();
                         updateGeofenceStatus(position);
                         
-                        // Start watching for location changes with better error handling
-                        if (watchId) {
-                            navigator.geolocation.clearWatch(watchId);
+                        // Update maps if initialized
+                        if (checkinMap) {
+                            updateUserLocationOnMaps(position);
                         }
                         
-                        watchId = navigator.geolocation.watchPosition(
-                            function(pos) {
-                                userLocation = pos;
-                                updateUserLocationOnMaps(pos);
-                                updateGeofenceStatus(pos);
-                                updateCurrentLocationDisplay(pos);
-                            },
-                            function(error) {
-                                console.warn('Location watch error:', error);
-                                // Don't show error for watch failures - keep using last known location
-                                // Only log the error for debugging
-                            },
-                            {
-                                enableHighAccuracy: false, // Less strict for continuous tracking
-                                timeout: 30000, // Longer timeout for watch
-                                maximumAge: 120000 // Accept older locations for watch
-                            }
-                        );
-                        
-                        resolve(position);
-                    },
-                    function(error) {
-                        hasLocationPermission = false;
-                        let errorMsg = 'Unable to get location';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMsg = 'Location access denied by user';
-                                showLocationPermissionRequest();
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMsg = 'Location information unavailable';
-                                break;
-                            case error.TIMEOUT:
-                                errorMsg = 'Location request timed out';
-                                break;
+                        // Refresh any section-specific data
+                        const currentSection = document.querySelector('.section-content:not(.hidden)');
+                        if (currentSection && currentSection.id === 'gps-checkin-section') {
+                            // Refresh check-in section data
+                            fetchCurrentStatus();
                         }
-                        updateLocationStatus('error', null, errorMsg);
-                        reject(new Error(errorMsg));
-                    },
-                    options
-                );
+                    }, 100);
+                    
+                    // Start optimized watching for location changes
+                    startOptimizedLocationWatch();
+                    
+                    resolve(position);
+                }).catch(error => {
+                    console.error('Location tracking failed:', error);
+                    hasLocationPermission = false;
+                    
+                    let errorMsg = 'Unable to get location';
+                    let showPermissionRequest = true;
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = 'Location access was denied. Please allow location access for attendance tracking.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = 'Location is currently unavailable. Please check your device settings.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = 'Location request timed out. Please try again or check your connection.';
+                            break;
+                        default:
+                            errorMsg = 'Location error: ' + error.message;
+                    }
+                    
+                    updateLocationStatus('error', null, errorMsg);
+                    
+                    if (showPermissionRequest) {
+                        showLocationPermissionRequest();
+                    }
+                    
+                    reject(new Error(errorMsg));
+                });
             });
+        }
+        
+        function startOptimizedLocationWatch() {
+            // Clear existing watch if any
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+            
+            // Start watching with optimized settings
+            watchId = navigator.geolocation.watchPosition(
+                function(pos) {
+                    // Update location and cache it
+                    userLocation = pos;
+                    cacheLocation(pos);
+                    
+                    // Update UI elements
+                    updateUserLocationOnMaps(pos);
+                    updateGeofenceStatus(pos);
+                    updateCurrentLocationDisplay(pos);
+                    
+                    // Refresh map data if visible
+                    const gpsSection = document.getElementById('gps-checkin-section');
+                    if (gpsSection && !gpsSection.classList.contains('hidden') && checkinMap) {
+                        refreshCheckinMapData();
+                    }
+                    
+                    console.log('Location updated:', pos.coords.accuracy + 'm accuracy');
+                },
+                function(error) {
+                    console.warn('Location watch error:', error.message);
+                    
+                    // Don't show errors for watch failures unless it's permission denied
+                    if (error.code === error.PERMISSION_DENIED) {
+                        updateLocationStatus('error', null, 'Location permission was revoked');
+                        hasLocationPermission = false;
+                        showLocationPermissionRequest();
+                    }
+                    // For other errors, keep using cached location and try again later
+                },
+                {
+                    enableHighAccuracy: false, // Use lower accuracy for continuous tracking (faster)
+                    timeout: 20000, // 20-second timeout for watch
+                    maximumAge: 180000 // Accept 3-minute old locations for watch
+                }
+            );
+            
+            console.log('Optimized location watching started');
+        }
+        
+        function updateLocationStatus(status, position, message = null) {
+            const badge = document.getElementById('location-badge');
+            const location = document.getElementById('current-location');
+            const sidebarStatus = document.getElementById('location-status');
+            
+            if (status === 'loading') {
+                if (badge) {
+                    badge.className = 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium animate-pulse';
+                    badge.textContent = 'Getting Location...';
+                }
+                if (location) {
+                    location.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600 mr-2"></i>' + 
+                                       (message || 'Requesting your location...');
+                }
+                if (sidebarStatus) {
+                    sidebarStatus.textContent = 'Getting Location...';
+                }
+            } else if (status === 'success' && position) {
+                const accuracy = Math.round(position.coords.accuracy);
+                const accuracyColor = accuracy <= 20 ? 'text-green-600' : accuracy <= 100 ? 'text-yellow-600' : 'text-orange-600';
+                const accuracyIcon = accuracy <= 20 ? 'fa-check-circle' : accuracy <= 100 ? 'fa-exclamation-circle' : 'fa-question-circle';
+                
+                if (badge) {
+                    badge.className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
+                    badge.textContent = 'Location Active';
+                }
+                if (location) {
+                    location.innerHTML = `<i class="fas fa-map-marker-alt text-green-600 mr-2"></i>` +
+                                       `<span class="font-medium">Location:</span> ` +
+                                       `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)} ` +
+                                       `<span class="text-xs ${accuracyColor}">(<i class="fas ${accuracyIcon}"></i> ±${accuracy}m)</span>`;
+                }
+                if (sidebarStatus) {
+                    sidebarStatus.textContent = 'Location Active';
+                }
+                
+                // Update current location display elements
+                updateCurrentLocationDisplay(position);
+                
+                // Update geofence status and UI
+                updateGeofenceStatus(position);
+                
+                // Update maps if they're initialized
+                if (checkinMap) {
+                    updateUserLocationOnMaps(position);
+                }
+                
+                // Cache the successful location
+                cacheLocation(position);
+                
+            } else {
+                if (badge) {
+                    badge.className = 'px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium';
+                    badge.textContent = 'Location Error';
+                }
+                if (location) {
+                    location.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>' + 
+                                       (message || 'Unable to get location');
+                }
+                if (sidebarStatus) {
+                    sidebarStatus.textContent = 'Location Error';
+                }
+            }
         }
         
         function updateCurrentLocationDisplay(position) {
             if (!position) return;
             
-            document.getElementById('current-lat').textContent = position.coords.latitude.toFixed(6);
-            document.getElementById('current-lng').textContent = position.coords.longitude.toFixed(6);
-            document.getElementById('current-accuracy').textContent = Math.round(position.coords.accuracy);
+            // Update coordinate displays in the workplace setup
+            const currentLat = document.getElementById('current-lat');
+            const currentLng = document.getElementById('current-lng');
+            const currentAccuracy = document.getElementById('current-accuracy');
+            
+            if (currentLat) currentLat.textContent = position.coords.latitude.toFixed(6);
+            if (currentLng) currentLng.textContent = position.coords.longitude.toFixed(6);
+            if (currentAccuracy) currentAccuracy.textContent = Math.round(position.coords.accuracy);
             
             // Enable the "Use Current Location" button
-            document.getElementById('use-current-location').disabled = false;
-        }
-        
-        function updateLocationStatus(status, position, errorMessage = null) {
-            const badge = document.getElementById('location-badge');
-            const location = document.getElementById('current-location');
-            const sidebarStatus = document.getElementById('location-status');
-            
-            if (status === 'success' && position) {
-                badge.className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
-                badge.textContent = 'Location Found';
-                location.innerHTML = '<i class="fas fa-map-marker-alt text-green-600 mr-2"></i>Location: ' + 
-                                   position.coords.latitude.toFixed(6) + ', ' + position.coords.longitude.toFixed(6);
-                sidebarStatus.textContent = 'Location Active';
-            } else {
-                badge.className = 'px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium';
-                badge.textContent = 'Location Error';
-                location.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>' + 
-                                   (errorMessage || 'Unable to get location');
-                sidebarStatus.textContent = 'Location Unavailable';
+            const useLocationBtn = document.getElementById('use-current-location');
+            if (useLocationBtn) {
+                useLocationBtn.disabled = false;
+                useLocationBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                useLocationBtn.classList.add('hover:bg-blue-700');
             }
         }
         
@@ -1713,6 +2692,9 @@
             
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
+            
+            // Load workplace from storage first
+            loadWorkplaceData();
             const workplace = workLocations.mainOffice;
             
             if (!workplace || !workplace.lat || !workplace.lng) {
@@ -1720,10 +2702,13 @@
                 const checkinBtn = document.getElementById('checkin-btn');
                 if (checkinBtn) {
                     checkinBtn.className = 'w-full py-4 bg-gray-400 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
-                    checkinBtn.innerHTML = '<i class="fas fa-cog mr-2"></i>Setup Workplace First';
+                    checkinBtn.innerHTML = '<i class="fas fa-cog mr-2"></i>Select Workplace First';
                     checkinBtn.disabled = true;
-                    checkinBtn.onclick = () => switchToSection('workplace-setup');
+                    checkinBtn.onclick = () => switchToSection('my-workplace');
                 }
+                
+                // Update workplace display to show not configured
+                updateWorkplaceDisplay();
                 return;
             }
             
@@ -1739,19 +2724,36 @@
                 officeDistanceEl.textContent = Math.round(workplaceDistance) + 'm';
             }
             
+            // Update workplace info display
+            updateWorkplaceDisplay();
+            
             // Check if user is within geofence
             const inWorkplaceGeofence = workplaceDistance <= workplace.radius;
             
-            // Update check-in button - only if user is outside geofence
+            // Update geofence status display
+            const geofenceStatus = document.getElementById('geofence-status');
+            if (geofenceStatus) {
+                if (inWorkplaceGeofence) {
+                    geofenceStatus.className = 'flex items-center text-green-700 bg-green-100 px-3 py-2 rounded-lg';
+                    geofenceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>You are within the work area';
+                } else {
+                    geofenceStatus.className = 'flex items-center text-red-700 bg-red-100 px-3 py-2 rounded-lg';
+                    geofenceStatus.innerHTML = `<i class="fas fa-times-circle mr-2"></i>You are ${Math.round(workplaceDistance)}m away from work area`;
+                }
+            }
+            
+            // Update check-in button based on geofence status
             const checkinBtn = document.getElementById('checkin-btn');
-            if (checkinBtn && !inWorkplaceGeofence) {
-                checkinBtn.className = 'w-full py-4 bg-red-500 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
-                checkinBtn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Outside Work Area';
-                checkinBtn.disabled = true;
-                checkinBtn.onclick = null;
-            } else if (checkinBtn && inWorkplaceGeofence) {
-                // If in geofence, fetch current status to set correct button
-                fetchCurrentStatus();
+            if (checkinBtn) {
+                if (!inWorkplaceGeofence) {
+                    checkinBtn.className = 'w-full py-4 bg-red-500 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
+                    checkinBtn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Outside Work Area';
+                    checkinBtn.disabled = true;
+                    checkinBtn.onclick = null;
+                } else {
+                    // If in geofence, fetch current status to set correct button
+                    fetchCurrentStatus();
+                }
             }
             
             // Update location badge color based on geofence status
@@ -1839,47 +2841,152 @@
                 // Update any time displays if needed
                 console.log('Dashboard refreshed at:', timeString);
             }, 30000); // 30 seconds
-        }        // Initialize maps
+        }        // Map state tracking
+        let mapInitializationState = {
+            checkinMap: false,
+            setupMap: false,
+            checkinMapLoading: false,
+            setupMapLoading: false
+        };
+        
+        // Initialize maps only when needed (lazy loading)
         function initializeMaps() {
-            initializeCheckinMap();
-            initializeSetupMap();
+            // Don't initialize maps immediately, wait for section switch
+            console.log('Maps initialization deferred until needed');
         }
         
-        // Initialize GPS Check-in Map with Leaflet
+        // Initialize GPS Check-in Map with Leaflet (optimized)
         function initializeCheckinMap() {
-            if (!userLocation) return;
-            
-            const lat = userLocation.coords.latitude;
-            const lng = userLocation.coords.longitude;
-            
-            // Initialize Leaflet map centered on user location
-            if (checkinMap) {
-                checkinMap.remove();
+            const mapContainer = document.getElementById('checkin-map');
+            if (!mapContainer) {
+                console.warn('Check-in map container not found');
+                return;
             }
             
-            checkinMap = L.map('checkin-map').setView([lat, lng], 16);
+            // Prevent multiple simultaneous initializations
+            if (mapInitializationState.checkinMapLoading) {
+                console.log('Check-in map already loading, skipping...');
+                return;
+            }
             
-            // Add OpenStreetMap tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(checkinMap);
+            // If map already exists and has content, don't recreate
+            if (checkinMap && mapInitializationState.checkinMap) {
+                console.log('Check-in map already initialized, refreshing data only...');
+                refreshCheckinMapData();
+                return;
+            }
             
-            // Add user location marker
-            const userMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                    className: 'user-location-marker',
-                    html: '<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10]
-                })
-            }).addTo(checkinMap);
+            mapInitializationState.checkinMapLoading = true;
             
-            userMarker.bindPopup('Your Current Location').openPopup();
+            // Show loading state
+            showMapLoadingState('checkin-map');
+            
+            // Initialize with fallback location if user location not available
+            let lat = 14.5995; // Default Manila coordinates
+            let lng = 120.9842;
+            let hasUserLocation = false;
+            
+            if (userLocation && userLocation.coords) {
+                lat = userLocation.coords.latitude;
+                lng = userLocation.coords.longitude;
+                hasUserLocation = true;
+            }
+            
+            try {
+                // Remove existing map if present
+                if (checkinMap) {
+                    checkinMap.remove();
+                    checkinMap = null;
+                }
+                
+                // Initialize Leaflet map with optimized settings
+                checkinMap = L.map('checkin-map', {
+                    zoomControl: true,
+                    attributionControl: false, // Remove to reduce clutter
+                    maxZoom: 18,
+                    minZoom: 10,
+                    preferCanvas: true, // Better performance for markers
+                    fadeAnimation: false, // Disable animations for faster loading
+                    zoomAnimation: false,
+                    markerZoomAnimation: false
+                }).setView([lat, lng], hasUserLocation ? 16 : 12);
+                
+                // Add optimized tile layer with loading options
+                const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 18,
+                    tileSize: 256,
+                    crossOrigin: true,
+                    // Performance optimizations
+                    keepBuffer: 2, // Keep fewer tiles in memory
+                    updateWhenZooming: false, // Don't update tiles while zooming
+                    updateWhenIdle: true, // Update only when map is idle
+                    bounds: [
+                        [lat - 0.05, lng - 0.05], // Limit tile loading area
+                        [lat + 0.05, lng + 0.05]
+                    ]
+                });
+                
+                // Add loading event handlers
+                tileLayer.on('loading', () => {
+                    console.log('Map tiles loading...');
+                });
+                
+                tileLayer.on('load', () => {
+                    console.log('Map tiles loaded successfully');
+                    hideMapLoadingState('checkin-map');
+                    mapInitializationState.checkinMap = true;
+                    mapInitializationState.checkinMapLoading = false;
+                });
+                
+                tileLayer.on('tileerror', (e) => {
+                    console.warn('Tile loading error:', e);
+                    // Continue anyway, don't block the map
+                });
+                
+                tileLayer.addTo(checkinMap);
+                
+                // Add markers and overlays
+                addCheckinMapMarkers(lat, lng, hasUserLocation);
+                
+                // Set timeout fallback in case tiles don't load
+                setTimeout(() => {
+                    if (mapInitializationState.checkinMapLoading) {
+                        console.log('Map loading timeout, hiding loading state');
+                        hideMapLoadingState('checkin-map');
+                        mapInitializationState.checkinMap = true;
+                        mapInitializationState.checkinMapLoading = false;
+                    }
+                }, 5000); // 5 second timeout
+                
+            } catch (error) {
+                console.error('Error initializing check-in map:', error);
+                showMapError('checkin-map', 'Failed to load map. Please try refreshing.');
+                mapInitializationState.checkinMapLoading = false;
+            }
+        }
+        
+        // Separate function to add markers (for better organization)
+        function addCheckinMapMarkers(lat, lng, hasUserLocation) {
+            if (!checkinMap) return;
+            
+            // Add user location marker only if we have real location
+            if (hasUserLocation && userLocation) {
+                const userMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'user-location-marker',
+                        html: '<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                }).addTo(checkinMap);
+                
+                userMarker.bindPopup('Your Current Location');
+            }
             
             // Add workplace location marker and geofence circle
             const workplace = workLocations.mainOffice;
-            if (workplace) {
+            if (workplace && workplace.lat && workplace.lng) {
                 // Add workplace marker
                 const workMarker = L.marker([workplace.lat, workplace.lng], {
                     icon: L.divIcon({
@@ -1890,62 +2997,242 @@
                     })
                 }).addTo(checkinMap);
                 
-                workMarker.bindPopup(`<b>${workplace.name}</b><br>${workplace.address}`);
+                workMarker.bindPopup(`<b>${workplace.name}</b><br>${workplace.address || 'Workplace Location'}`);
                 
                 // Add geofence circle
                 L.circle([workplace.lat, workplace.lng], {
                     color: '#10b981',
                     fillColor: '#10b981',
                     fillOpacity: 0.1,
-                    radius: workplace.radius,
+                    radius: workplace.radius || 100,
                     weight: 2,
                     dashArray: '5, 5'
                 }).addTo(checkinMap);
+                
+                // If we have both user and workplace, fit bounds to show both
+                if (hasUserLocation) {
+                    const group = L.featureGroup([
+                        L.marker([lat, lng]),
+                        L.marker([workplace.lat, workplace.lng])
+                    ]);
+                    checkinMap.fitBounds(group.getBounds().pad(0.1));
+                }
             }
         }
         
-        // Initialize Setup Map for workplace registration
-        function initializeSetupMap() {
-            if (!userLocation) return;
+        // Refresh map data without reinitializing the entire map
+        function refreshCheckinMapData() {
+            if (!checkinMap) return;
             
-            const lat = userLocation.coords.latitude;
-            const lng = userLocation.coords.longitude;
+            console.log('Refreshing check-in map data...');
             
-            // Initialize Leaflet map for setup
-            if (setupMap) {
-                setupMap.remove();
-            }
-            
-            setupMap = L.map('setup-map').setView([lat, lng], 15);
-            
-            // Add OpenStreetMap tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(setupMap);
-            
-            // Add user location marker
-            const userMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                    className: 'user-location-marker',
-                    html: '<div style="background: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8]
-                })
-            }).addTo(setupMap);
-            
-            userMarker.bindPopup('Your Current Location');
-            
-            // Handle map clicks for workplace selection
-            setupMap.on('click', function(e) {
-                setWorkplaceLocation(e.latlng.lat, e.latlng.lng);
+            // Remove existing markers but keep the map
+            checkinMap.eachLayer((layer) => {
+                if (layer instanceof L.Marker || layer instanceof L.Circle) {
+                    checkinMap.removeLayer(layer);
+                }
             });
             
-            // Load existing workplace if available
-            const workplace = workLocations.mainOffice;
-            if (workplace && workplace.lat && workplace.lng) {
-                setWorkplaceLocation(workplace.lat, workplace.lng, false);
-                populateWorkplaceForm(workplace);
+            // Re-add markers with current data
+            const lat = userLocation ? userLocation.coords.latitude : 14.5995;
+            const lng = userLocation ? userLocation.coords.longitude : 120.9842;
+            const hasUserLocation = userLocation && userLocation.coords;
+            
+            addCheckinMapMarkers(lat, lng, hasUserLocation);
+        }
+        
+        // Show loading state for map
+        function showMapLoadingState(mapId) {
+            const mapContainer = document.getElementById(mapId);
+            if (!mapContainer) return;
+            
+            const existingLoader = mapContainer.querySelector('.map-loader');
+            if (existingLoader) return; // Already showing
+            
+            const loader = document.createElement('div');
+            loader.className = 'map-loader absolute inset-0 bg-gray-100 flex items-center justify-center z-50';
+            loader.innerHTML = `
+                <div class="text-center">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
+                    <p class="text-gray-600 text-sm">Loading map...</p>
+                    <p class="text-gray-500 text-xs mt-1">This may take a few seconds</p>
+                </div>
+            `;
+            mapContainer.appendChild(loader);
+        }
+        
+        // Hide loading state for map
+        function hideMapLoadingState(mapId) {
+            const mapContainer = document.getElementById(mapId);
+            if (!mapContainer) return;
+            
+            const loader = mapContainer.querySelector('.map-loader');
+            if (loader) {
+                loader.remove();
+            }
+        }
+        
+        // Show map error state
+        function showMapError(mapId, message) {
+            const mapContainer = document.getElementById(mapId);
+            if (!mapContainer) return;
+            
+            hideMapLoadingState(mapId);
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'absolute inset-0 bg-red-50 flex items-center justify-center z-50';
+            errorDiv.innerHTML = `
+                <div class="text-center p-4">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                    <p class="text-red-700 font-medium">${message}</p>
+                    <button onclick="retryMapLoading('${mapId}')" class="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+            mapContainer.appendChild(errorDiv);
+        }
+        
+        // Retry map loading
+        function retryMapLoading(mapId) {
+            const mapContainer = document.getElementById(mapId);
+            if (!mapContainer) return;
+            
+            // Remove error state
+            const errorDiv = mapContainer.querySelector('.absolute.inset-0.bg-red-50');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+            
+            // Reset state and retry
+            if (mapId === 'checkin-map') {
+                mapInitializationState.checkinMap = false;
+                mapInitializationState.checkinMapLoading = false;
+                initializeCheckinMap();
+            } else if (mapId === 'setup-map') {
+                mapInitializationState.setupMap = false;
+                mapInitializationState.setupMapLoading = false;
+                initializeSetupMap();
+            }
+        }
+        
+        // Initialize Setup Map for workplace registration (optimized)
+        function initializeSetupMap() {
+            const mapContainer = document.getElementById('setup-map');
+            if (!mapContainer) {
+                console.warn('Setup map container not found');
+                return;
+            }
+            
+            // Prevent multiple simultaneous initializations
+            if (mapInitializationState.setupMapLoading) {
+                console.log('Setup map already loading, skipping...');
+                return;
+            }
+            
+            // If map already exists, don't recreate
+            if (setupMap && mapInitializationState.setupMap) {
+                console.log('Setup map already initialized');
+                return;
+            }
+            
+            mapInitializationState.setupMapLoading = true;
+            showMapLoadingState('setup-map');
+            
+            // Use fallback location if user location not available
+            let lat = 14.5995;
+            let lng = 120.9842;
+            let hasUserLocation = false;
+            
+            if (userLocation && userLocation.coords) {
+                lat = userLocation.coords.latitude;
+                lng = userLocation.coords.longitude;
+                hasUserLocation = true;
+            }
+            
+            try {
+                // Remove existing map if present
+                if (setupMap) {
+                    setupMap.remove();
+                    setupMap = null;
+                }
+                
+                // Initialize Leaflet map with optimized settings
+                setupMap = L.map('setup-map', {
+                    zoomControl: true,
+                    attributionControl: false,
+                    maxZoom: 18,
+                    minZoom: 10,
+                    preferCanvas: true,
+                    fadeAnimation: false,
+                    zoomAnimation: false,
+                    markerZoomAnimation: false
+                }).setView([lat, lng], 15);
+                
+                // Add optimized tile layer
+                const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 18,
+                    tileSize: 256,
+                    crossOrigin: true,
+                    keepBuffer: 2,
+                    updateWhenZooming: false,
+                    updateWhenIdle: true
+                });
+                
+                tileLayer.on('load', () => {
+                    console.log('Setup map tiles loaded');
+                    hideMapLoadingState('setup-map');
+                    mapInitializationState.setupMap = true;
+                    mapInitializationState.setupMapLoading = false;
+                });
+                
+                tileLayer.on('tileerror', (e) => {
+                    console.warn('Setup map tile error:', e);
+                });
+                
+                tileLayer.addTo(setupMap);
+                
+                // Add user location marker if available
+                if (hasUserLocation) {
+                    const userMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'user-location-marker',
+                            html: '<div style="background: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
+                        })
+                    }).addTo(setupMap);
+                    
+                    userMarker.bindPopup('Your Current Location');
+                }
+                
+                // Handle map clicks for workplace selection
+                setupMap.on('click', function(e) {
+                    setWorkplaceLocation(e.latlng.lat, e.latlng.lng);
+                });
+                
+                // Load existing workplace if available
+                const workplace = workLocations.mainOffice;
+                if (workplace && workplace.lat && workplace.lng) {
+                    setWorkplaceLocation(workplace.lat, workplace.lng, false);
+                    populateWorkplaceForm(workplace);
+                }
+                
+                // Set timeout fallback
+                setTimeout(() => {
+                    if (mapInitializationState.setupMapLoading) {
+                        console.log('Setup map loading timeout');
+                        hideMapLoadingState('setup-map');
+                        mapInitializationState.setupMap = true;
+                        mapInitializationState.setupMapLoading = false;
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error initializing setup map:', error);
+                showMapError('setup-map', 'Failed to load workplace setup map.');
+                mapInitializationState.setupMapLoading = false;
             }
         }
         
@@ -2129,6 +3416,323 @@
                     }
                 });
             }
+        }
+        
+        // Force refresh location status and UI
+        function refreshLocationStatus() {
+            console.log('Force refreshing location status...');
+            
+            if (userLocation && hasLocationPermission) {
+                updateLocationStatus('success', userLocation);
+                updateGeofenceStatus(userLocation);
+                if (checkinMap) {
+                    updateUserLocationOnMaps(userLocation);
+                }
+                fetchCurrentStatus();
+            } else {
+                // Try to get fresh location
+                initializeSmartLocation();
+            }
+        }
+        
+        // Workplace selection and management functions
+        function selectWorkplace(id, name, address, latitude, longitude, radius, isPrimary) {
+            // Update selected workplace details
+            const detailsContainer = document.getElementById('selected-workplace-details');
+            const mapContainer = document.getElementById('workplace-map-container');
+            
+            if (detailsContainer) {
+                detailsContainer.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-semibold text-gray-900">${name}</h4>
+                            ${isPrimary ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Primary Workplace</span>' : ''}
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-start">
+                                <i class="fas fa-map-marker-alt text-gray-500 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Address</p>
+                                    <p class="text-sm text-gray-600">${address || 'No address provided'}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-crosshairs text-gray-500 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Coordinates</p>
+                                    <p class="text-sm text-gray-600">${latitude.toFixed(6)}, ${longitude.toFixed(6)}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-circle-notch text-gray-500 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Check-in Radius</p>
+                                    <p class="text-sm text-gray-600">${radius} meters</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-4 border-t border-gray-200">
+                            <div class="flex space-x-3">
+                                ${!isPrimary ? `<button onclick="setPrimaryWorkplace(${id}, '${name}')" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <i class="fas fa-star mr-2"></i>Set as Primary
+                                </button>` : ''}
+                                <button onclick="switchToSection('gps-checkin')" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-map-pin mr-2"></i>Check In Here
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Show map container and initialize workplace map
+            if (mapContainer) {
+                mapContainer.classList.remove('hidden');
+                initializeWorkplaceMap(latitude, longitude, radius, name, address);
+            }
+            
+            // Highlight selected workplace
+            document.querySelectorAll('.workplace-item').forEach(item => {
+                item.classList.remove('ring-2', 'ring-indigo-500');
+            });
+            document.querySelector(`[data-workplace-id="${id}"]`).classList.add('ring-2', 'ring-indigo-500');
+        }
+        
+        function initializeWorkplaceMap(latitude, longitude, radius, name, address) {
+            const mapContainer = document.getElementById('workplace-map');
+            if (!mapContainer) return;
+            
+            // Remove existing map if any
+            if (window.workplaceViewMap) {
+                window.workplaceViewMap.remove();
+            }
+            
+            // Initialize new map
+            window.workplaceViewMap = L.map('workplace-map').setView([latitude, longitude], 16);
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(window.workplaceViewMap);
+            
+            // Add workplace marker
+            const workplaceMarker = L.marker([latitude, longitude], {
+                icon: L.divIcon({
+                    className: 'workplace-marker',
+                    html: '<div style="background: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(window.workplaceViewMap);
+            
+            workplaceMarker.bindPopup(`<b>${name}</b><br>${address || 'Workplace Location'}`);
+            
+            // Add geofence circle
+            L.circle([latitude, longitude], {
+                color: '#10b981',
+                fillColor: '#10b981',
+                fillOpacity: 0.1,
+                radius: radius,
+                weight: 2,
+                dashArray: '5, 5'
+            }).addTo(window.workplaceViewMap);
+            
+            // Add user location if available
+            if (userLocation) {
+                const userMarker = L.marker([userLocation.coords.latitude, userLocation.coords.longitude], {
+                    icon: L.divIcon({
+                        className: 'user-location-marker',
+                        html: '<div style="background: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    })
+                }).addTo(window.workplaceViewMap);
+                
+                userMarker.bindPopup('Your Current Location');
+                
+                // Calculate and show distance
+                const distance = calculateDistance(
+                    userLocation.coords.latitude, 
+                    userLocation.coords.longitude,
+                    latitude, 
+                    longitude
+                );
+                
+                // Add distance info to the details
+                const detailsContainer = document.getElementById('selected-workplace-details');
+                if (detailsContainer) {
+                    const distanceInfo = document.createElement('div');
+                    distanceInfo.innerHTML = `
+                        <div class="flex items-start">
+                            <i class="fas fa-route text-gray-500 mr-3 mt-1"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-700">Distance from You</p>
+                                <p class="text-sm ${distance <= radius ? 'text-green-600' : 'text-red-600'}">
+                                    ${Math.round(distance)}m away 
+                                    ${distance <= radius ? '(Within check-in range)' : '(Outside check-in range)'}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    detailsContainer.querySelector('.space-y-3').appendChild(distanceInfo);
+                }
+            }
+        }
+        
+        async function setPrimaryWorkplace(workplaceId, workplaceName) {
+            try {
+                const response = await fetch('/api/set-primary-workplace', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        user_id: getCurrentUserId(),
+                        workplace_id: workplaceId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showNotification(`${workplaceName} set as primary workplace`, 'success');
+                    
+                    // Refresh workplace list and other data
+                    fetchUserWorkplaces();
+                    fetchUserWorkplace();
+                    
+                    // Update check-in maps if they exist and are initialized
+                    if (checkinMap && mapInitializationState.checkinMap) {
+                        refreshCheckinMapData();
+                    }
+                } else {
+                    showNotification(result.error || 'Failed to set primary workplace', 'error');
+                }
+            } catch (error) {
+                console.error('Error setting primary workplace:', error);
+                showNotification('Failed to set primary workplace: ' + error.message, 'error');
+            }
+        }
+        
+        function updatePrimaryWorkplaceInfo(primaryWorkplace) {
+            const primaryInfoContainer = document.getElementById('primary-workplace-info');
+            if (!primaryInfoContainer) return;
+            
+            if (primaryWorkplace) {
+                primaryInfoContainer.innerHTML = `
+                    <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-star text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-bold text-gray-900">${primaryWorkplace.name}</h4>
+                                    <p class="text-sm text-gray-600">Your Primary Workplace</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full font-medium">Active</span>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="space-y-3">
+                                <div class="flex items-start">
+                                    <i class="fas fa-map-marker-alt text-green-600 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">Address</p>
+                                        <p class="text-sm text-gray-600">${primaryWorkplace.address || 'No address provided'}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-circle-notch text-green-600 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">Check-in Radius</p>
+                                        <p class="text-sm text-gray-600">${primaryWorkplace.radius} meters</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-start">
+                                    <i class="fas fa-crosshairs text-green-600 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">Coordinates</p>
+                                        <p class="text-sm text-gray-600">${primaryWorkplace.latitude.toFixed(6)}, ${primaryWorkplace.longitude.toFixed(6)}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-user-tag text-green-600 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">Role</p>
+                                        <p class="text-sm text-gray-600 capitalize">${primaryWorkplace.role || 'Employee'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex space-x-3">
+                            <button onclick="selectWorkplace(${primaryWorkplace.id}, '${primaryWorkplace.name}', '${primaryWorkplace.address}', ${primaryWorkplace.latitude}, ${primaryWorkplace.longitude}, ${primaryWorkplace.radius}, true)" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-eye mr-2"></i>View Details
+                            </button>
+                            <button onclick="switchToSection('gps-checkin')" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-map-pin mr-2"></i>Go to Check-in
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                primaryInfoContainer.innerHTML = `
+                    <div class="text-center p-6 text-gray-500">
+                        <i class="fas fa-star text-3xl mb-3 text-gray-300"></i>
+                        <h4 class="text-lg font-medium text-gray-800 mb-2">No Primary Workplace Set</h4>
+                        <p class="text-gray-600 mb-4">Select one of your assigned workplaces as primary to enable check-in functionality.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function refreshWorkplaces() {
+            // Show loading state
+            const workplacesList = document.getElementById('assigned-workplaces-list');
+            const noWorkplacesMessage = document.getElementById('no-workplaces-message');
+            
+            if (workplacesList) {
+                workplacesList.innerHTML = `
+                    <div class="flex items-center justify-center p-8 text-gray-500">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-3xl mb-3 text-gray-300"></i>
+                            <p>Refreshing your workplaces...</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (noWorkplacesMessage) {
+                noWorkplacesMessage.classList.add('hidden');
+            }
+            
+            // Clear selected workplace details
+            const detailsContainer = document.getElementById('selected-workplace-details');
+            if (detailsContainer) {
+                detailsContainer.innerHTML = `
+                    <div class="text-center p-8 text-gray-500">
+                        <i class="fas fa-building text-3xl mb-3 text-gray-300"></i>
+                        <p>Select a workplace to view details</p>
+                    </div>
+                `;
+            }
+            
+            // Hide map container
+            const mapContainer = document.getElementById('workplace-map-container');
+            if (mapContainer) {
+                mapContainer.classList.add('hidden');
+            }
+            
+            // Fetch updated data
+            fetchUserWorkplaces();
         }
     </script>
 
