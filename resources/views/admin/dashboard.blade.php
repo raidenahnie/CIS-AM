@@ -271,7 +271,7 @@
                     </div>
                 </a>
                 
-                <a href="#" 
+                <a href="#" onclick="addUser(); return false;"
                    class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500">
                     <div class="flex items-center">
                         <i class="fas fa-user-plus text-2xl text-blue-500 mr-4"></i>
@@ -282,7 +282,7 @@
                     </div>
                 </a>
                 
-                <a href="#" 
+                <a href="#" onclick="switchAdminSection('reports'); return false;"
                    class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500">
                     <div class="flex items-center">
                         <i class="fas fa-chart-line text-2xl text-purple-500 mr-4"></i>
@@ -602,10 +602,149 @@
                     <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
                     <p class="mt-2 text-sm text-gray-600">Manage system users and their permissions.</p>
                 </div>
-                <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                    <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">User Management</h3>
-                    <p class="text-gray-500">Advanced user management features coming soon.</p>
+
+                <!-- User Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-users text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Users</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $users->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-user text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Regular Users</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $users->where('role', 'user')->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-user-shield text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Administrators</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $users->where('role', 'admin')->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-user-check text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Active Today</p>
+                                <p class="text-2xl font-bold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions for Users -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <button onclick="addUser()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
+                        <div class="flex items-center">
+                            <i class="fas fa-user-plus text-2xl text-green-500 mr-4"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">Add New User</h3>
+                                <p class="text-sm text-gray-600">Create a new user account</p>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="switchAdminSection('dashboard'); setTimeout(() => document.getElementById('userSearch').focus(), 300);" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
+                        <div class="flex items-center">
+                            <i class="fas fa-search text-2xl text-blue-500 mr-4"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">Search Users</h3>
+                                <p class="text-sm text-gray-600">Find and manage users</p>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="showNotification('Bulk operations coming soon', 'info')" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left">
+                        <div class="flex items-center">
+                            <i class="fas fa-tasks text-2xl text-purple-500 mr-4"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">Bulk Operations</h3>
+                                <p class="text-sm text-gray-600">Mass user management</p>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Users List Summary -->
+                <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+                    <div class="px-6 py-6 border-b border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-900">Recent Users</h3>
+                        <p class="mt-1 text-sm text-gray-600">Latest user registrations</p>
+                    </div>
+                    <div class="p-6">
+                        @if($users->count() > 0)
+                            <div class="space-y-4">
+                                @foreach($users->take(5) as $user)
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                                            <span class="text-white font-semibold">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="text-sm font-semibold text-gray-900">{{ $user->name }}</p>
+                                            <p class="text-xs text-gray-600">{{ $user->email }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $user->role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                            {{ ucfirst($user->role) }}
+                                        </span>
+                                        <div class="flex space-x-1">
+                                            <button onclick="viewUser({{ $user->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="View user">
+                                                <i class="fas fa-eye text-sm"></i>
+                                            </button>
+                                            <button onclick="editUser({{ $user->id }})" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Edit user">
+                                                <i class="fas fa-edit text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                                
+                                <div class="text-center pt-4">
+                                    <button onclick="switchAdminSection('dashboard')" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                                        <i class="fas fa-list mr-2"></i>
+                                        View All Users
+                                    </button>
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-center">
+                                <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
+                                <p class="text-gray-500">No users found</p>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -615,10 +754,59 @@
                     <h1 class="text-3xl font-bold text-gray-900">Attendance Overview</h1>
                     <p class="mt-2 text-sm text-gray-600">Monitor and analyze attendance data.</p>
                 </div>
+                
+                <!-- Attendance Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-check text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Today's Check-ins</p>
+                                <p class="text-2xl font-bold text-gray-900">0</p>
+                                <p class="text-xs text-green-600 mt-1">Active employees</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-clock text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Average Hours</p>
+                                <p class="text-2xl font-bold text-gray-900">0</p>
+                                <p class="text-xs text-blue-600 mt-1">Per employee today</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Late Arrivals</p>
+                                <p class="text-2xl font-bold text-gray-900">0</p>
+                                <p class="text-xs text-red-600 mt-1">Today</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="bg-white rounded-xl shadow-lg p-8 text-center">
                     <i class="fas fa-clock text-gray-300 text-6xl mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-700 mb-2">Attendance Reports</h3>
-                    <p class="text-gray-500">Detailed attendance analytics coming soon.</p>
+                    <p class="text-gray-500">Detailed attendance analytics and logs will be available here.</p>
                 </div>
             </div>
 
@@ -628,10 +816,47 @@
                     <h1 class="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
                     <p class="mt-2 text-sm text-gray-600">Generate comprehensive reports and insights.</p>
                 </div>
+                
+                <!-- Report Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-calendar-week text-blue-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Weekly Report</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Weekly attendance summary for all employees</p>
+                        <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors" onclick="generateReport('weekly')">
+                            Generate Report
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-calendar-alt text-green-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Monthly Report</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Monthly attendance and performance metrics</p>
+                        <button class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors" onclick="generateReport('monthly')">
+                            Generate Report
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-user-clock text-purple-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Employee Report</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Individual employee attendance details</p>
+                        <button class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors" onclick="generateReport('employee')">
+                            Generate Report
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="bg-white rounded-xl shadow-lg p-8 text-center">
                     <i class="fas fa-chart-bar text-gray-300 text-6xl mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-700 mb-2">Analytics Dashboard</h3>
-                    <p class="text-gray-500">Advanced reporting features coming soon.</p>
+                    <p class="text-gray-500">Advanced reporting and data visualization tools will be available here.</p>
                 </div>
             </div>
 
@@ -641,10 +866,99 @@
                     <h1 class="text-3xl font-bold text-gray-900">System Settings</h1>
                     <p class="mt-2 text-sm text-gray-600">Configure system preferences and security settings.</p>
                 </div>
+                
+                <!-- Settings Categories -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-shield-alt text-indigo-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Security Settings</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Manage password policies and security requirements</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Require password change every 90 days</span>
+                                <input type="checkbox" class="toggle-switch" checked disabled>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Two-factor authentication</span>
+                                <input type="checkbox" class="toggle-switch" disabled>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Session timeout (30 mins)</span>
+                                <input type="checkbox" class="toggle-switch" checked disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-map-marker-alt text-green-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Location Settings</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Configure GPS accuracy and location services</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">High accuracy GPS</span>
+                                <input type="checkbox" class="toggle-switch" checked disabled>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Allow manual location entry</span>
+                                <input type="checkbox" class="toggle-switch" disabled>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm text-gray-700">Default radius (meters)</label>
+                                <input type="number" value="100" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded text-sm" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-bell text-yellow-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Notification Settings</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Configure system notifications and alerts</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Late arrival notifications</span>
+                                <input type="checkbox" class="toggle-switch" checked disabled>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Daily attendance reports</span>
+                                <input type="checkbox" class="toggle-switch" disabled>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">System maintenance alerts</span>
+                                <input type="checkbox" class="toggle-switch" checked disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-database text-blue-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Data Management</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Backup and data retention settings</p>
+                        <div class="space-y-3">
+                            <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm" onclick="showNotification('Backup feature coming soon', 'info')">
+                                Create Backup
+                            </button>
+                            <button class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm" onclick="showNotification('Export feature coming soon', 'info')">
+                                Export Data
+                            </button>
+                            <div class="text-xs text-gray-500">
+                                Last backup: Never
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="bg-white rounded-xl shadow-lg p-8 text-center">
                     <i class="fas fa-cog text-gray-300 text-6xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">System Configuration</h3>
-                    <p class="text-gray-500">Advanced settings panel coming soon.</p>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Advanced Configuration</h3>
+                    <p class="text-gray-500">Additional system configuration options will be available here.</p>
                 </div>
             </div>
 
@@ -732,6 +1046,45 @@
                     <div class="flex justify-end space-x-3">
                         <button type="button" onclick="closeAssignmentModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-xl bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4" id="userModalTitle">Add New User</h3>
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                        <input type="text" id="userName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="userEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                    </div>
+                    <div class="mb-4" id="userPasswordField">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="userPassword" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <div class="mb-4" id="userPasswordConfirmField">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                        <input type="password" id="userPasswordConfirm" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                        <select id="userRole" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" required>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeUserModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Save</button>
                     </div>
                 </form>
             </div>
@@ -853,20 +1206,88 @@
 
         // User action functions
         function addUser() {
-            alert('Add user functionality to be implemented');
+            openUserModal();
         }
 
         function editUser(userId) {
-            alert(`Edit user functionality for user ID: ${userId} to be implemented`);
+            fetch(`/admin/users/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    document.getElementById('userId').value = userId;
+                    document.getElementById('userName').value = user.name;
+                    document.getElementById('userEmail').value = user.email;
+                    document.getElementById('userRole').value = user.role;
+                    document.getElementById('userPasswordField').style.display = 'none';
+                    document.getElementById('userPasswordConfirmField').style.display = 'none';
+                    document.getElementById('userModalTitle').textContent = 'Edit User';
+                    document.getElementById('userModal').classList.remove('hidden');
+                } else {
+                    showNotification('Error loading user data', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while loading user data', 'error');
+            });
         }
 
         function viewUser(userId) {
-            alert(`View user details for user ID: ${userId} to be implemented`);
+            fetch(`/admin/users/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    let workplacesList = 'No workplaces assigned';
+                    if (user.workplaces && user.workplaces.length > 0) {
+                        workplacesList = user.workplaces.map(wp => 
+                            `${wp.name}${wp.pivot.is_primary ? ' (Primary)' : ''} - ${wp.pivot.role}`
+                        ).join(', ');
+                    }
+                    
+                    alert(`User Details:\n\nName: ${user.name}\nEmail: ${user.email}\nRole: ${user.role}\nJoined: ${new Date(user.created_at).toLocaleDateString()}\nWorkplaces: ${workplacesList}`);
+                } else {
+                    showNotification('Error loading user data', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while loading user data', 'error');
+            });
         }
 
         function deleteUser(userId) {
-            if (confirm('Are you sure you want to delete this user?')) {
-                alert(`Delete user functionality for user ID: ${userId} to be implemented`);
+            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                fetch(`/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification('Error: ' + (data.message || 'Unknown error'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while deleting user', 'error');
+                });
             }
         }
 
@@ -897,6 +1318,22 @@
         
         function closeAssignmentModal() {
             document.getElementById('assignmentModal').classList.add('hidden');
+        }
+
+        // User Modal Functions
+        function openUserModal() {
+            document.getElementById('userModal').classList.remove('hidden');
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('userModalTitle').textContent = 'Add New User';
+            document.getElementById('userPasswordField').style.display = 'block';
+            document.getElementById('userPasswordConfirmField').style.display = 'block';
+            document.getElementById('userPassword').required = true;
+            document.getElementById('userPasswordConfirm').required = true;
+        }
+        
+        function closeUserModal() {
+            document.getElementById('userModal').classList.add('hidden');
         }
         
         // Form Handlers
@@ -980,11 +1417,96 @@
                     });
                 });
             }
+
+            const userForm = document.getElementById('userForm');
+            if (userForm) {
+                userForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const userId = document.getElementById('userId').value;
+                    const password = document.getElementById('userPassword').value;
+                    const passwordConfirm = document.getElementById('userPasswordConfirm').value;
+                    
+                    // Validate passwords match for new users or when password is being changed
+                    if ((!userId || password) && password !== passwordConfirm) {
+                        showNotification('Passwords do not match', 'error');
+                        return;
+                    }
+                    
+                    const formData = {
+                        name: document.getElementById('userName').value,
+                        email: document.getElementById('userEmail').value,
+                        role: document.getElementById('userRole').value
+                    };
+                    
+                    if (password) {
+                        formData.password = password;
+                        formData.password_confirmation = passwordConfirm;
+                    }
+                    
+                    const url = userId ? `/admin/users/${userId}` : '/admin/users';
+                    const method = userId ? 'PUT' : 'POST';
+                    
+                    fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification(data.message, 'success');
+                            closeUserModal();
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            if (data.errors) {
+                                const errorMessages = Object.values(data.errors).flat().join('\n');
+                                showNotification('Validation errors:\n' + errorMessages, 'error');
+                            } else {
+                                showNotification('Error: ' + (data.message || 'Unknown error'), 'error');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('An error occurred', 'error');
+                    });
+                });
+            }
         });
         
         // Workplace Action Functions
         function editWorkplace(id) {
-            openWorkplaceModal(id);
+            fetch(`/admin/workplaces/${id}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const workplace = data.workplace;
+                    document.getElementById('workplaceId').value = id;
+                    document.getElementById('workplaceName').value = workplace.name;
+                    document.getElementById('workplaceAddress').value = workplace.address;
+                    document.getElementById('workplaceLatitude').value = workplace.latitude;
+                    document.getElementById('workplaceLongitude').value = workplace.longitude;
+                    document.getElementById('workplaceRadius').value = workplace.radius;
+                    document.getElementById('workplaceActive').checked = workplace.is_active;
+                    document.getElementById('modalTitle').textContent = 'Edit Workplace';
+                    document.getElementById('workplaceModal').classList.remove('hidden');
+                } else {
+                    showNotification('Error loading workplace data', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while loading workplace data', 'error');
+            });
         }
         
         function deleteWorkplace(id) {
@@ -1012,11 +1534,86 @@
         }
         
         function manageUsers(workplaceId) {
-            showNotification('Workplace user management feature coming soon', 'info');
+            fetch(`/admin/workplace-users/${workplaceId}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let usersList = 'Assigned Users:\n\n';
+                    if (data.workplaceUsers.length > 0) {
+                        data.workplaceUsers.forEach(user => {
+                            usersList += `• ${user.name} (${user.email}) - Role: ${user.pivot.role}${user.pivot.is_primary ? ' (Primary)' : ''}\n`;
+                        });
+                    } else {
+                        usersList += 'No users assigned to this workplace.\n';
+                    }
+                    
+                    usersList += '\nAvailable Users:\n';
+                    if (data.availableUsers.length > 0) {
+                        data.availableUsers.forEach(user => {
+                            usersList += `• ${user.name} (${user.email})\n`;
+                        });
+                    } else {
+                        usersList += 'All users are already assigned.\n';
+                    }
+                    
+                    alert(usersList);
+                } else {
+                    showNotification('Error loading workplace users', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while loading workplace users', 'error');
+            });
         }
         
         function manageUserWorkplaces(userId) {
-            showNotification('User workplace management feature coming soon', 'info');
+            fetch(`/admin/user-workplaces/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let workplacesList = 'User Workplaces:\n\n';
+                    if (data.userWorkplaces.length > 0) {
+                        data.userWorkplaces.forEach(workplace => {
+                            workplacesList += `• ${workplace.name} - Role: ${workplace.pivot.role}${workplace.pivot.is_primary ? ' (Primary)' : ''}\n`;
+                        });
+                    } else {
+                        workplacesList += 'No workplaces assigned to this user.\n';
+                    }
+                    
+                    workplacesList += '\nAvailable Workplaces:\n';
+                    if (data.availableWorkplaces.length > 0) {
+                        data.availableWorkplaces.forEach(workplace => {
+                            workplacesList += `• ${workplace.name} (${workplace.address})\n`;
+                        });
+                    } else {
+                        workplacesList += 'User is assigned to all workplaces.\n';
+                    }
+                    
+                    alert(workplacesList);
+                } else {
+                    showNotification('Error loading user workplaces', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while loading user workplaces', 'error');
+            });
+        }
+
+        // Report generation function
+        function generateReport(type) {
+            showNotification(`Generating ${type} report... This feature will be available soon.`, 'info');
         }
 
         // Notification system

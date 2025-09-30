@@ -301,32 +301,59 @@
                 </div>
                 
                 <!-- Location troubleshooting panel (hidden by default) -->
-                <div id="location-troubleshooting" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 class="text-sm font-medium text-blue-900 mb-2">Location Troubleshooting</h4>
-                    <div class="space-y-2 text-xs text-blue-800">
-                        <div class="flex items-center">
-                            <i class="fas fa-check-circle text-blue-600 mr-2"></i>
-                            <span>Make sure location services are enabled on your device</span>
+                <div id="location-troubleshooting" class="hidden mt-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-blue-900 flex items-center">
+                            <i class="fas fa-tools mr-2"></i>Location Diagnostics
+                        </h4>
+                        <button onclick="runLocationDiagnostics()" class="text-blue-600 hover:text-blue-800 text-xs">
+                            <i class="fas fa-sync-alt mr-1"></i>Run Diagnostics
+                        </button>
+                    </div>
+                    
+                    <!-- Diagnostic Results -->
+                    <div id="diagnostic-results" class="space-y-2 text-xs mb-3">
+                        <div class="flex items-center" id="geolocation-support">
+                            <i class="fas fa-circle text-gray-400 mr-2"></i>
+                            <span class="text-gray-600">Checking geolocation support...</span>
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-wifi text-blue-600 mr-2"></i>
-                            <span>Check that you have a good internet connection</span>
+                        <div class="flex items-center" id="permission-status">
+                            <i class="fas fa-circle text-gray-400 mr-2"></i>
+                            <span class="text-gray-600">Checking location permissions...</span>
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-shield-alt text-blue-600 mr-2"></i>
-                            <span>Allow location access when prompted by your browser</span>
+                        <div class="flex items-center" id="connection-status">
+                            <i class="fas fa-circle text-gray-400 mr-2"></i>
+                            <span class="text-gray-600">Checking internet connection...</span>
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-mobile-alt text-blue-600 mr-2"></i>
-                            <span>For best accuracy, use on mobile device with GPS</span>
+                        <div class="flex items-center" id="https-status">
+                            <i class="fas fa-circle text-gray-400 mr-2"></i>
+                            <span class="text-gray-600">Checking secure connection...</span>
                         </div>
                     </div>
-                    <div class="flex space-x-2 mt-3">
+                    
+                    <!-- Error Details (if any) -->
+                    <div id="error-details" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs">
+                        <div class="font-medium text-red-800 mb-1">Error Details:</div>
+                        <div id="error-message" class="text-red-700"></div>
+                    </div>
+                    
+                    <!-- Recommended Actions -->
+                    <div id="recommended-actions" class="space-y-1 text-xs text-blue-800 mb-3">
+                        <!-- Will be populated by diagnostics -->
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="testBasicLocation()" class="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 transition-colors">
+                            <i class="fas fa-map-marker-alt mr-1"></i>Basic Test
+                        </button>
                         <button onclick="retryLocationAccess()" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-redo mr-1"></i>Try Again
+                            <i class="fas fa-redo mr-1"></i>Retry Location
                         </button>
                         <button onclick="clearLocationCache()" class="px-3 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700 transition-colors">
                             <i class="fas fa-trash mr-1"></i>Clear Cache
+                        </button>
+                        <button onclick="testHighAccuracy()" class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors">
+                            <i class="fas fa-crosshairs mr-1"></i>High Accuracy Test
                         </button>
                         <button onclick="toggleLocationTroubleshooting()" class="px-3 py-1 border border-blue-300 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors">
                             Close
@@ -2045,14 +2072,42 @@
         }
         
         function clearLocationCache() {
-            localStorage.removeItem(STORAGE_KEYS.cachedLocation);
-            localStorage.removeItem(STORAGE_KEYS.locationTimestamp);
-            console.log('Location cache cleared');
-            showNotification('Location cache cleared. Requesting fresh location...', 'info');
-            
-            // Restart location tracking
-            userLocation = null;
-            retryLocationAccess();
+            try {
+                // Check if localStorage is available
+                if (typeof(Storage) === "undefined") {
+                    showSimpleNotification('Local storage not supported', 'error');
+                    return;
+                }
+                
+                // Clear cached location data
+                localStorage.removeItem(STORAGE_KEYS.cachedLocation);
+                localStorage.removeItem(STORAGE_KEYS.locationTimestamp);
+                console.log('Location cache cleared');
+                
+                // Reset location state
+                userLocation = null;
+                hasLocationPermission = false;
+                
+                // Clear any existing watch
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+                
+                showSimpleNotification('Location cache cleared. Getting fresh location...', 'success');
+                
+                // Show loading state immediately
+                updateLocationStatus('loading', null, 'Getting fresh location...');
+                
+                // Start fresh location request after a short delay
+                setTimeout(() => {
+                    retryLocationAccess();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Failed to clear cache:', error);
+                showSimpleNotification('Failed to clear location cache: ' + error.message, 'error');
+            }
         }
         
         // Location troubleshooting functions
@@ -2060,6 +2115,8 @@
             const panel = document.getElementById('location-troubleshooting');
             if (panel) {
                 panel.classList.remove('hidden');
+                // Run diagnostics when panel is opened
+                setTimeout(runLocationDiagnostics, 100);
             }
         }
         
@@ -2070,11 +2127,148 @@
             }
         }
         
+        function runLocationDiagnostics() {
+            console.log('Running location diagnostics...');
+            
+            // Reset all diagnostic indicators
+            resetDiagnosticIndicators();
+            
+            // Check geolocation support
+            checkGeolocationSupport();
+            
+            // Check HTTPS
+            checkHTTPS();
+            
+            // Check connection
+            checkConnection();
+            
+            // Check permissions
+            checkLocationPermissions();
+        }
+        
+        function resetDiagnosticIndicators() {
+            const indicators = ['geolocation-support', 'permission-status', 'connection-status', 'https-status'];
+            indicators.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const icon = element.querySelector('i');
+                    const text = element.querySelector('span');
+                    if (icon) icon.className = 'fas fa-spinner fa-spin text-blue-500 mr-2';
+                    if (text) text.textContent = 'Checking...';
+                }
+            });
+            
+            // Hide error details and recommendations
+            document.getElementById('error-details')?.classList.add('hidden');
+            document.getElementById('recommended-actions').innerHTML = '';
+        }
+        
+        function updateDiagnosticResult(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const icon = element.querySelector('i');
+            const text = element.querySelector('span');
+            
+            if (status === 'success') {
+                if (icon) icon.className = 'fas fa-check-circle text-green-500 mr-2';
+                if (text) text.textContent = message;
+                text.className = 'text-green-700';
+            } else if (status === 'error') {
+                if (icon) icon.className = 'fas fa-times-circle text-red-500 mr-2';
+                if (text) text.textContent = message;
+                text.className = 'text-red-700';
+            } else if (status === 'warning') {
+                if (icon) icon.className = 'fas fa-exclamation-triangle text-yellow-500 mr-2';
+                if (text) text.textContent = message;
+                text.className = 'text-yellow-700';
+            }
+        }
+        
+        function checkGeolocationSupport() {
+            setTimeout(() => {
+                if (navigator.geolocation) {
+                    updateDiagnosticResult('geolocation-support', 'success', 'Geolocation API is supported');
+                } else {
+                    updateDiagnosticResult('geolocation-support', 'error', 'Geolocation API is not supported');
+                    addRecommendation('Use a modern browser that supports geolocation');
+                }
+            }, 200);
+        }
+        
+        function checkHTTPS() {
+            setTimeout(() => {
+                if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                    updateDiagnosticResult('https-status', 'success', 'Secure connection (HTTPS)');
+                } else {
+                    updateDiagnosticResult('https-status', 'warning', 'Insecure connection - location may be limited');
+                    addRecommendation('Use HTTPS for better location accuracy');
+                }
+            }, 400);
+        }
+        
+        function checkConnection() {
+            setTimeout(() => {
+                if (navigator.onLine) {
+                    updateDiagnosticResult('connection-status', 'success', 'Internet connection is active');
+                } else {
+                    updateDiagnosticResult('connection-status', 'error', 'No internet connection detected');
+                    addRecommendation('Check your internet connection');
+                }
+            }, 600);
+        }
+        
+        function checkLocationPermissions() {
+            setTimeout(() => {
+                if (navigator.permissions) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(permission => {
+                        if (permission.state === 'granted') {
+                            updateDiagnosticResult('permission-status', 'success', 'Location permission granted');
+                        } else if (permission.state === 'denied') {
+                            updateDiagnosticResult('permission-status', 'error', 'Location permission denied');
+                            addRecommendation('Enable location permission in your browser settings');
+                            showErrorDetails('Location permission was denied. Please enable it in your browser settings.');
+                        } else {
+                            updateDiagnosticResult('permission-status', 'warning', 'Location permission not yet requested');
+                            addRecommendation('Allow location access when prompted');
+                        }
+                    }).catch(() => {
+                        updateDiagnosticResult('permission-status', 'warning', 'Cannot check permission status');
+                    });
+                } else {
+                    updateDiagnosticResult('permission-status', 'warning', 'Permission API not supported');
+                }
+            }, 800);
+        }
+        
+        function addRecommendation(message) {
+            const container = document.getElementById('recommended-actions');
+            if (container) {
+                const item = document.createElement('div');
+                item.className = 'flex items-center';
+                item.innerHTML = `<i class="fas fa-arrow-right text-blue-600 mr-2"></i><span>${message}</span>`;
+                container.appendChild(item);
+            }
+        }
+        
+        function showErrorDetails(message) {
+            const errorDetails = document.getElementById('error-details');
+            const errorMessage = document.getElementById('error-message');
+            if (errorDetails && errorMessage) {
+                errorMessage.textContent = message;
+                errorDetails.classList.remove('hidden');
+            }
+        }
+        
         function retryLocationAccess() {
             console.log('Retrying location access...');
             
-            // Hide troubleshooting panel
-            toggleLocationTroubleshooting();
+            // First check if geolocation is supported
+            if (!navigator.geolocation) {
+                showSimpleNotification('Geolocation is not supported by this browser', 'error');
+                updateLocationStatus('error', null, 'Geolocation not supported');
+                return;
+            }
             
             // Clear any existing watch
             if (watchId) {
@@ -2089,13 +2283,195 @@
             // Show loading state
             updateLocationStatus('loading', null, 'Retrying location access...');
             
-            // Start fresh location tracking
-            startLocationTracking().then(() => {
-                showNotification('Location access restored!', 'success');
-            }).catch(error => {
-                console.error('Retry failed:', error);
-                showNotification('Location retry failed. Please check your settings.', 'error');
-            });
+            // Try multiple approaches for getting location
+            const options = {
+                enableHighAccuracy: false, // Start with lower accuracy for speed
+                timeout: 10000, // 10 seconds timeout
+                maximumAge: 0 // Don't accept cached positions
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('Location retry successful:', position);
+                    userLocation = position;
+                    hasLocationPermission = true;
+                    
+                    // Update all UI elements
+                    updateLocationStatus('success', position);
+                    updateCurrentLocationDisplay(position);
+                    updateGeofenceStatus(position);
+                    
+                    // Cache the successful location
+                    cacheLocation(position);
+                    
+                    // Start watching for location changes
+                    startOptimizedLocationWatch();
+                    
+                    showSimpleNotification('Location access restored!', 'success');
+                    
+                    // Close troubleshooting panel after a short delay
+                    setTimeout(() => {
+                        toggleLocationTroubleshooting();
+                    }, 1500);
+                },
+                function(error) {
+                    console.error('Location retry failed:', error);
+                    hasLocationPermission = false;
+                    
+                    let errorMsg = 'Location retry failed: ';
+                    let recommendation = '';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg += 'Permission denied';
+                            recommendation = 'Please enable location access in your browser settings';
+                            showErrorDetails('Location permission was denied. Please check your browser settings and allow location access.');
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg += 'Position unavailable';
+                            recommendation = 'Make sure location services are enabled on your device';
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg += 'Request timed out';
+                            recommendation = 'Try again or move to an area with better signal';
+                            break;
+                        default:
+                            errorMsg += error.message || 'Unknown error';
+                            recommendation = 'Check your connection and device settings';
+                    }
+                    
+                    updateLocationStatus('error', null, errorMsg);
+                    showSimpleNotification(errorMsg + '. ' + recommendation, 'error');
+                    
+                    // Add the recommendation to the panel
+                    addRecommendation(recommendation);
+                },
+                options
+            );
+        }
+        
+        function testHighAccuracy() {
+            console.log('Testing high accuracy location...');
+            updateLocationStatus('loading', null, 'Testing high accuracy location...');
+            
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    userLocation = position;
+                    updateLocationStatus('success', position);
+                    updateGeofenceStatus(position);
+                    showSimpleNotification(`High accuracy test successful! Accuracy: ±${Math.round(position.coords.accuracy)}m`, 'success');
+                },
+                error => {
+                    let message = 'High accuracy test failed: ';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            message += 'Permission denied';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            message += 'Position unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            message += 'Request timed out';
+                            break;
+                        default:
+                            message += error.message;
+                    }
+                    updateLocationStatus('error', null, message);
+                    showSimpleNotification(message, 'error');
+                },
+                options
+            );
+        }
+        
+        function showSimpleNotification(message, type) {
+            // Simple notification without complex DOM creation
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-3 rounded-lg text-white text-sm z-50 transition-all duration-300 max-w-sm`;
+            
+            switch(type) {
+                case 'success':
+                    notification.className += ' bg-green-500';
+                    break;
+                case 'error':
+                    notification.className += ' bg-red-500';
+                    break;
+                case 'warning':
+                    notification.className += ' bg-yellow-500';
+                    break;
+                default:
+                    notification.className += ' bg-blue-500';
+            }
+            
+            notification.innerHTML = `
+                <div class="flex items-start">
+                    <span class="flex-1">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200 text-xs">✕</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
+        
+        // Simple location test function for debugging
+        function testBasicLocation() {
+            console.log('Testing basic geolocation...');
+            updateLocationStatus('loading', null, 'Testing basic location access...');
+            
+            if (!navigator.geolocation) {
+                updateLocationStatus('error', null, 'Geolocation not supported');
+                showSimpleNotification('Geolocation is not supported by this browser', 'error');
+                return;
+            }
+            
+            const options = {
+                enableHighAccuracy: false,
+                timeout: 15000,
+                maximumAge: 60000
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log('Basic location test successful:', position);
+                    userLocation = position;
+                    hasLocationPermission = true;
+                    
+                    updateLocationStatus('success', position);
+                    updateCurrentLocationDisplay(position);
+                    updateGeofenceStatus(position);
+                    
+                    showSimpleNotification(`Location obtained! Accuracy: ±${Math.round(position.coords.accuracy)}m`, 'success');
+                },
+                function(error) {
+                    console.error('Basic location test failed:', error);
+                    let msg = 'Location test failed: ';
+                    
+                    switch(error.code) {
+                        case 1: msg += 'Permission denied'; break;
+                        case 2: msg += 'Position unavailable'; break;
+                        case 3: msg += 'Timeout'; break;
+                        default: msg += error.message;
+                    }
+                    
+                    updateLocationStatus('error', null, msg);
+                    showSimpleNotification(msg, 'error');
+                },
+                options
+            );
         }
         
         // Enhanced browser-specific location tips

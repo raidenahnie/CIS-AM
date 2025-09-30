@@ -43,11 +43,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
     
     // Workplace CRUD
+    Route::get('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'getWorkplace']);
     Route::post('/workplaces', [App\Http\Controllers\AdminController::class, 'storeWorkplace']);
     Route::put('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'updateWorkplace']);
     Route::delete('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'deleteWorkplace']);
     
-    // User assignments
+    // User CRUD
+    Route::get('/users/{user}', [App\Http\Controllers\AdminController::class, 'getUser']);
+    Route::post('/users', [App\Http\Controllers\AdminController::class, 'storeUser']);
+    Route::put('/users/{user}', [App\Http\Controllers\AdminController::class, 'updateUser']);
+    Route::delete('/users/{user}', [App\Http\Controllers\AdminController::class, 'deleteUser']);
+    
+    // User-Workplace assignments
     Route::post('/assign-workplace', [App\Http\Controllers\AdminController::class, 'assignWorkplace']);
     Route::delete('/remove-assignment', [App\Http\Controllers\AdminController::class, 'removeWorkplaceAssignment']);
+    Route::get('/user-workplaces/{user}', [App\Http\Controllers\AdminController::class, 'getUserWorkplaces']);
+    Route::get('/workplace-users/{workplace}', [App\Http\Controllers\AdminController::class, 'getWorkplaceUsers']);
+    Route::post('/set-primary-workplace', [App\Http\Controllers\AdminController::class, 'setPrimaryWorkplace']);
+    Route::put('/update-user-role', [App\Http\Controllers\AdminController::class, 'updateUserWorkplaceRole']);
 });
