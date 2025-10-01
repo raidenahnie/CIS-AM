@@ -147,12 +147,12 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-white/80 text-sm mb-1">Latitude</label>
-                        <input type="number" id="test-lat" step="any" placeholder="14.5995" 
+                        <input type="number" id="test-lat" step="any" placeholder="14.2785" 
                                class="w-full px-3 py-2 bg-white/20 text-white rounded text-sm border border-white/30 placeholder-white/50">
                     </div>
                     <div>
                         <label class="block text-white/80 text-sm mb-1">Longitude</label>
-                        <input type="number" id="test-lng" step="any" placeholder="120.9842" 
+                        <input type="number" id="test-lng" step="any" placeholder="120.8677" 
                                class="w-full px-3 py-2 bg-white/20 text-white rounded text-sm border border-white/30 placeholder-white/50">
                     </div>
                 </div>

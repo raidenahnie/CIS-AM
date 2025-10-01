@@ -3,8 +3,8 @@ class DashboardManager {
     constructor() {
         this.currentLocation = null;
         this.allowedAreas = [
-            { name: 'Main Office', lat: 14.5995, lng: 120.9842, radius: 100 }, // Manila coordinates
-            { name: 'Remote Work Zone', lat: 14.6091, lng: 121.0223, radius: 200 }
+            { name: 'DepEd Cavite Main Office', lat: 14.2785, lng: 120.8677, radius: 100 }, // DepEd Cavite coordinates
+            { name: 'Tanza National Comprehensive HS', lat: 14.3971, lng: 120.8530, radius: 200 }
         ];
         this.map = null;
         this.realtimeMap = null;

@@ -87,7 +87,6 @@
                     class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700">
                 Login
             </button>
-        </form>
 
         <!-- Contact Admin for Access -->
         <p class="mt-6 text-center text-sm text-gray-600">

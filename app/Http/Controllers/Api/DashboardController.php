@@ -38,7 +38,15 @@ class DashboardController extends Controller
             return $attendance->check_in_time ? $attendance->check_in_time->hour * 60 + $attendance->check_in_time->minute : null;
         });
         
-        $avgCheckIn = $avgCheckInMinutes ? sprintf('%02d:%02d AM', floor($avgCheckInMinutes / 60), $avgCheckInMinutes % 60) : '8:00 AM';
+        if ($avgCheckInMinutes) {
+            $hours = floor($avgCheckInMinutes / 60);
+            $minutes = $avgCheckInMinutes % 60;
+            $ampm = $hours >= 12 ? 'PM' : 'AM';
+            $displayHour = $hours > 12 ? $hours - 12 : ($hours == 0 ? 12 : $hours);
+            $avgCheckIn = sprintf('%d:%02d %s', $displayHour, $minutes, $ampm);
+        } else {
+            $avgCheckIn = '8:00 AM';
+        }
 
         // Get today's attendance
         $todayAttendance = Attendance::where('user_id', $userId)
@@ -157,8 +165,10 @@ class DashboardController extends Controller
         $isValidLocation = $distance <= $workplace->radius;
         
         if (!$isValidLocation) {
+            // Convert distance to km for better readability
+            $distanceKm = round($distance / 1000, 1);
             return response()->json([
-                'error' => "You are {$distance}m away from your workplace. You must be within {$workplace->radius}m to check in.",
+                'error' => "You are {$distanceKm}km away from your workplace. You must be within {$workplace->radius}m to check in/out.",
                 'distance' => round($distance),
                 'required_radius' => $workplace->radius
             ], 400);
@@ -244,58 +254,92 @@ class DashboardController extends Controller
     private function determineNextAction($todaysLogs)
     {
         $logCount = $todaysLogs->count();
+        $currentTime = now();
         
-        // No logs yet - first check-in of the day (AM shift start)
+        // No logs yet - first check-in of the day
         if ($logCount === 0) {
+            // Determine shift type based on check-in time
+            // AM shift: before 12:00 PM
+            // PM shift: 12:00 PM and after
+            $shiftType = $currentTime->hour < 12 ? 'am' : 'pm';
+            
             return [
                 'action' => 'check_in',
-                'shift_type' => 'am',
+                'shift_type' => $shiftType,
                 'sequence' => 1,
                 'error' => false
             ];
         }
 
         $lastLog = $todaysLogs->last();
+        $firstLog = $todaysLogs->first();
         
-        // Determine next action based on sequence
-        switch ($logCount) {
-            case 1: // After first check-in
-                if ($lastLog->action === 'check_in') {
+        // Get the shift type from the first check-in
+        $shiftType = $firstLog->shift_type;
+        
+        // For AM shift: check_in -> break_start -> break_end -> check_out (4 actions total)
+        // For PM shift: check_in -> check_out (2 actions total, no lunch break)
+        
+        if ($shiftType === 'am') {
+            // AM shift workflow with lunch break
+            switch ($logCount) {
+                case 1: // After first check-in
+                    if ($lastLog->action === 'check_in') {
+                        return [
+                            'action' => 'break_start',
+                            'shift_type' => 'am',
+                            'sequence' => 2,
+                            'error' => false
+                        ];
+                    }
+                    break;
+                    
+                case 2: // After lunch break start
+                    if ($lastLog->action === 'break_start') {
+                        return [
+                            'action' => 'break_end',
+                            'shift_type' => 'pm',
+                            'sequence' => 3,
+                            'error' => false
+                        ];
+                    }
+                    break;
+                    
+                case 3: // After lunch break end
+                    if ($lastLog->action === 'break_end') {
+                        return [
+                            'action' => 'check_out',
+                            'shift_type' => 'pm',
+                            'sequence' => 4,
+                            'error' => false
+                        ];
+                    }
+                    break;
+                    
+                case 4: // Already completed full AM shift cycle
                     return [
-                        'action' => 'break_start',
-                        'shift_type' => 'am',
-                        'sequence' => 2,
-                        'error' => false
+                        'error' => 'You have already completed your full work day (checked in, lunch break, and checked out).'
                     ];
-                }
-                break;
-                
-            case 2: // After lunch break start
-                if ($lastLog->action === 'break_start') {
+            }
+        } else {
+            // PM shift workflow without lunch break
+            switch ($logCount) {
+                case 1: // After first check-in (PM shift)
+                    if ($lastLog->action === 'check_in') {
+                        return [
+                            'action' => 'check_out',
+                            'shift_type' => 'pm',
+                            'sequence' => 2,
+                            'error' => false
+                        ];
+                    }
+                    break;
+                    
+                case 2: // Already completed PM shift cycle
                     return [
-                        'action' => 'break_end',
-                        'shift_type' => 'pm',
-                        'sequence' => 3,
-                        'error' => false
+                        'error' => 'You have already completed your PM shift (checked in and checked out).'
                     ];
-                }
-                break;
-                
-            case 3: // After lunch break end
-                if ($lastLog->action === 'break_end') {
-                    return [
-                        'action' => 'check_out',
-                        'shift_type' => 'pm',
-                        'sequence' => 4,
-                        'error' => false
-                    ];
-                }
-                break;
-                
-            default: // Already completed full cycle
-                return [
-                    'error' => 'You have already completed your full work day (checked in, lunch break, and checked out).'
-                ];
+            }
         }
         
         return [
@@ -307,20 +351,20 @@ class DashboardController extends Controller
     {
         $messages = [
             'check_in' => [
-                'am' => 'Checked in for morning shift',
-                'pm' => 'Checked in for afternoon shift'
+                'am' => 'Checked in for morning shift (AM)',
+                'pm' => 'Checked in for afternoon shift (PM)'
             ],
             'break_start' => [
                 'am' => 'Started lunch break',
-                'pm' => 'Started lunch break'
+                'pm' => 'Started lunch break' // This shouldn't happen for PM shifts
             ],
             'break_end' => [
-                'am' => 'Lunch break ended, afternoon shift started',
-                'pm' => 'Lunch break ended, afternoon shift started'
+                'am' => 'Lunch break ended, resuming afternoon work',
+                'pm' => 'Lunch break ended, resuming afternoon work'
             ],
             'check_out' => [
                 'am' => 'Checked out from morning shift',
-                'pm' => 'Checked out - work day completed'
+                'pm' => 'Checked out - PM shift completed'
             ]
         ];
         
@@ -331,12 +375,30 @@ class DashboardController extends Controller
     {
         $logCount = $logs->count() + 1; // Including the action we just took
         
-        switch ($logCount) {
-            case 1: return 'Next: Start lunch break';
-            case 2: return 'Next: End lunch break';
-            case 3: return 'Next: Check out';
-            case 4: return 'Work day completed';
-            default: return 'No further actions';
+        // If there's an error, work is completed
+        if ($actionResult['error']) {
+            return 'Work day completed';
+        }
+        
+        // Get shift type from action result or first log
+        $shiftType = $actionResult['shift_type'] ?? ($logs->count() > 0 ? $logs->first()->shift_type : 'am');
+        
+        if ($shiftType === 'am') {
+            // AM shift workflow
+            switch ($logCount) {
+                case 1: return 'Next: Start lunch break';
+                case 2: return 'Next: End lunch break';
+                case 3: return 'Next: Check out';
+                case 4: return 'Work day completed';
+                default: return 'No further actions';
+            }
+        } else {
+            // PM shift workflow (no lunch break)
+            switch ($logCount) {
+                case 1: return 'Next: Check out';
+                case 2: return 'PM shift completed';
+                default: return 'No further actions';
+            }
         }
     }
 
@@ -346,14 +408,21 @@ class DashboardController extends Controller
             return 'Work Day Complete';
         }
 
+        $action = $actionResult['action'];
+        $shiftType = $actionResult['shift_type'];
+
+        // For check_in, specify the shift type
+        if ($action === 'check_in') {
+            return $shiftType === 'am' ? 'Check In (AM Shift)' : 'Check In (PM Shift)';
+        }
+
         $buttonTexts = [
-            'check_in' => 'Check In (Start Work)',
             'break_start' => 'Start Lunch Break',
             'break_end' => 'End Lunch Break',
-            'check_out' => 'Check Out (End Work)'
+            'check_out' => $shiftType === 'pm' ? 'Check Out (End PM Shift)' : 'Check Out (End Work)'
         ];
 
-        return $buttonTexts[$actionResult['action']] ?? 'Unknown Action';
+        return $buttonTexts[$action] ?? 'Unknown Action';
     }
 
     private function getButtonColor($actionResult)
@@ -374,14 +443,20 @@ class DashboardController extends Controller
 
     private function getStatusMessage($actionResult)
     {
+        $action = $actionResult['action'];
+        $shiftType = $actionResult['shift_type'];
+
+        if ($action === 'check_in') {
+            return $shiftType === 'am' ? 'Ready to start your morning shift' : 'Ready to start your afternoon shift';
+        }
+
         $statusMessages = [
-            'check_in' => 'Ready to start your work day',
             'break_start' => 'Time for lunch break',
-            'break_end' => 'Ready to resume afternoon shift',
-            'check_out' => 'Ready to end your work day'
+            'break_end' => 'Ready to resume afternoon work',
+            'check_out' => $shiftType === 'pm' ? 'Ready to end your PM shift' : 'Ready to end your work day'
         ];
 
-        return $statusMessages[$actionResult['action']] ?? 'Ready for action';
+        return $statusMessages[$action] ?? 'Ready for action';
     }
 
     public function saveWorkplace(Request $request)
@@ -458,8 +533,20 @@ class DashboardController extends Controller
         // Determine what action should be taken next
         $actionResult = $this->determineNextAction($todaysLogs);
         
+        // Determine if work is completed based on shift type
+        $isCompleted = false;
+        if ($todaysLogs->count() > 0) {
+            $firstLog = $todaysLogs->first();
+            $shiftType = $firstLog->shift_type;
+            
+            // AM shift is complete after 4 actions, PM shift after 2 actions
+            $requiredActions = ($shiftType === 'am') ? 4 : 2;
+            $isCompleted = $todaysLogs->count() >= $requiredActions;
+        }
+        
         return response()->json([
             'current_logs_count' => $todaysLogs->count(),
+            'shift_type' => $todaysLogs->count() > 0 ? $todaysLogs->first()->shift_type : null,
             'logs' => $todaysLogs->map(function($log) {
                 return [
                     'action' => $log->action,
@@ -474,7 +561,7 @@ class DashboardController extends Controller
             'button_color' => $this->getButtonColor($actionResult),
             'can_perform_action' => !$actionResult['error'],
             'status_message' => $actionResult['error'] ?: $this->getStatusMessage($actionResult),
-            'completed_today' => $todaysLogs->count() >= 4
+            'completed_today' => $isCompleted
         ]);
     }
 
@@ -536,16 +623,23 @@ class DashboardController extends Controller
             return response()->json(['error' => 'User is not assigned to this workplace'], 400);
         }
 
-        // Remove primary status from all other workplaces for this user
-        DB::table('user_workplaces')
-            ->where('user_id', $userId)
-            ->update(['is_primary' => false]);
+        // Use transaction to safely update primary workplace
+        // The unique constraint prevents duplicate (user_id, is_primary) combinations
+        // So we must remove the old primary BEFORE setting the new one
+        DB::transaction(function () use ($userId, $workplaceId) {
+            // Step 1: Remove primary status from all OTHER workplaces for this user FIRST
+            DB::table('user_workplaces')
+                ->where('user_id', $userId)
+                ->where('workplace_id', '!=', $workplaceId)
+                ->where('is_primary', true)  // Only update those that are currently primary
+                ->update(['is_primary' => false, 'updated_at' => now()]);
 
-        // Set the selected workplace as primary
-        DB::table('user_workplaces')
-            ->where('user_id', $userId)
-            ->where('workplace_id', $workplaceId)
-            ->update(['is_primary' => true, 'updated_at' => now()]);
+            // Step 2: Now safely set the selected workplace as primary
+            DB::table('user_workplaces')
+                ->where('user_id', $userId)
+                ->where('workplace_id', $workplaceId)
+                ->update(['is_primary' => true, 'updated_at' => now()]);
+        });
 
         return response()->json([
             'message' => 'Primary workplace updated successfully',

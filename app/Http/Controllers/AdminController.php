@@ -477,30 +477,28 @@ class AdminController extends Controller
     public function getEmployeeLocations()
     {
         try {
-            // Get latest attendance logs for each user
-            $latestLogs = \App\Models\AttendanceLog::select('user_id', DB::raw('MAX(timestamp) as latest_timestamp'))
-                                                  ->where('timestamp', '>=', now()->startOfDay())
-                                                  ->groupBy('user_id')
-                                                  ->get();
-
             $employeeLocations = [];
             
-            foreach ($latestLogs as $log) {
-                $attendanceLog = \App\Models\AttendanceLog::where('user_id', $log->user_id)
-                                                        ->where('timestamp', $log->latest_timestamp)
-                                                        ->with(['user', 'workplace'])
-                                                        ->first();
+            // Get all users and their latest attendance logs (same logic as dashboard)
+            $users = User::all();
+            
+            foreach ($users as $user) {
+                $latestLog = \App\Models\AttendanceLog::where('user_id', $user->id)
+                                                     ->where('timestamp', '>=', now()->startOfDay())
+                                                     ->orderBy('timestamp', 'desc')
+                                                     ->with(['user', 'workplace'])
+                                                     ->first();
                 
-                if ($attendanceLog && $attendanceLog->latitude && $attendanceLog->longitude) {
+                if ($latestLog && $latestLog->latitude && $latestLog->longitude) {
                     $employeeLocations[] = [
-                        'user_id' => $attendanceLog->user_id,
-                        'user_name' => $attendanceLog->user->name,
-                        'action' => $attendanceLog->action,
-                        'latitude' => (float) $attendanceLog->latitude,
-                        'longitude' => (float) $attendanceLog->longitude,
-                        'address' => $attendanceLog->address ?: null, // Don't set fallback text here
-                        'timestamp' => $attendanceLog->timestamp,
-                        'workplace_name' => $attendanceLog->workplace ? $attendanceLog->workplace->name : null
+                        'user_id' => $latestLog->user_id,
+                        'user_name' => $latestLog->user->name,
+                        'action' => $latestLog->action,
+                        'latitude' => (float) $latestLog->latitude,
+                        'longitude' => (float) $latestLog->longitude,
+                        'address' => $latestLog->address ?: null, // Keep original logic for address
+                        'timestamp' => $latestLog->timestamp,
+                        'workplace_name' => $latestLog->workplace ? $latestLog->workplace->name : null
                     ];
                 }
             }

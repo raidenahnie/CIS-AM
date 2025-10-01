@@ -378,7 +378,7 @@
                     </div>
                 </div>
                 
-                @if(Auth::user()->isAdmin())
+                
                 <!-- Testing Mode Panel (Admin Only) -->
                 <div id="testing-mode-panel" class="mt-3 p-4 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-lg shadow-sm">
                     <div class="flex items-center justify-between mb-3">
@@ -400,21 +400,21 @@
                         <div class="mb-4">
                             <h5 class="text-xs font-medium text-orange-800 mb-2">Quick Preset Locations:</h5>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <button onclick="setPresetLocation(14.5995, 120.9842, 'Manila Office')" 
+                                <button onclick="setPresetLocation(14.2784642, 120.8676613, 'DepEd Cavite')" 
                                         class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                    Manila Office
+                                    DepEd Cavite
                                 </button>
-                                <button onclick="setPresetLocation(14.6760, 121.0437, 'Quezon City Branch')" 
+                                <button onclick="setPresetLocation(14.3971478, 120.8530243, 'Tanza National Comprehensive HS')" 
                                         class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                    Quezon City
+                                    Tanza National Comprehensive HS
                                 </button>
-                                <button onclick="setPresetLocation(14.5547, 121.0244, 'Makati Branch')" 
+                                <button onclick="setPresetLocation(14.3186223, 120.8591034, 'Tanza National Trade School')" 
                                         class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                    Makati
+                                    Tanza National Trade School
                                 </button>
-                                <button onclick="setPresetLocation(14.6507, 121.1029, 'Marikina Office')" 
+                                <button onclick="setPresetLocation(14.287075, 120.8687556, 'Trece Martires City Elementary')" 
                                         class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                    Marikina
+                                    Trece Martires City Elementary
                                 </button>
                             </div>
                         </div>
@@ -423,12 +423,12 @@
                         <div class="grid grid-cols-2 gap-2 mb-3">
                             <div>
                                 <label class="block text-xs font-medium text-orange-800 mb-1">Latitude</label>
-                                <input type="number" id="admin-test-lat" step="any" placeholder="14.5995" 
+                                <input type="number" id="admin-test-lat" step="any" placeholder="14.2785" 
                                        class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-orange-800 mb-1">Longitude</label>
-                                <input type="number" id="admin-test-lng" step="any" placeholder="120.9842" 
+                                <input type="number" id="admin-test-lng" step="any" placeholder="120.8677" 
                                        class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
                             </div>
                         </div>
@@ -450,7 +450,7 @@
                         </div>
                     </div>
                 </div>
-                @endif
+                
             </div>                            <!-- Geofence Status -->
                             <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <h3 class="font-semibold text-blue-800 mb-2">Your Workplace:</h3>
@@ -1465,7 +1465,7 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center space-x-2">
-                                        ${!isPrimary ? `<button onclick="event.stopPropagation(); setPrimaryWorkplace(${workplace.id}, '${workplace.name}')" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-xs hover:bg-indigo-200 transition-colors">Set Primary</button>` : ''}
+                                        ${!isPrimary ? `<button onclick="event.stopPropagation(); setPrimaryWorkplace(${workplace.id}, \`${workplace.name}\`)" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-xs hover:bg-indigo-200 transition-colors">Set Primary</button>` : ''}
                                         <i class="fas fa-chevron-right text-gray-400"></i>
                                     </div>
                                 </div>
@@ -1915,13 +1915,25 @@
                 if (workplace.ok && !statusData.error) {
                     let scheduleHtml = '';
                     
-                    // Show workflow progress based on current status
-                    const steps = [
-                        { action: 'check_in', label: 'Check In', icon: '🟢', description: 'Start your work day' },
-                        { action: 'break_start', label: 'Start Lunch', icon: '🟡', description: 'Begin lunch break' },
-                        { action: 'break_end', label: 'End Lunch', icon: '🔵', description: 'Resume afternoon work' },
-                        { action: 'check_out', label: 'Check Out', icon: '🔴', description: 'End your work day' }
-                    ];
+                    // Determine shift type and create appropriate workflow steps
+                    const shiftType = statusData.shift_type || statusData.next_shift_type || 'am';
+                    let steps = [];
+                    
+                    if (shiftType === 'am') {
+                        // AM shift workflow: Check In → Lunch Start → Lunch End → Check Out
+                        steps = [
+                            { action: 'check_in', label: 'Check In', icon: '🟢', description: 'Start your morning shift' },
+                            { action: 'break_start', label: 'Start Lunch', icon: '🟡', description: 'Begin lunch break' },
+                            { action: 'break_end', label: 'End Lunch', icon: '🔵', description: 'Resume afternoon work' },
+                            { action: 'check_out', label: 'Check Out', icon: '🔴', description: 'End your work day' }
+                        ];
+                    } else {
+                        // PM shift workflow: Check In → Check Out (no lunch break)
+                        steps = [
+                            { action: 'check_in', label: 'Check In', icon: '🟢', description: 'Start your afternoon shift' },
+                            { action: 'check_out', label: 'Check Out', icon: '🔴', description: 'End your PM shift' }
+                        ];
+                    }
                     
                     steps.forEach((step, index) => {
                         const isCompleted = index < statusData.current_logs_count;
@@ -2874,19 +2886,20 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-                            <input type="number" id="manual-lat" step="any" placeholder="14.5995" 
+                            <input type="number" id="manual-lat" step="any" placeholder="14.2785" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-                            <input type="number" id="manual-lng" step="any" placeholder="120.9842" 
+                            <input type="number" id="manual-lng" step="any" placeholder="120.8677" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div class="text-xs text-gray-500">
-                            <strong>Common locations:</strong><br>
-                            • Manila: 14.5995, 120.9842<br>
-                            • Quezon City: 14.6760, 121.0437<br>
-                            • Makati: 14.5547, 121.0244
+                            <strong>Common DepEd Cavite locations:</strong><br>
+                            • DepEd Cavite: 14.2785, 120.8677<br>
+                            • Tanza National Comprehensive HS: 14.3971, 120.8530<br>
+                            • Tanza National Trade School: 14.3186, 120.8591<br>
+                            • Trece Martires City Elementary: 14.2871, 120.8688
                         </div>
                     </div>
                     <div class="flex gap-3 mt-6">
@@ -3128,7 +3141,7 @@
                 actionHtml = `
                     <div class="mt-3">
                         <button onclick="${actionButton.action}" 
-                                class="px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded text-sm">
+                                class="px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-black rounded text-sm">
                             ${actionButton.text}
                         </button>
                     </div>
@@ -3369,10 +3382,10 @@
         // Default and stored work locations
         let workLocations = {
             mainOffice: {
-                lat: 14.5995,
-                lng: 120.9842,
-                name: 'Main Office',
-                address: '123 Business St.',
+                lat: 14.2785,
+                lng: 120.8677,
+                name: 'DepEd Cavite Main Office',
+                address: 'Luciano, Trece Martires, Cavite',
                 radius: 100
             }
         };
@@ -4656,10 +4669,10 @@
                         
                         <div class="pt-4 border-t border-gray-200">
                             <div class="flex space-x-3">
-                                ${!isPrimary ? `<button onclick="setPrimaryWorkplace(${id}, '${name}')" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                ${!isPrimary ? `<button onclick="setPrimaryWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                                     <i class="fas fa-star mr-2"></i>Set as Primary
                                 </button>` : ''}
-                                <button onclick="switchToSection('gps-checkin')" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                <button onclick="checkInAtWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                                     <i class="fas fa-map-pin mr-2"></i>Check In Here
                                 </button>
                             </div>
@@ -4796,6 +4809,62 @@
             } catch (error) {
                 console.error('Error setting primary workplace:', error);
                 showNotification('Failed to set primary workplace: ' + error.message, 'error');
+            }
+        }
+
+        async function checkInAtWorkplace(workplaceId, workplaceName) {
+            try {
+                // First, set this workplace as primary so user can check in there
+                const setPrimaryResponse = await fetch('/api/set-primary-workplace', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        user_id: getCurrentUserId(),
+                        workplace_id: workplaceId
+                    })
+                });
+                
+                const setPrimaryResult = await setPrimaryResponse.json();
+                
+                if (setPrimaryResponse.ok) {
+                    showNotification(`${workplaceName} set as your active workplace for check-in`, 'success');
+                    
+                    // Refresh workplace and location data
+                    await fetchUserWorkplaces();
+                    await fetchUserWorkplace();
+                    
+                    // Update check-in maps if they exist and are initialized
+                    if (checkinMap && mapInitializationState.checkinMap) {
+                        refreshCheckinMapData();
+                    }
+                    
+                    // Switch to GPS check-in section
+                    switchToSection('gps-checkin');
+                    
+                    // Refresh the workplace data to get the new workplace info including radius
+                    setTimeout(async () => {
+                        // Get the updated workplace info
+                        try {
+                            const workplaceResponse = await fetch(`/api/user-workplace/${getCurrentUserId()}`);
+                            if (workplaceResponse.ok) {
+                                const workplaceData = await workplaceResponse.json();
+                                showNotification(`You can now check in at ${workplaceName}. Make sure you're within ${workplaceData.radius}m of the workplace.`, 'info');
+                            } else {
+                                showNotification(`You can now check in at ${workplaceName}. Make sure you're within the workplace area.`, 'info');
+                            }
+                        } catch (error) {
+                            showNotification(`You can now check in at ${workplaceName}. Make sure you're within the workplace area.`, 'info');
+                        }
+                    }, 1000);
+                } else {
+                    showNotification(setPrimaryResult.error || 'Failed to set workplace for check-in', 'error');
+                }
+            } catch (error) {
+                console.error('Error setting workplace for check-in:', error);
+                showNotification('Failed to set workplace for check-in: ' + error.message, 'error');
             }
         }
         

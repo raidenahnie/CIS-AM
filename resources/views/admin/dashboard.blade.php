@@ -273,13 +273,13 @@
                     </div>
                 </a>
                 
-                <a href="#" onclick="addUser(); return false;"
+                <a href="#" onclick="switchAdminSection('users'); return false;"
                    class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500">
                     <div class="flex items-center">
-                        <i class="fas fa-user-plus text-2xl text-blue-500 mr-4"></i>
+                        <i class="fas fa-user-group text-2xl text-blue-500 mr-4"></i>
                         <div>
-                            <h3 class="font-semibold text-gray-900">Add New User</h3>
-                            <p class="text-sm text-gray-600">Create user account</p>
+                            <h3 class="font-semibold text-gray-900">Manage Users</h3>
+                            <p class="text-sm text-gray-600">Create, edit and monitor user accounts</p>
                         </div>
                     </div>
                 </a>
@@ -1980,7 +1980,7 @@
             // Check if Leaflet is available (you'll need to include it in the head)
             if (typeof L !== 'undefined') {
                 // Initialize map centered on a default location
-                employeeMap = L.map('employeeMap').setView([14.5995, 120.9842], 10); // Manila coordinates as default
+                employeeMap = L.map('employeeMap').setView([14.2785, 120.8677], 11); // DepEd Cavite coordinates as default
                 
                 // Add tile layer
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
