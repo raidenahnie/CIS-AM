@@ -14,6 +14,8 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    // Registration disabled - users created by admin only
+    /*
     public function showRegister() {
         return view('auth.register');
     }
@@ -37,6 +39,7 @@ class AuthController extends Controller
 
         return redirect()->route('dashboard');
     }
+    */
 
     // Handle login
     public function login(Request $request) {

@@ -21,6 +21,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'last_activity',
     ];
 
     /**
@@ -43,6 +44,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_activity' => 'datetime',
         ];
     }
 
@@ -111,5 +113,30 @@ class User extends Authenticatable
                         $query->wherePivotNull('effective_until')
                               ->orWherePivot('effective_until', '>', now());
                     });
+    }
+
+    /**
+     * Check if user is online (activity within last 5 minutes)
+     */
+    public function isOnline(): bool
+    {
+        return $this->last_activity && $this->last_activity->gt(now()->subMinutes(5));
+    }
+
+    /**
+     * Update user's last activity
+     */
+    public function updateLastActivity(): void
+    {
+        $this->last_activity = now();
+        $this->save();
+    }
+
+    /**
+     * Scope to get only online users
+     */
+    public function scopeOnline($query)
+    {
+        return $query->where('last_activity', '>=', now()->subMinutes(5));
     }
 }

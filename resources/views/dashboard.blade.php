@@ -12,6 +12,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .modal-blur {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            -moz-backdrop-filter: blur(8px) !important;
+            -ms-backdrop-filter: blur(8px) !important;
+            z-index: 9999 !important;
+        }
+        
+        /* Fallback for browsers that don't support backdrop-filter */
+        @supports not (backdrop-filter: blur(8px)) {
+            .modal-blur {
+                background-color: rgba(0, 0, 0, 0.95) !important;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 min-h-screen flex">
 
@@ -360,6 +377,80 @@
                         </button>
                     </div>
                 </div>
+                
+                @if(Auth::user()->isAdmin())
+                <!-- Testing Mode Panel (Admin Only) -->
+                <div id="testing-mode-panel" class="mt-3 p-4 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-orange-900 flex items-center">
+                            <i class="fas fa-flask mr-2"></i>Testing Mode (Admin Only)
+                        </h4>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="testing-mode-toggle" class="sr-only peer" onchange="toggleTestingMode()">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        </label>
+                    </div>
+                    
+                    <div id="testing-mode-content" class="hidden">
+                        <p class="text-xs text-orange-800 mb-3">
+                            Testing mode allows simulated GPS locations for office demonstrations and testing.
+                        </p>
+                        
+                        <!-- Preset Locations -->
+                        <div class="mb-4">
+                            <h5 class="text-xs font-medium text-orange-800 mb-2">Quick Preset Locations:</h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button onclick="setPresetLocation(14.5995, 120.9842, 'Manila Office')" 
+                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                    Manila Office
+                                </button>
+                                <button onclick="setPresetLocation(14.6760, 121.0437, 'Quezon City Branch')" 
+                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                    Quezon City
+                                </button>
+                                <button onclick="setPresetLocation(14.5547, 121.0244, 'Makati Branch')" 
+                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                    Makati
+                                </button>
+                                <button onclick="setPresetLocation(14.6507, 121.1029, 'Marikina Office')" 
+                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                    Marikina
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Location Input -->
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                                <label class="block text-xs font-medium text-orange-800 mb-1">Latitude</label>
+                                <input type="number" id="admin-test-lat" step="any" placeholder="14.5995" 
+                                       class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-orange-800 mb-1">Longitude</label>
+                                <input type="number" id="admin-test-lng" step="any" placeholder="120.9842" 
+                                       class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button onclick="setCustomTestLocation()" 
+                                    class="flex-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
+                                Set Custom Location
+                            </button>
+                            <button onclick="clearTestLocation()" 
+                                    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
+                                Clear Test
+                            </button>
+                        </div>
+                        
+                        <div class="mt-2 text-xs text-orange-700 bg-orange-100 p-2 rounded">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong>Status:</strong> <span id="testing-mode-status">Ready to set test location</span>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>                            <!-- Geofence Status -->
                             <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <h3 class="font-semibold text-blue-800 mb-2">Your Workplace:</h3>
@@ -1947,6 +2038,12 @@
             // Initialize location with smart approach
             initializeSmartLocation();
             
+            // Initialize testing mode (admin only)
+            initializeTestingMode();
+            
+            // Start location health monitoring
+            startLocationHealthMonitoring();
+            
             // Setup workplace event handlers
             document.getElementById('request-location-btn').addEventListener('click', function() {
                 startLocationTracking().then(() => {
@@ -2318,6 +2415,9 @@
                     console.error('Location retry failed:', error);
                     hasLocationPermission = false;
                     
+                    // Use enhanced error handling
+                    handleLocationError(error, 'retry');
+                    
                     let errorMsg = 'Location retry failed: ';
                     let recommendation = '';
                     
@@ -2325,7 +2425,6 @@
                         case error.PERMISSION_DENIED:
                             errorMsg += 'Permission denied';
                             recommendation = 'Please enable location access in your browser settings';
-                            showErrorDetails('Location permission was denied. Please check your browser settings and allow location access.');
                             break;
                         case error.POSITION_UNAVAILABLE:
                             errorMsg += 'Position unavailable';
@@ -2392,7 +2491,8 @@
         function showSimpleNotification(message, type) {
             // Simple notification without complex DOM creation
             const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 p-3 rounded-lg text-white text-sm z-50 transition-all duration-300 max-w-sm`;
+            notification.className = `fixed top-4 right-4 p-3 rounded-lg text-white text-sm transition-all duration-300 max-w-sm`;
+            notification.style.zIndex = '10000';
             
             switch(type) {
                 case 'success':
@@ -2553,11 +2653,717 @@
                 }
             }).catch(error => {
                 console.warn('Location initialization failed:', error.message);
-                updateLocationStatus('error', null, error.message);
                 
-                // Still allow app to function with fallback location
-                console.log('App will use fallback coordinates when needed');
+                // Try fallback location methods
+                tryFallbackLocation().then(fallbackLocation => {
+                    if (fallbackLocation) {
+                        userLocation = fallbackLocation;
+                        updateLocationStatus('warning', fallbackLocation, 'Using approximate location');
+                        updateCurrentLocationDisplay(fallbackLocation);
+                        updateGeofenceStatus(fallbackLocation);
+                        showSimpleNotification('Using approximate location. GPS accuracy may be limited.', 'warning');
+                    } else {
+                        updateLocationStatus('error', null, error.message);
+                        showLocationAlternatives();
+                    }
+                }).catch(fallbackError => {
+                    console.error('All location methods failed:', fallbackError);
+                    updateLocationStatus('error', null, 'Unable to determine location');
+                    showLocationAlternatives();
+                });
             });
+        }
+        
+        // Fallback location methods
+        function tryFallbackLocation() {
+            return new Promise((resolve, reject) => {
+                console.log('Trying fallback location methods...');
+                
+                // Method 1: Check for test location (for office testing)
+                const testLocation = getTestLocation();
+                if (testLocation) {
+                    console.log('Using test location');
+                    resolve(createLocationObject(testLocation.lat, testLocation.lng, 10, 'test'));
+                    return;
+                }
+                
+                // Method 2: Try IP-based geolocation
+                tryIPGeolocation().then(location => {
+                    if (location) {
+                        console.log('IP geolocation successful');
+                        resolve(location);
+                    } else {
+                        // Method 3: Use workplace default location
+                        const workplace = getStoredWorkplace();
+                        if (workplace && workplace.lat && workplace.lng) {
+                            console.log('Using workplace default location');
+                            resolve(createLocationObject(workplace.lat, workplace.lng, 500, 'workplace'));
+                        } else {
+                            // Method 4: Use system default
+                            console.log('Using system default location');
+                            resolve(createLocationObject(14.5995, 120.9842, 1000, 'default'));
+                        }
+                    }
+                }).catch(error => {
+                    console.warn('IP geolocation failed:', error);
+                    // Fallback to workplace or default
+                    const workplace = getStoredWorkplace();
+                    if (workplace && workplace.lat && workplace.lng) {
+                        resolve(createLocationObject(workplace.lat, workplace.lng, 500, 'workplace'));
+                    } else {
+                        resolve(createLocationObject(14.5995, 120.9842, 1000, 'default'));
+                    }
+                });
+            });
+        }
+        
+        function getTestLocation() {
+            try {
+                const testLoc = localStorage.getItem('testLocation');
+                if (testLoc) {
+                    const parsed = JSON.parse(testLoc);
+                    // Check if test location is not too old (24 hours)
+                    if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+                        return parsed;
+                    } else {
+                        localStorage.removeItem('testLocation');
+                    }
+                }
+            } catch (e) {
+                console.error('Error reading test location:', e);
+            }
+            return null;
+        }
+        
+        function tryIPGeolocation() {
+            return new Promise((resolve, reject) => {
+                // Try multiple IP geolocation services
+                const services = [
+                    'https://ipapi.co/json/',
+                    'http://ip-api.com/json/',
+                    'https://ipinfo.io/json'
+                ];
+                
+                let serviceIndex = 0;
+                
+                function tryNextService() {
+                    if (serviceIndex >= services.length) {
+                        reject(new Error('All IP geolocation services failed'));
+                        return;
+                    }
+                    
+                    const service = services[serviceIndex];
+                    serviceIndex++;
+                    
+                    fetch(service, {
+                        method: 'GET',
+                        timeout: 5000
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        let lat, lng;
+                        
+                        // Handle different service response formats
+                        if (service.includes('ipapi.co')) {
+                            lat = data.latitude;
+                            lng = data.longitude;
+                        } else if (service.includes('ip-api.com')) {
+                            lat = data.lat;
+                            lng = data.lon;
+                        } else if (service.includes('ipinfo.io')) {
+                            const coords = data.loc ? data.loc.split(',') : null;
+                            if (coords && coords.length === 2) {
+                                lat = parseFloat(coords[0]);
+                                lng = parseFloat(coords[1]);
+                            }
+                        }
+                        
+                        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                            // IP geolocation typically has low accuracy (city-level)
+                            resolve(createLocationObject(lat, lng, 5000, 'ip'));
+                        } else {
+                            tryNextService();
+                        }
+                    })
+                    .catch(error => {
+                        console.warn(`IP geolocation service ${service} failed:`, error);
+                        tryNextService();
+                    });
+                }
+                
+                tryNextService();
+            });
+        }
+        
+        function createLocationObject(lat, lng, accuracy = 100, source = 'unknown') {
+            return {
+                coords: {
+                    latitude: lat,
+                    longitude: lng,
+                    accuracy: accuracy,
+                    altitude: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null
+                },
+                timestamp: Date.now(),
+                source: source
+            };
+        }
+        
+        function getStoredWorkplace() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEYS.workplace);
+                return stored ? JSON.parse(stored) : null;
+            } catch (e) {
+                console.error('Error reading stored workplace:', e);
+                return null;
+            }
+        }
+        
+        function showLocationAlternatives() {
+            // Show options for manual location entry or alternative methods
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-4 right-4 bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded shadow-lg z-50 max-w-sm';
+            alertDiv.innerHTML = `
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-800 font-medium">Location Access Needed</p>
+                        <p class="text-xs text-yellow-700 mt-1">GPS is required for attendance tracking</p>
+                        <div class="mt-2">
+                            <button onclick="showManualLocationEntry(); this.parentElement.parentElement.parentElement.parentElement.remove();" 
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs mr-2">
+                                Manual Entry
+                            </button>
+                            <button onclick="retryLocationAccess(); this.parentElement.parentElement.parentElement.parentElement.remove();" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                Retry GPS
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            class="ml-auto text-yellow-500 hover:text-yellow-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 10 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 10000);
+        }
+        
+        function showManualLocationEntry() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 flex items-center justify-center px-4 modal-blur';
+            modal.style.zIndex = '9999';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md w-full">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Manual Location Entry</h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Enter coordinates manually for testing purposes. Contact your administrator for proper workplace coordinates.
+                    </p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                            <input type="number" id="manual-lat" step="any" placeholder="14.5995" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                            <input type="number" id="manual-lng" step="any" placeholder="120.9842" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <strong>Common locations:</strong><br>
+                            • Manila: 14.5995, 120.9842<br>
+                            • Quezon City: 14.6760, 121.0437<br>
+                            • Makati: 14.5547, 121.0244
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="setManualLocation(); document.body.removeChild(this.closest('.fixed'))" 
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                            Set Location
+                        </button>
+                        <button onclick="document.body.removeChild(this.closest('.fixed'))" 
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function setManualLocation() {
+            const lat = parseFloat(document.getElementById('manual-lat').value);
+            const lng = parseFloat(document.getElementById('manual-lng').value);
+            
+            if (isNaN(lat) || isNaN(lng)) {
+                alert('Please enter valid latitude and longitude values');
+                return;
+            }
+            
+            // Create a manual location object
+            const manualLocation = createLocationObject(lat, lng, 50, 'manual');
+            
+            // Store as test location
+            localStorage.setItem('testLocation', JSON.stringify({
+                lat: lat,
+                lng: lng,
+                accuracy: 50,
+                timestamp: Date.now()
+            }));
+            
+            // Set as current location
+            userLocation = manualLocation;
+            hasLocationPermission = true;
+            
+            // Update UI
+            updateLocationStatus('warning', manualLocation, 'Manual location set');
+            updateCurrentLocationDisplay(manualLocation);
+            updateGeofenceStatus(manualLocation);
+            
+            showSimpleNotification(`Manual location set: ${lat.toFixed(4)}, ${lng.toFixed(4)}`, 'success');
+        }
+        
+        // Enhanced Error Messaging System
+        function showContextualError(errorType, errorCode, browserAgent) {
+            const errorMessages = {
+                PERMISSION_DENIED: {
+                    title: 'Location Access Denied',
+                    message: 'Please enable location access to use attendance tracking',
+                    solutions: [
+                        'Click the location icon in your browser address bar',
+                        'Select "Allow" or "Always Allow" for location access',
+                        'Refresh the page after granting permission',
+                        'Check your browser settings if the icon is not visible'
+                    ],
+                    icon: 'fas fa-shield-alt',
+                    color: 'red'
+                },
+                POSITION_UNAVAILABLE: {
+                    title: 'Location Currently Unavailable',
+                    message: 'Your device cannot determine your location right now',
+                    solutions: [
+                        'Make sure location services are enabled on your device',
+                        'Try moving to an area with better signal reception',
+                        'Check if GPS is working in other apps',
+                        'Restart your browser and try again'
+                    ],
+                    icon: 'fas fa-satellite-dish',
+                    color: 'orange'
+                },
+                TIMEOUT: {
+                    title: 'Location Request Timed Out',
+                    message: 'It took too long to get your location',
+                    solutions: [
+                        'Check your internet connection',
+                        'Make sure GPS is enabled on your device',
+                        'Try again in a few moments',
+                        'Move to an area with better connectivity'
+                    ],
+                    icon: 'fas fa-clock',
+                    color: 'yellow'
+                },
+                GEOLOCATION_NOT_SUPPORTED: {
+                    title: 'Geolocation Not Supported',
+                    message: 'Your browser doesn\'t support location services',
+                    solutions: [
+                        'Update your browser to the latest version',
+                        'Use a modern browser (Chrome, Firefox, Edge, Safari)',
+                        'Contact IT support if using a managed device',
+                        'Use manual location entry as an alternative'
+                    ],
+                    icon: 'fas fa-exclamation-triangle',
+                    color: 'red'
+                }
+            };
+        
+            const errorInfo = errorMessages[errorType] || errorMessages.GEOLOCATION_NOT_SUPPORTED;
+            
+            // Create enhanced error modal
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 flex items-center justify-center px-4 modal-blur';
+            modal.style.zIndex = '9999';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-${errorInfo.color}-100 flex items-center justify-center mr-4">
+                            <i class="${errorInfo.icon} text-${errorInfo.color}-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">${errorInfo.title}</h3>
+                            <p class="text-sm text-gray-600">${errorInfo.message}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">How to fix this:</h4>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
+                            ${errorInfo.solutions.map(solution => `<li>${solution}</li>`).join('')}
+                        </ol>
+                    </div>
+                    
+                    ${getBrowserSpecificHelp(browserAgent)}
+                    
+                    <div class="bg-blue-50 rounded-lg p-3 mb-4">
+                        <h5 class="font-medium text-blue-900 mb-1 flex items-center">
+                            <i class="fas fa-lightbulb text-blue-600 mr-2"></i>Alternative Options
+                        </h5>
+                        <div class="text-sm text-blue-800 space-y-1">
+                            <div>• Use manual location entry for testing</div>
+                            <div>• Ask your administrator to enable testing mode</div>
+                            <div>• Try accessing from a different device or browser</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="retryLocationAccess(); document.body.removeChild(this.closest('.fixed'))" 
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-medium">
+                            <i class="fas fa-redo mr-2"></i>Try Again
+                        </button>
+                        <button onclick="showManualLocationEntry(); document.body.removeChild(this.closest('.fixed'))" 
+                                class="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium">
+                            <i class="fas fa-map-pin mr-2"></i>Manual Entry
+                        </button>
+                        <button onclick="document.body.removeChild(this.closest('.fixed'))" 
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function getBrowserSpecificHelp(userAgent = navigator.userAgent) {
+            let browserName = 'your browser';
+            let specificSteps = [];
+            
+            if (userAgent.includes('Chrome') && !userAgent.includes('Edge')) {
+                browserName = 'Chrome';
+                specificSteps = [
+                    'Look for the location icon (🗺️) in the address bar',
+                    'Click it and select "Always allow on this site"',
+                    'If no icon: Go to Settings → Privacy and Security → Site Settings → Location',
+                    'Add this site to "Allowed to access your location"'
+                ];
+            } else if (userAgent.includes('Edge')) {
+                browserName = 'Microsoft Edge';
+                specificSteps = [
+                    'Click the location icon in the address bar',
+                    'Choose "Allow for this site"',
+                    'Or go to Settings → Cookies and site permissions → Location',
+                    'Add this website to the allowed list'
+                ];
+            } else if (userAgent.includes('Firefox')) {
+                browserName = 'Firefox';
+                specificSteps = [
+                    'Click the shield icon or "i" icon in the address bar',
+                    'Select "Allow Location Access"',
+                    'Or go to Preferences → Privacy & Security → Permissions',
+                    'Click Settings next to Location and add this site'
+                ];
+            } else if (userAgent.includes('Safari')) {
+                browserName = 'Safari';
+                specificSteps = [
+                    'Go to Safari → Preferences → Websites → Location',
+                    'Find this website in the list',
+                    'Change the setting to "Allow"',
+                    'Refresh the page'
+                ];
+            }
+            
+            if (specificSteps.length > 0) {
+                return `
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                        <h5 class="font-medium text-gray-900 mb-1 flex items-center">
+                            <i class="fab fa-${browserName.toLowerCase().replace(' ', '-')} text-gray-600 mr-2"></i>
+                            For ${browserName} Users:
+                        </h5>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
+                            ${specificSteps.map(step => `<li>${step}</li>`).join('')}
+                        </ol>
+                    </div>
+                `;
+            }
+            
+            return '';
+        }
+        
+        // Enhanced notification system
+        function showEnhancedNotification(message, type = 'info', duration = 5000, actionButton = null) {
+            const colors = {
+                success: 'bg-green-500 border-green-600',
+                error: 'bg-red-500 border-red-600',
+                warning: 'bg-yellow-500 border-yellow-600',
+                info: 'bg-blue-500 border-blue-600'
+            };
+            
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg max-w-sm border-l-4`;
+            notification.style.zIndex = '10000';
+            
+            let actionHtml = '';
+            if (actionButton) {
+                actionHtml = `
+                    <div class="mt-3">
+                        <button onclick="${actionButton.action}" 
+                                class="px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded text-sm">
+                            ${actionButton.text}
+                        </button>
+                    </div>
+                `;
+            }
+            
+            notification.innerHTML = `
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="${icons[type]} mr-3"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium">${message}</p>
+                        ${actionHtml}
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            class="ml-2 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, duration);
+        }
+        
+        // Update existing error handlers to use contextual errors
+        function handleLocationError(error, context = 'general') {
+            let errorType;
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorType = 'PERMISSION_DENIED';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorType = 'POSITION_UNAVAILABLE';
+                    break;
+                case error.TIMEOUT:
+                    errorType = 'TIMEOUT';
+                    break;
+                default:
+                    errorType = 'GEOLOCATION_NOT_SUPPORTED';
+            }
+            
+            // Show contextual error with solutions
+            showContextualError(errorType, error.code, navigator.userAgent);
+            
+            // Also update the status display
+            updateLocationStatus('error', null, `${errorType.replace('_', ' ').toLowerCase()}`);
+        }
+        
+        // Testing Mode Functions (Admin Only)
+        function toggleTestingMode() {
+            const toggle = document.getElementById('testing-mode-toggle');
+            const content = document.getElementById('testing-mode-content');
+            const status = document.getElementById('testing-mode-status');
+            
+            if (toggle.checked) {
+                content.classList.remove('hidden');
+                localStorage.setItem('testingModeEnabled', 'true');
+                status.textContent = 'Testing mode enabled - Ready to set test location';
+                showSimpleNotification('Testing mode enabled. You can now set simulated locations.', 'info');
+            } else {
+                content.classList.add('hidden');
+                localStorage.removeItem('testingModeEnabled');
+                localStorage.removeItem('testLocation');
+                status.textContent = 'Testing mode disabled';
+                
+                // Reset to actual GPS location
+                clearTestLocation();
+                showSimpleNotification('Testing mode disabled. Returning to GPS location.', 'info');
+            }
+        }
+        
+        function setPresetLocation(lat, lng, name) {
+            const testLocation = {
+                lat: lat,
+                lng: lng,
+                accuracy: 10,
+                timestamp: Date.now(),
+                name: name
+            };
+            
+            localStorage.setItem('testLocation', JSON.stringify(testLocation));
+            
+            // Apply immediately
+            const locationObj = createLocationObject(lat, lng, 10, 'preset');
+            userLocation = locationObj;
+            hasLocationPermission = true;
+            
+            updateLocationStatus('warning', locationObj, `Test location: ${name}`);
+            updateCurrentLocationDisplay(locationObj);
+            updateGeofenceStatus(locationObj);
+            
+            document.getElementById('testing-mode-status').textContent = `Active: ${name} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            showSimpleNotification(`Test location set to ${name}`, 'success');
+        }
+        
+        function setCustomTestLocation() {
+            const lat = parseFloat(document.getElementById('admin-test-lat').value);
+            const lng = parseFloat(document.getElementById('admin-test-lng').value);
+            
+            if (isNaN(lat) || isNaN(lng)) {
+                alert('Please enter valid latitude and longitude values');
+                return;
+            }
+            
+            const testLocation = {
+                lat: lat,
+                lng: lng,
+                accuracy: 10,
+                timestamp: Date.now(),
+                name: 'Custom Test Location'
+            };
+            
+            localStorage.setItem('testLocation', JSON.stringify(testLocation));
+            
+            // Apply immediately
+            const locationObj = createLocationObject(lat, lng, 10, 'custom');
+            userLocation = locationObj;
+            hasLocationPermission = true;
+            
+            updateLocationStatus('warning', locationObj, 'Custom test location');
+            updateCurrentLocationDisplay(locationObj);
+            updateGeofenceStatus(locationObj);
+            
+            document.getElementById('testing-mode-status').textContent = `Active: Custom (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            showSimpleNotification(`Custom test location set: ${lat.toFixed(4)}, ${lng.toFixed(4)}`, 'success');
+        }
+        
+        function clearTestLocation() {
+            localStorage.removeItem('testLocation');
+            document.getElementById('testing-mode-status').textContent = 'Test location cleared - Using GPS';
+            
+            // Reset location inputs
+            document.getElementById('admin-test-lat').value = '';
+            document.getElementById('admin-test-lng').value = '';
+            
+            // Try to get real GPS location
+            if (navigator.geolocation) {
+                updateLocationStatus('loading', null, 'Returning to GPS location...');
+                startLocationTracking().then(() => {
+                    showSimpleNotification('Returned to GPS location', 'success');
+                }).catch(error => {
+                    console.warn('Could not get GPS location:', error);
+                    updateLocationStatus('error', null, 'GPS location unavailable');
+                    showSimpleNotification('GPS location not available. You may need to enable location access.', 'warning');
+                });
+            } else {
+                updateLocationStatus('error', null, 'GPS not supported');
+            }
+        }
+        
+        // Initialize testing mode state on page load
+        function initializeTestingMode() {
+            const isTestingEnabled = localStorage.getItem('testingModeEnabled') === 'true';
+            const toggle = document.getElementById('testing-mode-toggle');
+            const content = document.getElementById('testing-mode-content');
+            
+            if (toggle && isTestingEnabled) {
+                toggle.checked = true;
+                content.classList.remove('hidden');
+                
+                // Check if there's an active test location
+                const testLoc = getTestLocation();
+                if (testLoc) {
+                    const statusEl = document.getElementById('testing-mode-status');
+                    if (statusEl) {
+                        statusEl.textContent = `Active: ${testLoc.name || 'Test Location'} (${testLoc.lat.toFixed(4)}, ${testLoc.lng.toFixed(4)})`;
+                    }
+                }
+            }
+        }
+        
+        // Proactive location status monitoring
+        function startLocationHealthMonitoring() {
+            // Check location health every 30 seconds
+            setInterval(() => {
+                if (!navigator.geolocation) return;
+                
+                // Check if permission has been revoked
+                if (navigator.permissions) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(permission => {
+                        if (permission.state === 'denied' && hasLocationPermission) {
+                            hasLocationPermission = false;
+                            showEnhancedNotification(
+                                'Location permission was revoked. Attendance tracking may not work properly.',
+                                'warning',
+                                10000,
+                                {
+                                    text: 'Fix Now',
+                                    action: 'showContextualError("PERMISSION_DENIED", 1, navigator.userAgent)'
+                                }
+                            );
+                        }
+                    });
+                }
+                
+                // Warn if location accuracy is very poor
+                if (userLocation && userLocation.coords.accuracy > 1000) {
+                    showEnhancedNotification(
+                        'Location accuracy is poor (±' + Math.round(userLocation.coords.accuracy) + 'm). This may affect attendance tracking.',
+                        'warning',
+                        8000,
+                        {
+                            text: 'Improve',
+                            action: 'retryLocationAccess()'
+                        }
+                    );
+                }
+                
+                // Check if we haven't had a location update in a while
+                if (userLocation && Date.now() - userLocation.timestamp > 10 * 60 * 1000) { // 10 minutes
+                    showEnhancedNotification(
+                        'Location data is outdated. Getting fresh location...',
+                        'info',
+                        5000
+                    );
+                    
+                    // Try to refresh location quietly
+                    getQuickLocation().then(position => {
+                        userLocation = position;
+                        updateLocationStatus('success', position);
+                        updateCurrentLocationDisplay(position);
+                    }).catch(() => {
+                        // Ignore errors from background refresh
+                    });
+                }
+            }, 30000); // 30 seconds
         }
         
         // Default and stored work locations
@@ -2734,7 +3540,8 @@
             // Create a modal with clear explanation
             const modal = document.createElement('div');
             modal.id = 'location-permission-modal';
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.className = 'fixed inset-0 flex items-center justify-center modal-blur';
+            modal.style.zIndex = '9999';
             modal.innerHTML = `
                 <div class="bg-white rounded-xl shadow-2xl p-8 m-4 max-w-md w-full">
                     <div class="text-center mb-6">
@@ -2868,6 +3675,9 @@
                     console.error('Location tracking failed:', error);
                     hasLocationPermission = false;
                     
+                    // Use enhanced error handling for better user experience
+                    handleLocationError(error, 'tracking');
+                    
                     let errorMsg = 'Unable to get location';
                     let showPermissionRequest = true;
                     
@@ -2886,10 +3696,6 @@
                     }
                     
                     updateLocationStatus('error', null, errorMsg);
-                    
-                    if (showPermissionRequest) {
-                        showLocationPermissionRequest();
-                    }
                     
                     reject(new Error(errorMsg));
                 });

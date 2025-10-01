@@ -8,6 +8,7 @@ use App\Models\Workplace;
 use App\Models\UserWorkplace;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -19,7 +20,53 @@ class AdminController extends Controller
         $users = User::with('workplaces')->get();
         $workplaces = Workplace::withCount('users')->get();
         
-        return view('admin.dashboard', compact('users', 'workplaces'));
+        // Get latest attendance data for each user today
+        $latestAttendance = [];
+        foreach ($users as $user) {
+            $latestLog = \App\Models\AttendanceLog::where('user_id', $user->id)
+                                                 ->where('timestamp', '>=', now()->startOfDay())
+                                                 ->orderBy('timestamp', 'desc')
+                                                 ->with('workplace')
+                                                 ->first();
+            if ($latestLog) {
+                $latestAttendance[$user->id] = [
+                    'action' => $latestLog->action,
+                    'address' => $latestLog->address ?: 'Location not available',
+                    'workplace_name' => $latestLog->workplace ? $latestLog->workplace->name : 'Unknown',
+                    'timestamp' => $latestLog->timestamp
+                ];
+            }
+        }
+        
+        return view('admin.dashboard', compact('users', 'workplaces', 'latestAttendance'));
+    }
+
+    /**
+     * Get all users for API
+     */
+    public function getUsers()
+    {
+        $users = User::select('id', 'name', 'email', 'role')->get();
+        
+        return response()->json([
+            'success' => true,
+            'users' => $users
+        ]);
+    }
+
+    /**
+     * Get all workplaces for API
+     */
+    public function getWorkplaces()
+    {
+        $workplaces = Workplace::select('id', 'name', 'address', 'is_active')
+                              ->where('is_active', true)
+                              ->get();
+        
+        return response()->json([
+            'success' => true,
+            'workplaces' => $workplaces
+        ]);
     }
 
     /**
@@ -422,5 +469,107 @@ class AdminController extends Controller
             'success' => true,
             'message' => 'Workplace assignment removed successfully'
         ]);
+    }
+
+    /**
+     * Get employee locations for mapping
+     */
+    public function getEmployeeLocations()
+    {
+        try {
+            // Get latest attendance logs for each user
+            $latestLogs = \App\Models\AttendanceLog::select('user_id', DB::raw('MAX(timestamp) as latest_timestamp'))
+                                                  ->where('timestamp', '>=', now()->startOfDay())
+                                                  ->groupBy('user_id')
+                                                  ->get();
+
+            $employeeLocations = [];
+            
+            foreach ($latestLogs as $log) {
+                $attendanceLog = \App\Models\AttendanceLog::where('user_id', $log->user_id)
+                                                        ->where('timestamp', $log->latest_timestamp)
+                                                        ->with(['user', 'workplace'])
+                                                        ->first();
+                
+                if ($attendanceLog && $attendanceLog->latitude && $attendanceLog->longitude) {
+                    $employeeLocations[] = [
+                        'user_id' => $attendanceLog->user_id,
+                        'user_name' => $attendanceLog->user->name,
+                        'action' => $attendanceLog->action,
+                        'latitude' => (float) $attendanceLog->latitude,
+                        'longitude' => (float) $attendanceLog->longitude,
+                        'address' => $attendanceLog->address ?: null, // Don't set fallback text here
+                        'timestamp' => $attendanceLog->timestamp,
+                        'workplace_name' => $attendanceLog->workplace ? $attendanceLog->workplace->name : null
+                    ];
+                }
+            }
+
+            // Get workplaces for boundaries
+            $workplaces = Workplace::where('is_active', true)
+                                  ->select('id', 'name', 'address', 'latitude', 'longitude', 'radius')
+                                  ->get()
+                                  ->map(function ($workplace) {
+                                      return [
+                                          'id' => $workplace->id,
+                                          'name' => $workplace->name,
+                                          'address' => $workplace->address,
+                                          'latitude' => (float) $workplace->latitude,
+                                          'longitude' => (float) $workplace->longitude,
+                                          'radius' => (int) $workplace->radius
+                                      ];
+                                  });
+
+            return response()->json([
+                'success' => true,
+                'employeeLocations' => $employeeLocations,
+                'workplaces' => $workplaces
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading employee locations: ' . $e->getMessage(),
+                'employeeLocations' => [],
+                'workplaces' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Get detailed location history for a specific user
+     */
+    public function getUserLocationDetails(User $user)
+    {
+        try {
+            $locations = \App\Models\AttendanceLog::where('user_id', $user->id)
+                                                 ->where('timestamp', '>=', now()->startOfDay())
+                                                 ->with('workplace')
+                                                 ->orderBy('timestamp', 'desc')
+                                                 ->limit(10)
+                                                 ->get()
+                                                 ->map(function ($log) {
+                                                     return [
+                                                         'action' => $log->action,
+                                                         'latitude' => (float) $log->latitude,
+                                                         'longitude' => (float) $log->longitude,
+                                                         'address' => $log->address ?: 'Location not available',
+                                                         'timestamp' => $log->timestamp,
+                                                         'workplace_name' => $log->workplace ? $log->workplace->name : null
+                                                     ];
+                                                 });
+
+            return response()->json([
+                'success' => true,
+                'user_name' => $user->name,
+                'locations' => $locations
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading user location details: ' . $e->getMessage(),
+                'user_name' => $user->name,
+                'locations' => []
+            ], 500);
+        }
     }
 }

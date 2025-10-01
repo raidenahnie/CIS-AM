@@ -89,10 +89,9 @@
             </button>
         </form>
 
-        <!-- Register Link -->
+        <!-- Contact Admin for Access -->
         <p class="mt-6 text-center text-sm text-gray-600">
-            Don't have an account?
-            <a href="{{ route('register') }}" class="text-indigo-600 hover:underline">Register</a>
+            Need access? Contact your system administrator.
         </p>
         <p class="mt-2 text-center text-sm text-gray-600">
            Return to <a href="{{ route('landing') }}" class="text-indigo-600 hover:underline">home page</a>

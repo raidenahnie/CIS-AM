@@ -42,11 +42,4 @@ class UserWorkplace extends Model
     {
         return $this->belongsTo(Workplace::class);
     }
-}space App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class UserWorkplace extends Model
-{
-    //
 }
