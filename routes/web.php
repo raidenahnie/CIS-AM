@@ -21,11 +21,12 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
 
 // API routes for dashboard
 Route::prefix('api')->group(function () {
-    Route::get('/user-stats/{userId?}', [DashboardController::class, 'getUserStats']);
-    Route::get('/attendance-history/{userId?}', [DashboardController::class, 'getAttendanceHistory']);
-    Route::get('/user-workplace/{userId?}', [DashboardController::class, 'getUserWorkplace']);
-    Route::get('/user-workplaces/{userId?}', [DashboardController::class, 'getUserWorkplaces']);
-    Route::get('/current-status/{userId?}', [DashboardController::class, 'getCurrentStatus']);
+    Route::get('/user-stats/{userId}', [DashboardController::class, 'getUserStats']);
+    Route::get('/attendance-history/{userId}', [DashboardController::class, 'getAttendanceHistory']);
+    Route::get('/attendance-logs/{userId}', [DashboardController::class, 'getAttendanceLogs']);
+    Route::get('/user-workplace/{userId}', [DashboardController::class, 'getUserWorkplace']);
+    Route::get('/user-workplaces/{userId}', [DashboardController::class, 'getUserWorkplaces']);
+    Route::get('/current-status/{userId}', [DashboardController::class, 'getCurrentStatus']);
     Route::post('/checkin', [DashboardController::class, 'checkIn']);
     Route::post('/perform-action', [DashboardController::class, 'performAction']);
     Route::post('/save-workplace', [DashboardController::class, 'saveWorkplace']);

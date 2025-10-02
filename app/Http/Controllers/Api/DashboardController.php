@@ -13,8 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function getUserStats($userId = 1)
+    public function getUserStats($userId = null)
     {
+        if (!$userId) {
+            return response()->json(['error' => 'User ID is required'], 400);
+        }
+        
         $user = User::find($userId);
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
@@ -23,9 +27,10 @@ class DashboardController extends Controller
         $currentMonth = now()->startOfMonth();
         $today = now()->format('Y-m-d');
 
-        // Get user's attendances for current month
+        // Get user's attendances for current month (work days only - Monday to Friday)
         $attendances = Attendance::where('user_id', $userId)
             ->where('date', '>=', $currentMonth)
+            ->whereRaw('DAYOFWEEK(date) BETWEEN 2 AND 6') // Monday=2, Friday=6 in MySQL
             ->get();
 
         $totalDays = $attendances->count();
@@ -79,8 +84,12 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getAttendanceHistory($userId = 1)
+    public function getAttendanceHistory($userId = null)
     {
+        if (!$userId) {
+            return response()->json(['error' => 'User ID is required'], 400);
+        }
+        
         $attendances = Attendance::where('user_id', $userId)
             ->with('workplace')
             ->orderBy('date', 'desc')
@@ -103,8 +112,42 @@ class DashboardController extends Controller
         return response()->json($attendances);
     }
 
-    public function getUserWorkplace($userId = 1)
+    public function getAttendanceLogs($userId = null)
     {
+        if (!$userId) {
+            return response()->json(['error' => 'User ID is required'], 400);
+        }
+        
+        try {
+            $logs = AttendanceLog::where('user_id', $userId)
+                ->orderBy('timestamp', 'desc')
+                ->limit(100) // Limit for performance
+                ->get()
+                ->map(function ($log) {
+                    return [
+                        'id' => $log->id,
+                        'action' => $log->action,
+                        'timestamp' => $log->timestamp->format('g:i A'),
+                        'shift_type' => $log->shift_type ?? 'regular',
+                        'location' => $log->address ?? 'Workplace',
+                        'date' => $log->timestamp->format('M j, Y'),
+                        'date_raw' => $log->timestamp->format('Y-m-d'),
+                        'is_valid_location' => $log->is_valid_location ?? true
+                    ];
+                });
+
+            return response()->json($logs);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch attendance logs'], 500);
+        }
+    }
+
+    public function getUserWorkplace($userId = null)
+    {
+        if (!$userId) {
+            return response()->json(['error' => 'User ID is required'], 400);
+        }
+        
         $userWorkplace = DB::table('user_workplaces')
             ->join('workplaces', 'user_workplaces.workplace_id', '=', 'workplaces.id')
             ->where('user_workplaces.user_id', $userId)
@@ -515,8 +558,12 @@ class DashboardController extends Controller
         return $this->checkIn($request);
     }
 
-    public function getCurrentStatus($userId = 1)
+    public function getCurrentStatus($userId = null)
     {
+        if (!$userId) {
+            return response()->json(['error' => 'User ID is required'], 400);
+        }
+        
         $user = User::find($userId);
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
@@ -568,8 +615,12 @@ class DashboardController extends Controller
     /**
      * Get all workplaces assigned to a user
      */
-    public function getUserWorkplaces($userId = 1)
+    public function getUserWorkplaces($userId = null)
     {
+        if (!$userId) {
+            return response()->json(['error' => 'User ID is required'], 400);
+        }
+        
         $user = User::with(['workplaces' => function($query) {
             $query->where('is_active', true);
         }])->find($userId);
