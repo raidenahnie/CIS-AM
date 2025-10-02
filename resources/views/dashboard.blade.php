@@ -803,6 +803,36 @@
             position: relative;
         }
 
+        /* Fix z-index for Leaflet maps to prevent overlapping with modals */
+        .leaflet-container,
+        .leaflet-map-pane,
+        .leaflet-popup-pane,
+        .leaflet-marker-pane,
+        .leaflet-tile-pane,
+        .leaflet-shadow-pane,
+        .leaflet-overlay-pane,
+        .leaflet-control-container {
+            z-index: 1 !important;
+        }
+
+        .leaflet-popup {
+            z-index: 1000 !important;
+        }
+
+        /* Ensure map containers have proper z-index */
+        #checkin-map,
+        #workplace-map,
+        #setup-map {
+            z-index: 1 !important;
+            position: relative;
+        }
+
+        /* Make sure modals always stay on top */
+        .modal-blur,
+        .fixed.inset-0 {
+            z-index: 9999 !important;
+        }
+
         /* Pulse animation for location indicator */
         @keyframes pulse-ring {
             0% {
