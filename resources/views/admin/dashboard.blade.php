@@ -16,6 +16,10 @@
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* Fix Leaflet map z-index issues with modals */
+        .leaflet-container { z-index: 1 !important; }
+        .leaflet-control-container { z-index: 2 !important; }
+        
         .admin-nav-link {
             display: flex;
             align-items: center;
