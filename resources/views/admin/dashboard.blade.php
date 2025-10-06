@@ -20,6 +20,17 @@
         .leaflet-container { z-index: 1 !important; }
         .leaflet-control-container { z-index: 2 !important; }
         
+        /* Fix dropdown overflow in tables */
+        .table-container { overflow: visible !important; }
+        .table-wrapper { overflow-x: auto; overflow-y: visible; }
+        .dropdown-cell { position: relative; }
+        .dropdown-menu {
+            position: absolute !important;
+            z-index: 9999 !important;
+            right: 0;
+            min-width: 12rem;
+        }
+        
         .admin-nav-link {
             display: flex;
             align-items: center;
@@ -376,78 +387,244 @@
                     <p class="mt-2 text-sm text-gray-600">Manage workplace locations and user assignments.</p>
                 </div>
 
-                <!-- Add Workplace Button -->
-                <div class="mb-6">
-                    <button onclick="openWorkplaceModal()" 
-                            class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-plus mr-2"></i>
-                        Add New Workplace
-                    </button>
-                </div>
-
-                <!-- Workplaces Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" id="workplaces-grid">
-                    @foreach($workplaces as $workplace)
-                    <div class="bg-white rounded-xl shadow-lg card-hover transition-all duration-300 border border-gray-200" data-workplace-id="{{ $workplace->id }}">
-                        <div class="p-6">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                                        <i class="fas fa-building text-white text-xl"></i>
-                                    </div>
-                                    <div class="ml-4">
-                                        <h3 class="text-lg font-semibold text-gray-900">{{ $workplace->name }}</h3>
-                                        <p class="text-sm text-gray-600">Radius: {{ $workplace->radius }}m</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full {{ $workplace->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        <div class="w-1.5 h-1.5 {{ $workplace->is_active ? 'bg-green-500' : 'bg-red-500' }} rounded-full mr-1"></div>
-                                        {{ $workplace->is_active ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </div>
+                <!-- Workplace Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-3 shadow-lg">
+                                <i class="fas fa-building text-white text-2xl"></i>
                             </div>
-                            
-                            <div class="mb-4">
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <i class="fas fa-map-marker-alt mr-1"></i>
-                                    {{ $workplace->address }}
-                                </p>
-                                <p class="text-xs text-gray-500">
-                                    Coordinates: {{ $workplace->latitude }}, {{ $workplace->longitude }}
-                                </p>
-                            </div>
-                            
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                                <span class="inline-flex items-center px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
-                                    <i class="fas fa-users mr-1"></i>
-                                    {{ $workplace->users_count }} users
-                                </span>
-                                <div class="flex space-x-2">
-                                    <button onclick="editWorkplace({{ $workplace->id }})" 
-                                            class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors"
-                                            title="Edit workplace">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="manageUsers({{ $workplace->id }})" 
-                                            class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
-                                            title="Manage users">
-                                        <i class="fas fa-users-cog"></i>
-                                    </button>
-                                    <button onclick="deleteWorkplace({{ $workplace->id }})" 
-                                            class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Delete workplace">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
+                            <div class="ml-5">
+                                <p class="text-sm font-medium text-gray-500 uppercase">Total Workplaces</p>
+                                <p class="mt-1 text-3xl font-bold text-gray-900">{{ $workplaces->count() }}</p>
                             </div>
                         </div>
                     </div>
-                    @endforeach
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl p-3 shadow-lg">
+                                <i class="fas fa-check-circle text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-5">
+                                <p class="text-sm font-medium text-gray-500 uppercase">Active</p>
+                                <p class="mt-1 text-3xl font-bold text-gray-900">{{ $workplaces->where('is_active', true)->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl p-3 shadow-lg">
+                                <i class="fas fa-users text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-5">
+                                <p class="text-sm font-medium text-gray-500 uppercase">Total Assignments</p>
+                                <p class="mt-1 text-3xl font-bold text-gray-900">{{ $users->sum(function($u) { return $u->workplaces->count(); }) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-gradient-to-br from-red-400 to-red-600 rounded-xl p-3 shadow-lg">
+                                <i class="fas fa-times-circle text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-5">
+                                <p class="text-sm font-medium text-gray-500 uppercase">Inactive</p>
+                                <p class="mt-1 text-3xl font-bold text-gray-900">{{ $workplaces->where('is_active', false)->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions for Workplaces -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <button onclick="openWorkplaceModal()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
+                        <div class="flex items-center">
+                            <i class="fas fa-plus text-2xl text-green-500 mr-4"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">Add New Workplace</h3>
+                                <p class="text-sm text-gray-600">Create a new location</p>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="scrollToAllWorkplaces()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
+                        <div class="flex items-center">
+                            <i class="fas fa-list text-2xl text-blue-500 mr-4"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">View All Workplaces</h3>
+                                <p class="text-sm text-gray-600">Browse all locations</p>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="scrollToAssignments()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left">
+                        <div class="flex items-center">
+                            <i class="fas fa-user-cog text-2xl text-purple-500 mr-4"></i>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">Manage Assignments</h3>
+                                <p class="text-sm text-gray-600">User-workplace links</p>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- All Workplaces Table -->
+                <div id="all-workplaces-table" class="bg-white shadow-xl rounded-xl overflow-hidden mb-8">
+                    <div class="px-6 py-6 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-900">All Workplaces</h3>
+                                <p class="mt-1 text-sm text-gray-600">Manage all workplace locations</p>
+                            </div>
+                            <div class="mt-4 sm:mt-0 flex space-x-3">
+                                <div class="relative">
+                                    <input type="text" id="workplaceSearchMain" placeholder="Search workplaces..." 
+                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                                <button onclick="openWorkplaceModal()" 
+                                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Add Workplace
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-wrapper">
+                        <table class="min-w-full divide-y divide-gray-200" id="workplacesTableMain">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workplace</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Radius</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Users</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="workplacesTableBodyMain">
+                                @foreach($workplaces as $workplace)
+                                <tr class="hover:bg-gray-50 transition-colors workplace-row-main">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-12 w-12">
+                                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                                                    <i class="fas fa-building text-white text-xl"></i>
+                                                </div>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-semibold text-gray-900 workplace-name">{{ $workplace->name }}</div>
+                                                <div class="text-xs text-gray-500">ID: {{ $workplace->id }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm text-gray-900 workplace-address">
+                                            <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                                            {{ Str::limit($workplace->address, 50) }}
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            {{ number_format($workplace->latitude, 6) }}, {{ number_format($workplace->longitude, 6) }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            <i class="fas fa-circle-notch mr-1"></i>
+                                            {{ $workplace->radius }}m
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full {{ $workplace->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            <div class="w-1.5 h-1.5 {{ $workplace->is_active ? 'bg-green-500' : 'bg-red-500' }} rounded-full mr-1.5"></div>
+                                            {{ $workplace->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-800 rounded-full">
+                                            <i class="fas fa-users mr-1"></i>
+                                            {{ $workplace->users_count }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <div class="flex items-center space-x-2">
+                                            <!-- Main actions: View/Edit -->
+                                            <button onclick="viewWorkplace({{ $workplace->id }})" 
+                                                    class="inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition-colors"
+                                                    title="View Details">
+                                                <i class="fas fa-eye mr-1"></i>
+                                                View
+                                            </button>
+                                            <button onclick="editWorkplace({{ $workplace->id }})" 
+                                                    class="inline-flex items-center px-3 py-1.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-lg hover:bg-indigo-200 transition-colors"
+                                                    title="Edit Workplace">
+                                                <i class="fas fa-edit mr-1"></i>
+                                                Edit
+                                            </button>
+                                            
+                                            <!-- More button -->
+                                            <button id="more-btn-wp-{{ $workplace->id }}" 
+                                                    onclick="toggleMoreActionsWorkplace({{ $workplace->id }})" 
+                                                    class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                                    title="More Actions">
+                                                <i class="fas fa-ellipsis-h mr-1"></i>
+                                                More
+                                            </button>
+                                            
+                                            <!-- Expanded actions (hidden by default) -->
+                                            <div id="more-actions-wp-{{ $workplace->id }}" style="display: none;" class="flex items-center space-x-2">
+                                                <button onclick="manageUsers({{ $workplace->id }})" 
+                                                        class="inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 text-xs font-medium rounded-lg hover:bg-green-200 transition-colors"
+                                                        title="Manage Users">
+                                                    <i class="fas fa-users-cog mr-1"></i>
+                                                    Users
+                                                </button>
+                                                <button onclick="deleteWorkplace({{ $workplace->id }})" 
+                                                        class="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-lg hover:bg-red-200 transition-colors"
+                                                        title="Delete Workplace">
+                                                    <i class="fas fa-trash mr-1"></i>
+                                                    Delete
+                                                </button>
+                                                <button onclick="toggleMoreActionsWorkplace({{ $workplace->id }})" 
+                                                        class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                                        title="Show Less">
+                                                    <i class="fas fa-times mr-1"></i>
+                                                    Back
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-600">
+                                Showing <span class="font-semibold">{{ $workplaces->count() }}</span> of <span class="font-semibold">{{ $workplaces->count() }}</span> workplaces
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fas fa-chevron-left mr-1"></i>
+                                    Previous
+                                </button>
+                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    Next
+                                    <i class="fas fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- User Assignments Section -->
-                <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+                <div id="assignments-section" class="bg-white shadow-xl rounded-xl overflow-hidden">
                     <div class="px-6 py-6 border-b border-gray-200">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -469,7 +646,7 @@
                         </div>
                     </div>
                     
-                    <div class="overflow-x-auto">
+                    <div class="table-wrapper">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -523,7 +700,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <button onclick="manageUserWorkplaces({{ $user->id }})" 
-                                                class="inline-flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                                                class="inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition-colors">
                                             <i class="fas fa-cog mr-1"></i>
                                             Manage
                                         </button>
@@ -532,6 +709,25 @@
                                 @endforeach
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-600">
+                                Showing <span class="font-semibold">{{ $users->count() }}</span> users with assignments
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fas fa-chevron-left mr-1"></i>
+                                    Previous
+                                </button>
+                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    Next
+                                    <i class="fas fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -604,17 +800,17 @@
 
                 <!-- Quick Actions for Users -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <button onclick="addUser()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
+                    <button onclick="scrollToAllUsers()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
                         <div class="flex items-center">
-                            <i class="fas fa-user-plus text-2xl text-green-500 mr-4"></i>
+                            <i class="fas fa-users text-2xl text-green-500 mr-4"></i>
                             <div>
-                                <h3 class="font-semibold text-gray-900">Add New User</h3>
-                                <p class="text-sm text-gray-600">Create a new user account</p>
+                                <h3 class="font-semibold text-gray-900">View All Users</h3>
+                                <p class="text-sm text-gray-600">Browse and manage all users</p>
                             </div>
                         </div>
                     </button>
                     
-                    <button onclick="switchAdminSection('users'); setTimeout(() => document.getElementById('userSearchMain').focus(), 300);" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
+                    <button onclick="scrollToAllUsers(); setTimeout(() => { document.getElementById('userSearchMain').focus(); animateSearchBar(); }, 300);" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
                         <div class="flex items-center">
                             <i class="fas fa-search text-2xl text-blue-500 mr-4"></i>
                             <div>
@@ -624,7 +820,7 @@
                         </div>
                     </button>
                     
-                    <button onclick="showNotification('Bulk operations coming soon', 'info')" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left">
+                    <button onclick="openBulkOperationsModal()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left relative">
                         <div class="flex items-center">
                             <i class="fas fa-tasks text-2xl text-purple-500 mr-4"></i>
                             <div>
@@ -632,6 +828,8 @@
                                 <p class="text-sm text-gray-600">Mass user management</p>
                             </div>
                         </div>
+                        <!-- Selection count badge -->
+                        <span id="bulkSelectionBadge" class="hidden absolute -top-2 -right-2 bg-purple-600 text-white text-xs font-bold rounded-full h-7 w-7 flex items-center justify-center shadow-lg animate-pulse">0</span>
                     </button>
                 </div>
 
@@ -644,10 +842,19 @@
                                 <p class="mt-1 text-sm text-gray-600">Real-time employee check-in/out locations</p>
                             </div>
                             <div class="mt-4 sm:mt-0 flex space-x-3">
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="employeeLocationSearch"
+                                           placeholder="Search employees..." 
+                                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                </div>
                                 <button onclick="refreshEmployeeMap()" 
                                         class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
                                     <i class="fas fa-sync-alt mr-2"></i>
-                                    Refresh Map
+                                    Refresh
                                 </button>
                                 <button onclick="toggleMapView()" 
                                         class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
@@ -697,75 +904,142 @@
                         </div>
                     </div>
                     
-                    <!-- Employee Status Cards (when map is hidden) -->
-                    <div id="locationCards" class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="employeeLocationCards">
-                            @foreach($users->where('role', 'user') as $user)
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center">
-                                        <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
-                                            <span class="text-white font-semibold text-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    <!-- Employee Location Table (when map is hidden) -->
+                    <div id="locationCards" class="table-wrapper">
+                        <table class="min-w-full divide-y divide-gray-200" id="employeeLocationTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Location</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workplace</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Online Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="employeeLocationTableBody">
+                                @foreach($users->where('role', 'user') as $user)
+                                <tr class="hover:bg-gray-50 transition-colors employee-location-row">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                                    <span class="text-white font-semibold text-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-semibold text-gray-900">{{ $user->name }}</div>
+                                                <div class="text-sm text-gray-600">{{ $user->email }}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-gray-900">{{ $user->name }}</p>
-                                            <p class="text-xs text-gray-600">{{ $user->email }}</p>
-                                        </div>
-                                    </div>
-                                    <span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full {{ $user->isOnline() ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                        <div class="w-2 h-2 {{ $user->isOnline() ? 'bg-green-500' : 'bg-gray-500' }} rounded-full mr-1"></div>
-                                        {{ $user->isOnline() ? 'Online' : 'Offline' }}
-                                    </span>
-                                </div>
-                                
-                                <div class="text-xs text-gray-500 space-y-1">
-                                    <div class="flex items-center justify-between">
-                                        <span>Status:</span>
-                                        <span class="font-medium {{ isset($latestAttendance[$user->id]) ? 'text-' . (
-                                            $latestAttendance[$user->id]['action'] === 'check_in' ? 'green' : 
-                                            ($latestAttendance[$user->id]['action'] === 'check_out' ? 'red' : 'yellow')
-                                        ) . '-600' : '' }}" id="user-status-{{ $user->id }}">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full
+                                            {{ isset($latestAttendance[$user->id]) ? (
+                                                $latestAttendance[$user->id]['action'] === 'check_in' ? 'bg-green-100 text-green-800' : 
+                                                ($latestAttendance[$user->id]['action'] === 'check_out' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800')
+                                            ) : 'bg-gray-100 text-gray-800' }}" id="user-status-{{ $user->id }}">
+                                            <i class="fas {{ isset($latestAttendance[$user->id]) ? (
+                                                $latestAttendance[$user->id]['action'] === 'check_in' ? 'fa-sign-in-alt' : 
+                                                ($latestAttendance[$user->id]['action'] === 'check_out' ? 'fa-sign-out-alt' : 'fa-pause')
+                                            ) : 'fa-minus' }} mr-1"></i>
                                             @if(isset($latestAttendance[$user->id]))
                                                 {{ ucwords(str_replace('_', ' ', $latestAttendance[$user->id]['action'])) }}
                                             @else
                                                 No activity today
                                             @endif
                                         </span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span>Location:</span>
-                                        <span class="font-medium" id="user-location-{{ $user->id }}">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900" id="user-location-{{ $user->id }}">
                                             @if(isset($latestAttendance[$user->id]))
-                                                {{ Str::limit($latestAttendance[$user->id]['address'], 25) }}
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-map-marker-alt text-gray-400 mr-2"></i>
+                                                    <span>{{ Str::limit($latestAttendance[$user->id]['address'] ?: 'Coordinates: ' . $latestAttendance[$user->id]['latitude'] . ', ' . $latestAttendance[$user->id]['longitude'], 40) }}</span>
+                                                </div>
                                             @else
-                                                Unknown
+                                                <div class="flex items-center text-gray-500">
+                                                    <i class="fas fa-question-circle text-gray-400 mr-2"></i>
+                                                    <span>Unknown</span>
+                                                </div>
                                             @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        @if($user->workplaces->count() > 0)
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach($user->workplaces->take(1) as $workplace)
+                                                    <span class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                                        <i class="fas fa-building mr-1"></i>
+                                                        {{ $workplace->name }}{{ $workplace->pivot->is_primary ? ' (Primary)' : '' }}
+                                                    </span>
+                                                @endforeach
+                                                @if($user->workplaces->count() > 1)
+                                                    <span class="text-xs text-gray-500">+{{ $user->workplaces->count() - 1 }} more</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-400 italic">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                No assignments
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @php
+                                            $isOnline = $user->isOnline();
+                                        @endphp
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full {{ $isOnline ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                            <div class="w-2 h-2 {{ $isOnline ? 'bg-green-500' : 'bg-gray-500' }} rounded-full mr-2"></div>
+                                            {{ $isOnline ? 'Online' : 'Offline' }}
                                         </span>
-                                    </div>
-                                    @if($user->workplaces->count() > 0)
-                                    <div class="flex items-center justify-between">
-                                        <span>Assigned to:</span>
-                                        <span class="font-medium">{{ Str::limit($user->workplaces->first()->name, 20) }}</span>
-                                    </div>
-                                    @endif
-                                </div>
-                                
-                                <div class="mt-3 flex justify-between">
-                                    <button onclick="showUserLocationDetails({{ $user->id }})" class="text-xs text-indigo-600 hover:text-indigo-800">
-                                        View Details
-                                    </button>
-                                    <button onclick="centerMapOnUser({{ $user->id }})" class="text-xs text-blue-600 hover:text-blue-800">
-                                        Show on Map
-                                    </button>
-                                </div>
+                                        @if($isOnline && $user->last_activity)
+                                            <div class="text-xs text-gray-500 mt-1">Last: {{ $user->last_activity->diffForHumans() }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center gap-2">
+                                            <button onclick="showUserLocationDetails({{ $user->id }})" 
+                                                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                                                <i class="fas fa-history"></i>
+                                                <span>History</span>
+                                            </button>
+                                            <button onclick="centerMapOnUser({{ $user->id }})" 
+                                                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span>Map</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Employee Location Pagination -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-700">
+                                Showing <span class="font-medium">{{ $users->where('role', 'user')->count() }}</span> employees
                             </div>
-                            @endforeach
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                    Previous
+                                </button>
+                                <button class="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md">
+                                    1
+                                </button>
+                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                    Next
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Full Users Table -->
-                <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+                <div id="all-users-table" class="bg-white shadow-xl rounded-xl overflow-hidden">
                     <div class="px-6 py-6 border-b border-gray-200">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -775,7 +1049,7 @@
                             <div class="mt-4 sm:mt-0 flex space-x-3">
                                 <div class="relative">
                                     <input type="text" id="userSearchMain" placeholder="Search users..." 
-                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300">
                                     <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                                 </div>
                                 <button onclick="addUser()" 
@@ -787,7 +1061,7 @@
                         </div>
                     </div>
                     
-                    <div class="overflow-x-auto">
+                    <div class="table-wrapper">
                         <table class="min-w-full divide-y divide-gray-200" id="usersTableMain">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -862,34 +1136,42 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex space-x-2">
-                                            <button onclick="editUser({{ $user->id }})" 
-                                                    class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                    title="Edit user">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
+                                        <div class="flex items-center gap-2 flex-wrap">
                                             <button onclick="viewUser({{ $user->id }})" 
-                                                    class="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded-lg transition-colors"
-                                                    title="View details">
+                                                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
                                                 <i class="fas fa-eye"></i>
+                                                <span>View</span>
                                             </button>
-                                            <button onclick="manageUserWorkplaces({{ $user->id }})" 
-                                                    class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Manage workplaces">
-                                                <i class="fas fa-building"></i>
+                                            <button onclick="editUser({{ $user->id }})" 
+                                                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                                                <i class="fas fa-edit"></i>
+                                                <span>Edit</span>
                                             </button>
-                                            <button onclick="resetUserPassword({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')" 
-                                                    class="text-orange-600 hover:text-orange-900 p-2 hover:bg-orange-50 rounded-lg transition-colors"
-                                                    title="Reset password">
-                                                <i class="fas fa-key"></i>
+                                            <button onclick="toggleMoreActions({{ $user->id }})" 
+                                                    id="more-btn-{{ $user->id }}"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                                <span>More</span>
                                             </button>
-                                            @if($user->id !== auth()->id())
-                                            <button onclick="deleteUser({{ $user->id }})" 
-                                                    class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete user">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            @endif
+                                            <div id="more-actions-{{ $user->id }}" style="display: none;" class="flex items-center gap-2">
+                                                <button onclick="resetUserPassword({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')" 
+                                                        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors">
+                                                    <i class="fas fa-key"></i>
+                                                    <span>Reset</span>
+                                                </button>
+                                                @if($user->id !== auth()->id())
+                                                <button onclick="deleteUser({{ $user->id }})" 
+                                                        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 transition-colors">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                    <span>Delete</span>
+                                                </button>
+                                                @endif
+                                                <button onclick="toggleMoreActions({{ $user->id }})" 
+                                                        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors border border-gray-300">
+                                                    <i class="fas fa-chevron-left"></i>
+                                                    <span>Back</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -899,7 +1181,7 @@
                     </div>
                     
                     <!-- Pagination -->
-                    <div class="bg-gray-50 px-6 py-4 border-t">
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
                         <div class="flex items-center justify-between">
                             <div class="text-sm text-gray-700">
                                 Showing <span class="font-medium">{{ $users->count() }}</span> users
@@ -1343,6 +1625,213 @@
         </div>
     </div>
 
+    <!-- Bulk Operations Modal -->
+    <div id="bulkOperationsModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-0 border-0 w-96 shadow-lg rounded-2xl">
+            <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
+                <div class="px-6 py-4 border-b border-white border-opacity-20">
+                    <h3 class="text-lg font-semibold text-black mb-0">Bulk Operations</h3>
+                    <p class="text-sm text-gray-700 mt-1">Perform actions on multiple users</p>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-black mb-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <span id="selectedCount">0</span> user(s) selected
+                        </label>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <!-- Bulk Send Password Reset -->
+                        <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-40">
+                            <h4 class="text-sm font-semibold text-black mb-3 flex items-center">
+                                <i class="fas fa-key text-blue-600 mr-2"></i>
+                                Send Password Reset Email
+                            </h4>
+                            <p class="text-xs text-gray-700 mb-3">Send password reset links to selected users via email</p>
+                            <button onclick="executeBulkPasswordReset()" class="w-full px-4 py-2 bg-blue-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30 text-sm">
+                                <i class="fas fa-envelope mr-1"></i>
+                                Send Reset Emails
+                            </button>
+                        </div>
+                        
+                        <!-- Bulk Change Role -->
+                        <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-40">
+                            <h4 class="text-sm font-semibold text-black mb-3 flex items-center">
+                                <i class="fas fa-user-tag text-purple-600 mr-2"></i>
+                                Change Role
+                            </h4>
+                            <select id="bulkRoleSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white bg-opacity-80 text-black mb-2">
+                                <option value="">Select Role</option>
+                                <option value="admin">Admin</option>
+                                <option value="user">User</option>
+                            </select>
+                            <button onclick="executeBulkRoleChange()" class="w-full px-4 py-2 bg-purple-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30 text-sm">
+                                <i class="fas fa-check mr-1"></i>
+                                Update Role
+                            </button>
+                        </div>
+                        
+                        <!-- Bulk Delete -->
+                        <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-40">
+                            <h4 class="text-sm font-semibold text-black mb-3 flex items-center">
+                                <i class="fas fa-trash-alt text-red-600 mr-2"></i>
+                                Delete Users
+                            </h4>
+                            <p class="text-xs text-gray-700 mb-2">This action cannot be undone</p>
+                            <button onclick="executeBulkDelete()" class="w-full px-4 py-2 bg-red-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30 text-sm">
+                                <i class="fas fa-trash mr-1"></i>
+                                Delete Selected Users
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end">
+                    <button type="button" onclick="closeBulkOperationsModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workplace User Management Modal -->
+    <div id="workplaceUsersModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-0 border-0 w-11/12 max-w-4xl shadow-lg rounded-2xl">
+            <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
+                <div class="px-6 py-4 border-b border-white border-opacity-20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-black mb-0" id="workplaceUsersTitle">Manage Workplace Users</h3>
+                            <p class="text-sm text-gray-700 mt-1">Assign or remove users from this workplace</p>
+                        </div>
+                        <button onclick="closeWorkplaceUsersModal()" class="text-black hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Assigned Users (Left) -->
+                        <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-40">
+                            <h4 class="text-sm font-semibold text-black mb-3 flex items-center">
+                                <i class="fas fa-users text-green-600 mr-2"></i>
+                                Assigned Users (<span id="assignedUsersCount">0</span>)
+                            </h4>
+                            <div class="mb-3">
+                                <input type="text" id="assignedUsersSearch" placeholder="Search assigned users..." 
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white bg-opacity-80">
+                            </div>
+                            <div id="assignedUsersList" class="space-y-2 max-h-96 overflow-y-auto">
+                                <!-- Dynamically filled -->
+                            </div>
+                        </div>
+                        
+                        <!-- Available Users (Right) -->
+                        <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-40">
+                            <h4 class="text-sm font-semibold text-black mb-3 flex items-center">
+                                <i class="fas fa-user-plus text-blue-600 mr-2"></i>
+                                Available Users (<span id="availableUsersCount">0</span>)
+                            </h4>
+                            <div class="mb-3">
+                                <input type="text" id="availableUsersSearch" placeholder="Search available users..." 
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white bg-opacity-80">
+                            </div>
+                            <div id="availableUsersList" class="space-y-2 max-h-96 overflow-y-auto">
+                                <!-- Dynamically filled -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end">
+                    <button onclick="closeWorkplaceUsersModal()" 
+                            class="px-4 py-2 bg-blue-400 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Workplace Settings Modal -->
+    <div id="userWorkplaceSettingsModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-0 border-0 w-11/12 max-w-3xl shadow-lg rounded-2xl">
+            <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
+                <div class="px-6 py-4 border-b border-white border-opacity-20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-black mb-0" id="userWorkplaceSettingsTitle">User Workplace Settings</h3>
+                            <p class="text-sm text-gray-700 mt-1">Manage workplace assignments and set primary location</p>
+                        </div>
+                        <button onclick="closeUserWorkplaceSettingsModal()" class="text-black hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- User Info (Left - 1/3) -->
+                        <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-40">
+                            <div class="flex flex-col items-center text-center">
+                                <div id="userAvatarSettings" class="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg mb-3">
+                                    <span class="text-white font-semibold text-2xl">U</span>
+                                </div>
+                                <h4 id="userNameSettings" class="text-base font-semibold text-black mb-1">User Name</h4>
+                                <p id="userEmailSettings" class="text-xs text-gray-700 mb-4">user@example.com</p>
+                                
+                                <div class="w-full space-y-2 text-left">
+                                    <div class="bg-white bg-opacity-60 rounded-lg p-3">
+                                        <div class="flex items-center text-xs text-gray-700 mb-1">
+                                            <i class="fas fa-building mr-2 text-indigo-600"></i>
+                                            <span>Total Workplaces</span>
+                                        </div>
+                                        <div id="userTotalWorkplaces" class="text-2xl font-bold text-black">0</div>
+                                    </div>
+                                    
+                                    <div class="bg-white bg-opacity-60 rounded-lg p-3">
+                                        <div class="flex items-center text-xs text-gray-700 mb-1">
+                                            <i class="fas fa-star mr-2 text-yellow-500"></i>
+                                            <span>Primary Workplace</span>
+                                        </div>
+                                        <div id="userPrimaryWorkplace" class="text-sm font-semibold text-black">None set</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Workplace Assignments (Right - 2/3) -->
+                        <div class="md:col-span-2 bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-40">
+                            <h4 class="text-sm font-semibold text-black mb-3 flex items-center">
+                                <i class="fas fa-list-ul text-indigo-600 mr-2"></i>
+                                Workplace Assignments (<span id="workplaceAssignmentsCount">0</span>)
+                            </h4>
+                            
+                            <div id="userWorkplacesList" class="space-y-2 max-h-96 overflow-y-auto">
+                                <!-- Dynamically filled -->
+                            </div>
+                            
+                            <div id="noWorkplacesMessage" class="hidden text-center py-8 text-gray-600">
+                                <i class="fas fa-building text-4xl text-gray-300 mb-3"></i>
+                                <p class="text-sm">No workplaces assigned</p>
+                                <p class="text-xs text-gray-500 mt-1">Use "Assign User" button to add workplaces</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end">
+                    <button onclick="closeUserWorkplaceSettingsModal()" 
+                            class="px-4 py-2 bg-blue-400 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Set up CSRF token
         const csrfToken = document.querySelector('meta[name="csrf-token"]') ? 
@@ -1425,6 +1914,27 @@
                 });
             }
 
+            const employeeLocationSearch = document.getElementById('employeeLocationSearch');
+            if (employeeLocationSearch) {
+                employeeLocationSearch.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('.employee-location-row');
+                    
+                    rows.forEach(row => {
+                        const nameEl = row.querySelector('.text-sm.font-semibold.text-gray-900');
+                        const emailEl = row.querySelector('.text-sm.text-gray-600');
+                        const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+                        const email = emailEl ? emailEl.textContent.toLowerCase() : '';
+                        
+                        if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
             const assignmentSearch = document.getElementById('assignmentSearch');
             if (assignmentSearch) {
                 assignmentSearch.addEventListener('input', function(e) {
@@ -1444,6 +1954,26 @@
                 });
             }
 
+            // Workplace search functionality
+            const workplaceSearchMain = document.getElementById('workplaceSearchMain');
+            if (workplaceSearchMain) {
+                workplaceSearchMain.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('.workplace-row-main');
+                    
+                    rows.forEach(row => {
+                        const name = row.querySelector('.workplace-name').textContent.toLowerCase();
+                        const address = row.querySelector('.workplace-address').textContent.toLowerCase();
+                        
+                        if (name.includes(searchTerm) || address.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
             // Select all functionality for Users section
             const selectAllMain = document.getElementById('selectAllMain');
             if (selectAllMain) {
@@ -1452,9 +1982,32 @@
                     checkboxes.forEach(checkbox => {
                         checkbox.checked = e.target.checked;
                     });
+                    updateBulkSelectionBadge();
                 });
             }
+
+            // Update badge when individual checkboxes are changed
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('user-checkbox-main')) {
+                    updateBulkSelectionBadge();
+                }
+            });
         });
+
+        // Update bulk selection badge
+        function updateBulkSelectionBadge() {
+            const selectedCount = document.querySelectorAll('.user-checkbox-main:checked').length;
+            const badge = document.getElementById('bulkSelectionBadge');
+            
+            if (badge) {
+                if (selectedCount > 0) {
+                    badge.textContent = selectedCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        }
 
         // User action functions
         function addUser() {
@@ -1846,25 +2399,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    let usersList = 'Assigned Users:\n\n';
-                    if (data.workplaceUsers.length > 0) {
-                        data.workplaceUsers.forEach(user => {
-                            usersList += `• ${user.name} (${user.email}) - Role: ${user.pivot.role}${user.pivot.is_primary ? ' (Primary)' : ''}\n`;
-                        });
-                    } else {
-                        usersList += 'No users assigned to this workplace.\n';
-                    }
-                    
-                    usersList += '\nAvailable Users:\n';
-                    if (data.availableUsers.length > 0) {
-                        data.availableUsers.forEach(user => {
-                            usersList += `• ${user.name} (${user.email})\n`;
-                        });
-                    } else {
-                        usersList += 'All users are already assigned.\n';
-                    }
-                    
-                    alert(usersList);
+                    showWorkplaceUsersModal(workplaceId, data);
                 } else {
                     showNotification('Error loading workplace users', 'error');
                 }
@@ -1872,6 +2407,207 @@
             .catch(error => {
                 console.error('Error:', error);
                 showNotification('An error occurred while loading workplace users', 'error');
+            });
+        }
+
+        function showWorkplaceUsersModal(workplaceId, data) {
+            const modal = document.getElementById('workplaceUsersModal');
+            const title = document.getElementById('workplaceUsersTitle');
+            const assignedList = document.getElementById('assignedUsersList');
+            const availableList = document.getElementById('availableUsersList');
+            const assignedCount = document.getElementById('assignedUsersCount');
+            const availableCount = document.getElementById('availableUsersCount');
+            
+            // Set workplace name in title
+            const workplaceName = data.workplace ? data.workplace.name : 'Workplace';
+            title.textContent = `Manage Users - ${workplaceName}`;
+            
+            // Set counts
+            assignedCount.textContent = data.workplaceUsers.length;
+            availableCount.textContent = data.availableUsers.length;
+            
+            // Render assigned users
+            if (data.workplaceUsers.length > 0) {
+                assignedList.innerHTML = data.workplaceUsers.map(user => `
+                    <div class="assigned-user-item flex items-center justify-between p-3 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 transition-all">
+                        <div class="flex items-center flex-1">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg mr-3">
+                                <span class="text-white font-semibold text-sm">${user.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-black assigned-user-name">${user.name}</div>
+                                <div class="text-xs text-gray-700 assigned-user-email">${user.email}</div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                        ${user.pivot.role}
+                                    </span>
+                                    ${user.pivot.is_primary ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 ml-1"><i class="fas fa-star mr-1"></i>Primary</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="removeUserFromWorkplace(${workplaceId}, ${user.id})" 
+                                class="ml-3 px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-lg hover:bg-red-200 transition-colors"
+                                title="Remove user">
+                            <i class="fas fa-times mr-1"></i>
+                            Remove
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                assignedList.innerHTML = `
+                    <div class="text-center py-8 text-gray-600">
+                        <i class="fas fa-users text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-sm">No users assigned yet</p>
+                    </div>
+                `;
+            }
+            
+            // Render available users
+            if (data.availableUsers.length > 0) {
+                availableList.innerHTML = data.availableUsers.map(user => `
+                    <div class="available-user-item flex items-center justify-between p-3 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 transition-all">
+                        <div class="flex items-center flex-1">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg mr-3">
+                                <span class="text-white font-semibold text-sm">${user.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-black available-user-name">${user.name}</div>
+                                <div class="text-xs text-gray-700 available-user-email">${user.email}</div>
+                            </div>
+                        </div>
+                        <button onclick="addUserToWorkplace(${workplaceId}, ${user.id})" 
+                                class="ml-3 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-medium rounded-lg hover:bg-green-200 transition-colors"
+                                title="Assign user">
+                            <i class="fas fa-plus mr-1"></i>
+                            Assign
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                availableList.innerHTML = `
+                    <div class="text-center py-8 text-gray-600">
+                        <i class="fas fa-check-circle text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-sm">All users are assigned</p>
+                    </div>
+                `;
+            }
+            
+            // Setup search functionality
+            setupWorkplaceUserSearch();
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeWorkplaceUsersModal() {
+            document.getElementById('workplaceUsersModal').classList.add('hidden');
+        }
+
+        function setupWorkplaceUserSearch() {
+            const assignedSearch = document.getElementById('assignedUsersSearch');
+            const availableSearch = document.getElementById('availableUsersSearch');
+            
+            if (assignedSearch) {
+                assignedSearch.value = '';
+                assignedSearch.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const items = document.querySelectorAll('.assigned-user-item');
+                    
+                    items.forEach(item => {
+                        const name = item.querySelector('.assigned-user-name').textContent.toLowerCase();
+                        const email = item.querySelector('.assigned-user-email').textContent.toLowerCase();
+                        
+                        if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            if (availableSearch) {
+                availableSearch.value = '';
+                availableSearch.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const items = document.querySelectorAll('.available-user-item');
+                    
+                    items.forEach(item => {
+                        const name = item.querySelector('.available-user-name').textContent.toLowerCase();
+                        const email = item.querySelector('.available-user-email').textContent.toLowerCase();
+                        
+                        if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        }
+
+        function addUserToWorkplace(workplaceId, userId) {
+            if (!confirm('Assign this user to the workplace?')) {
+                return;
+            }
+
+            fetch('/admin/assign-workplace', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    workplace_id: workplaceId,
+                    role: 'employee',
+                    is_primary: false
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('User assigned successfully', 'success');
+                    // Refresh the modal
+                    manageUsers(workplaceId);
+                } else {
+                    showNotification(data.message || 'Error assigning user', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while assigning user', 'error');
+            });
+        }
+
+        function removeUserFromWorkplace(workplaceId, userId) {
+            if (!confirm('Remove this user from the workplace?')) {
+                return;
+            }
+
+            fetch('/admin/remove-assignment', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    workplace_id: workplaceId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('User removed successfully', 'success');
+                    // Refresh the modal
+                    manageUsers(workplaceId);
+                } else {
+                    showNotification(data.message || 'Error removing user', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while removing user', 'error');
             });
         }
         
@@ -1885,25 +2621,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    let workplacesList = 'User Workplaces:\n\n';
-                    if (data.userWorkplaces.length > 0) {
-                        data.userWorkplaces.forEach(workplace => {
-                            workplacesList += `• ${workplace.name} - Role: ${workplace.pivot.role}${workplace.pivot.is_primary ? ' (Primary)' : ''}\n`;
-                        });
-                    } else {
-                        workplacesList += 'No workplaces assigned to this user.\n';
-                    }
-                    
-                    workplacesList += '\nAvailable Workplaces:\n';
-                    if (data.availableWorkplaces.length > 0) {
-                        data.availableWorkplaces.forEach(workplace => {
-                            workplacesList += `• ${workplace.name} (${workplace.address})\n`;
-                        });
-                    } else {
-                        workplacesList += 'User is assigned to all workplaces.\n';
-                    }
-                    
-                    alert(workplacesList);
+                    showUserWorkplaceSettingsModal(userId, data);
                 } else {
                     showNotification('Error loading user workplaces', 'error');
                 }
@@ -1911,6 +2629,156 @@
             .catch(error => {
                 console.error('Error:', error);
                 showNotification('An error occurred while loading user workplaces', 'error');
+            });
+        }
+
+        function showUserWorkplaceSettingsModal(userId, data) {
+            const modal = document.getElementById('userWorkplaceSettingsModal');
+            const title = document.getElementById('userWorkplaceSettingsTitle');
+            const avatar = document.getElementById('userAvatarSettings');
+            const userName = document.getElementById('userNameSettings');
+            const userEmail = document.getElementById('userEmailSettings');
+            const totalWorkplaces = document.getElementById('userTotalWorkplaces');
+            const primaryWorkplace = document.getElementById('userPrimaryWorkplace');
+            const workplacesList = document.getElementById('userWorkplacesList');
+            const workplacesCount = document.getElementById('workplaceAssignmentsCount');
+            const noWorkplacesMsg = document.getElementById('noWorkplacesMessage');
+            
+            // Set user info
+            const user = data.user;
+            title.textContent = `${user.name} - Workplace Settings`;
+            avatar.innerHTML = `<span class="text-white font-semibold text-2xl">${user.name.charAt(0).toUpperCase()}</span>`;
+            userName.textContent = user.name;
+            userEmail.textContent = user.email;
+            
+            // Set stats
+            totalWorkplaces.textContent = data.userWorkplaces.length;
+            const primary = data.userWorkplaces.find(w => w.pivot.is_primary);
+            primaryWorkplace.textContent = primary ? primary.name : 'None set';
+            workplacesCount.textContent = data.userWorkplaces.length;
+            
+            // Render workplaces list
+            if (data.userWorkplaces.length > 0) {
+                noWorkplacesMsg.classList.add('hidden');
+                workplacesList.classList.remove('hidden');
+                
+                workplacesList.innerHTML = data.userWorkplaces.map(workplace => `
+                    <div class="workplace-assignment-item flex items-center justify-between p-3 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 transition-all">
+                        <div class="flex items-center flex-1">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg mr-3">
+                                <i class="fas fa-building text-white text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-black">${workplace.name}</div>
+                                <div class="text-xs text-gray-700 mt-1">
+                                    <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                                    ${workplace.address.substring(0, 50)}${workplace.address.length > 50 ? '...' : ''}
+                                </div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="fas fa-user-tag mr-1"></i>
+                                        ${workplace.pivot.role}
+                                    </span>
+                                    ${workplace.pivot.is_primary ? 
+                                        '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-star mr-1"></i>Primary</span>' : 
+                                        ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 ml-3">
+                            ${!workplace.pivot.is_primary ? 
+                                `<button onclick="setUserPrimaryWorkplace(${userId}, ${workplace.id})" 
+                                        class="px-3 py-1.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-lg hover:bg-yellow-200 transition-colors"
+                                        title="Set as Primary">
+                                    <i class="fas fa-star mr-1"></i>
+                                    Set Primary
+                                </button>` : 
+                                '<span class="text-xs text-gray-500 italic">Current Primary</span>'
+                            }
+                            <button onclick="removeUserWorkplaceAssignment(${userId}, ${workplace.id}, '${workplace.name}')" 
+                                    class="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-lg hover:bg-red-200 transition-colors"
+                                    title="Remove Assignment">
+                                <i class="fas fa-times mr-1"></i>
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                noWorkplacesMsg.classList.remove('hidden');
+                workplacesList.classList.add('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeUserWorkplaceSettingsModal() {
+            document.getElementById('userWorkplaceSettingsModal').classList.add('hidden');
+        }
+
+        function setUserPrimaryWorkplace(userId, workplaceId) {
+            if (!confirm('Set this workplace as primary for this user?')) {
+                return;
+            }
+
+            fetch('/admin/set-primary-workplace', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    workplace_id: workplaceId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Primary workplace updated successfully', 'success');
+                    // Refresh the modal
+                    manageUserWorkplaces(userId);
+                } else {
+                    showNotification(data.message || 'Error setting primary workplace', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while setting primary workplace', 'error');
+            });
+        }
+
+        function removeUserWorkplaceAssignment(userId, workplaceId, workplaceName) {
+            if (!confirm(`Remove user from "${workplaceName}"?`)) {
+                return;
+            }
+
+            fetch('/admin/remove-assignment', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    workplace_id: workplaceId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('User removed from workplace successfully', 'success');
+                    // Refresh the modal
+                    manageUserWorkplaces(userId);
+                    // Also reload the page to update the table
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification(data.message || 'Error removing assignment', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while removing assignment', 'error');
             });
         }
 
@@ -2135,21 +3003,39 @@
             const locationElement = document.getElementById(`user-location-${userId}`);
             
             if (statusElement && location) {
-                statusElement.textContent = location.action.replace('_', ' ').toUpperCase();
-                statusElement.className = `font-medium text-${getStatusColorClass(location.action)}`;
+                // Update the badge with proper styling for table format
+                const actionText = location.action.replace('_', ' ').toUpperCase();
+                const bgColorClass = getStatusBgClass(location.action);
+                const textColorClass = getStatusTextClass(location.action);
+                const iconClass = getStatusIconClass(location.action);
+                
+                statusElement.className = `inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${bgColorClass} ${textColorClass}`;
+                statusElement.innerHTML = `<i class="fas ${iconClass} mr-1"></i>${actionText}`;
             }
             
             if (locationElement && location) {
                 // Try to show address first, then coordinates as fallback, then 'Unknown'
                 let displayText = 'Unknown';
+                let iconClass = 'fa-question-circle';
+                let containerClass = 'flex items-center text-gray-500';
                 
                 if (location.address && location.address !== 'Location not available') {
-                    displayText = location.address.length > 30 ? location.address.substring(0, 30) + '...' : location.address;
+                    displayText = location.address.length > 40 ? location.address.substring(0, 40) + '...' : location.address;
+                    iconClass = 'fa-map-marker-alt';
+                    containerClass = 'flex items-center';
                 } else if (location.latitude && location.longitude) {
-                    displayText = `${parseFloat(location.latitude).toFixed(4)}, ${parseFloat(location.longitude).toFixed(4)}`;
+                    displayText = `Coordinates: ${parseFloat(location.latitude).toFixed(4)}, ${parseFloat(location.longitude).toFixed(4)}`;
+                    iconClass = 'fa-map-marker-alt';
+                    containerClass = 'flex items-center';
                 }
                 
-                locationElement.textContent = displayText;
+                locationElement.className = `text-sm text-gray-900`;
+                locationElement.innerHTML = `
+                    <div class="${containerClass}">
+                        <i class="fas ${iconClass} text-gray-400 mr-2"></i>
+                        <span>${displayText}</span>
+                    </div>
+                `;
             }
         }
 
@@ -2160,6 +3046,36 @@
                 case 'break_start': return 'yellow-600';
                 case 'break_end': return 'green-600';
                 default: return 'gray-600';
+            }
+        }
+        
+        function getStatusBgClass(action) {
+            switch(action) {
+                case 'check_in': return 'bg-green-100';
+                case 'check_out': return 'bg-red-100';
+                case 'break_start': return 'bg-yellow-100';
+                case 'break_end': return 'bg-green-100';
+                default: return 'bg-gray-100';
+            }
+        }
+        
+        function getStatusTextClass(action) {
+            switch(action) {
+                case 'check_in': return 'text-green-800';
+                case 'check_out': return 'text-red-800';
+                case 'break_start': return 'text-yellow-800';
+                case 'break_end': return 'text-green-800';
+                default: return 'text-gray-800';
+            }
+        }
+        
+        function getStatusIconClass(action) {
+            switch(action) {
+                case 'check_in': return 'fa-sign-in-alt';
+                case 'check_out': return 'fa-sign-out-alt';
+                case 'break_start': return 'fa-pause';
+                case 'break_end': return 'fa-play';
+                default: return 'fa-minus';
             }
         }
 
@@ -2331,6 +3247,456 @@
         function closeLocationHistoryModal() {
             document.getElementById('locationHistoryModal').classList.add('hidden');
         }
+
+        // Toggle more actions inline (for Users)
+        function toggleMoreActions(userId) {
+            const moreBtn = document.getElementById('more-btn-' + userId);
+            const moreActions = document.getElementById('more-actions-' + userId);
+            
+            // Check current state
+            const isExpanded = moreActions.style.display === 'flex';
+            
+            if (!isExpanded) {
+                // Collapse all other rows first
+                document.querySelectorAll('[id^="more-actions-"]').forEach(actions => {
+                    if (actions.id !== 'more-actions-' + userId) {
+                        actions.style.display = 'none';
+                        const otherId = actions.id.replace('more-actions-', '');
+                        const otherBtn = document.getElementById('more-btn-' + otherId);
+                        if (otherBtn) {
+                            otherBtn.style.display = 'inline-flex';
+                        }
+                    }
+                });
+                
+                // Expand this row - hide More button, show additional actions
+                moreBtn.style.display = 'none';
+                moreActions.style.display = 'flex';
+            } else {
+                // Collapse this row - show More button, hide additional actions
+                moreBtn.style.display = 'inline-flex';
+                moreActions.style.display = 'none';
+            }
+        }
+
+        // Toggle more actions inline (for Workplaces)
+        function toggleMoreActionsWorkplace(workplaceId) {
+            const moreBtn = document.getElementById('more-btn-wp-' + workplaceId);
+            const moreActions = document.getElementById('more-actions-wp-' + workplaceId);
+            
+            // Check current state
+            const isExpanded = moreActions.style.display === 'flex';
+            
+            if (!isExpanded) {
+                // Collapse all other rows first
+                document.querySelectorAll('[id^="more-actions-wp-"]').forEach(actions => {
+                    if (actions.id !== 'more-actions-wp-' + workplaceId) {
+                        actions.style.display = 'none';
+                        const otherId = actions.id.replace('more-actions-wp-', '');
+                        const otherBtn = document.getElementById('more-btn-wp-' + otherId);
+                        if (otherBtn) {
+                            otherBtn.style.display = 'inline-flex';
+                        }
+                    }
+                });
+                
+                // Expand this row - hide More button, show additional actions
+                moreBtn.style.display = 'none';
+                moreActions.style.display = 'flex';
+            } else {
+                // Collapse this row - show More button, hide additional actions
+                moreBtn.style.display = 'inline-flex';
+                moreActions.style.display = 'none';
+            }
+        }
+
+        // Scroll to All Users table
+        function scrollToAllUsers() {
+            const allUsersTable = document.getElementById('all-users-table');
+            if (allUsersTable) {
+                allUsersTable.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+                // Optional: Add a highlight effect
+                allUsersTable.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2');
+                setTimeout(() => {
+                    allUsersTable.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2');
+                }, 2000);
+            }
+        }
+
+        // Animate search bar - expand and contract
+        function animateSearchBar() {
+            const searchBar = document.getElementById('userSearchMain');
+            if (searchBar) {
+                const originalWidth = searchBar.offsetWidth;
+                // Expand
+                searchBar.style.width = (originalWidth * 1.15) + 'px';
+                // Contract back after 300ms
+                setTimeout(() => {
+                    searchBar.style.width = originalWidth + 'px';
+                }, 300);
+            }
+        }
+
+        // Scroll to All Workplaces table
+        function scrollToAllWorkplaces() {
+            const allWorkplacesTable = document.getElementById('all-workplaces-table');
+            if (allWorkplacesTable) {
+                allWorkplacesTable.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+                // Add a highlight effect
+                allWorkplacesTable.classList.add('ring-2', 'ring-green-500', 'ring-offset-2');
+                setTimeout(() => {
+                    allWorkplacesTable.classList.remove('ring-2', 'ring-green-500', 'ring-offset-2');
+                }, 2000);
+            }
+        }
+
+        // Scroll to Assignments section
+        function scrollToAssignments() {
+            const assignmentsSection = document.getElementById('assignments-section');
+            if (assignmentsSection) {
+                assignmentsSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+                // Add a highlight effect
+                assignmentsSection.classList.add('ring-2', 'ring-purple-500', 'ring-offset-2');
+                setTimeout(() => {
+                    assignmentsSection.classList.remove('ring-2', 'ring-purple-500', 'ring-offset-2');
+                }, 2000);
+            }
+        }
+
+        // View Workplace Details
+        function viewWorkplace(workplaceId) {
+            fetch(`/admin/workplaces/${workplaceId}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showWorkplaceDetailsModal(data.workplace);
+                } else {
+                    showNotification(data.message || 'Error loading workplace data', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while loading workplace data', 'error');
+            });
+        }
+
+        // Show Workplace Details Modal
+        function showWorkplaceDetailsModal(workplace) {
+            const modal = document.getElementById('userDetailsModal'); // Reuse user details modal
+            const title = document.getElementById('userDetailsTitle');
+            const content = document.getElementById('userDetailsContent');
+            
+            title.textContent = workplace.name + ' - Details';
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-building text-green-600 mr-2"></i>
+                            <span class="text-sm font-semibold text-black">Workplace Name</span>
+                        </div>
+                        <p class="text-black ml-6">${workplace.name}</p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-map-marker-alt text-red-600 mr-2"></i>
+                            <span class="text-sm font-semibold text-black">Address</span>
+                        </div>
+                        <p class="text-black ml-6">${workplace.address}</p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-map text-blue-600 mr-2"></i>
+                            <span class="text-sm font-semibold text-black">Coordinates</span>
+                        </div>
+                        <p class="text-black ml-6">${workplace.latitude}, ${workplace.longitude}</p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-circle-notch text-indigo-600 mr-2"></i>
+                            <span class="text-sm font-semibold text-black">Check-in Radius</span>
+                        </div>
+                        <p class="text-black ml-6">${workplace.radius} meters</p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas ${workplace.is_active ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i>
+                            <span class="text-sm font-semibold text-black">Status</span>
+                        </div>
+                        <p class="text-black ml-6">${workplace.is_active ? 'Active' : 'Inactive'}</p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-40 backdrop-blur-sm rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-users text-purple-600 mr-2"></i>
+                            <span class="text-sm font-semibold text-black">Assigned Users</span>
+                        </div>
+                        <p class="text-black ml-6">${workplace.users_count || 0} users</p>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Bulk Operations Functions
+        function openBulkOperationsModal() {
+            const selectedCheckboxes = document.querySelectorAll('.user-checkbox-main:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                showNotification('Please select at least one user first', 'warning');
+                // Scroll to users table and highlight it
+                scrollToAllUsers();
+                return;
+            }
+            
+            // Update selected count
+            document.getElementById('selectedCount').textContent = selectedCheckboxes.length;
+            
+            // Show modal
+            document.getElementById('bulkOperationsModal').classList.remove('hidden');
+        }
+        
+        function closeBulkOperationsModal() {
+            document.getElementById('bulkOperationsModal').classList.add('hidden');
+            // Reset selections
+            document.getElementById('bulkRoleSelect').value = '';
+        }
+        
+        function getSelectedUserIds() {
+            const selectedCheckboxes = document.querySelectorAll('.user-checkbox-main:checked');
+            return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+        }
+        
+        function executeBulkPasswordReset() {
+            const userIds = getSelectedUserIds();
+            
+            if (userIds.length === 0) {
+                showNotification('No users selected', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Send password reset email to ${userIds.length} user(s)?`)) {
+                return;
+            }
+            
+            fetch('/admin/bulk-password-reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    user_ids: userIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`Password reset emails sent to ${data.sent_count} user(s)`, 'success');
+                    if (data.errors && data.errors.length > 0) {
+                        console.log('Errors:', data.errors);
+                        showNotification(`${data.errors.length} email(s) failed to send`, 'warning');
+                    }
+                    closeBulkOperationsModal();
+                    // Uncheck all checkboxes
+                    document.querySelectorAll('.user-checkbox-main:checked').forEach(cb => cb.checked = false);
+                    document.getElementById('selectAllMain').checked = false;
+                    updateBulkSelectionBadge();
+                } else {
+                    showNotification(data.message || 'Error sending password reset emails', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while sending reset emails', 'error');
+            });
+        }
+        
+        function executeBulkRoleChange() {
+            const role = document.getElementById('bulkRoleSelect').value;
+            const userIds = getSelectedUserIds();
+            
+            if (!role) {
+                showNotification('Please select a role', 'warning');
+                return;
+            }
+            
+            if (userIds.length === 0) {
+                showNotification('No users selected', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Change role to "${role}" for ${userIds.length} user(s)?`)) {
+                return;
+            }
+            
+            fetch('/admin/bulk-change-role', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    user_ids: userIds,
+                    role: role
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`Successfully updated role for ${userIds.length} user(s)`, 'success');
+                    closeBulkOperationsModal();
+                    // Uncheck all checkboxes
+                    document.querySelectorAll('.user-checkbox-main:checked').forEach(cb => cb.checked = false);
+                    document.getElementById('selectAllMain').checked = false;
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification(data.message || 'Error changing roles', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred during bulk role change', 'error');
+            });
+        }
+        
+        function executeBulkDelete() {
+            const userIds = getSelectedUserIds();
+            
+            if (userIds.length === 0) {
+                showNotification('No users selected', 'warning');
+                return;
+            }
+            
+            if (!confirm(`⚠️ WARNING: Delete ${userIds.length} user(s)?\n\nThis action CANNOT be undone!\n\nType "DELETE" to confirm.`)) {
+                return;
+            }
+            
+            // Additional confirmation for safety
+            const confirmation = prompt(`Type "DELETE" in CAPS to confirm deletion of ${userIds.length} user(s):`);
+            if (confirmation !== 'DELETE') {
+                showNotification('Deletion cancelled - confirmation text did not match', 'info');
+                return;
+            }
+            
+            fetch('/admin/bulk-delete-users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    user_ids: userIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`Successfully deleted ${userIds.length} user(s)`, 'success');
+                    closeBulkOperationsModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification(data.message || 'Error deleting users', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred during bulk deletion', 'error');
+            });
+        }
+
+        // Dropdown menu functions (for other dropdowns if any)
+        function toggleUserDropdown(userId, event) {
+            event.stopPropagation();
+            const dropdownId = 'more-' + userId;
+            const dropdown = document.getElementById(dropdownId);
+            const wasHidden = dropdown.classList.contains('hidden');
+            
+            // Close all other dropdowns first (prevents stacking)
+            document.querySelectorAll('[id^="more-"]').forEach(dd => {
+                if (dd.id !== dropdownId) {
+                    dd.classList.add('hidden');
+                }
+            });
+            
+            // Toggle the clicked dropdown
+            if (wasHidden) {
+                dropdown.classList.remove('hidden');
+                
+                // Check if dropdown is cut off on the right edge
+                const rect = dropdown.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                
+                // If dropdown extends beyond viewport, align it to the left instead
+                if (rect.right > viewportWidth - 10) {
+                    dropdown.style.right = '0';
+                    dropdown.style.left = 'auto';
+                } else {
+                    dropdown.style.right = 'auto';
+                    dropdown.style.left = '0';
+                }
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+        
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const wasHidden = dropdown.classList.contains('hidden');
+            
+            // Close all other dropdowns
+            document.querySelectorAll('[id^="more-"]').forEach(dd => {
+                if (dd.id !== dropdownId) {
+                    dd.classList.add('hidden');
+                }
+            });
+            
+            // Toggle
+            if (wasHidden) {
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+        
+        function hideDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            if (dropdown) {
+                dropdown.classList.add('hidden');
+            }
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            const isDropdownButton = e.target.closest('[onclick*="toggleDropdown"]') || 
+                                     e.target.closest('[onclick*="toggleUserDropdown"]');
+            const isDropdownContent = e.target.closest('[id^="more-"]');
+            
+            if (!isDropdownButton && !isDropdownContent) {
+                document.querySelectorAll('[id^="more-"]').forEach(dropdown => {
+                    dropdown.classList.add('hidden');
+                });
+            }
+        });
 
         // Close modals when clicking outside
         document.getElementById('userDetailsModal').addEventListener('click', function(e) {

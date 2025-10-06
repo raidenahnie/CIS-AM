@@ -74,9 +74,11 @@ class AdminController extends Controller
      */
     public function getWorkplace(Workplace $workplace)
     {
+        $workplace->loadCount('users');
+        
         return response()->json([
             'success' => true,
-            'workplace' => $workplace->load('users')
+            'workplace' => $workplace
         ]);
     }
 
@@ -204,6 +206,11 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email
+            ],
             'userWorkplaces' => $userWorkplaces,
             'availableWorkplaces' => $availableWorkplaces
         ]);
@@ -260,6 +267,10 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
+            'workplace' => [
+                'id' => $workplace->id,
+                'name' => $workplace->name
+            ],
             'workplaceUsers' => $workplaceUsers,
             'availableUsers' => $availableUsers
         ]);
@@ -567,6 +578,212 @@ class AdminController extends Controller
                 'message' => 'Error loading user location details: ' . $e->getMessage(),
                 'user_name' => $user->name,
                 'locations' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk send password reset emails
+     */
+    public function bulkPasswordReset(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed: ' . $validator->errors()->first()
+                ], 422);
+            }
+
+            $sentCount = 0;
+            $errors = [];
+
+            foreach ($request->user_ids as $userId) {
+                try {
+                    $user = User::findOrFail($userId);
+                    
+                    // Delete any existing reset tokens for this user
+                    \App\Models\PasswordReset::where('user_id', $user->id)->delete();
+                    
+                    // Generate a new token
+                    $token = \Illuminate\Support\Str::random(60);
+                    $hashedToken = \Illuminate\Support\Facades\Hash::make($token);
+                    
+                    // Create password reset record
+                    \App\Models\PasswordReset::create([
+                        'user_id' => $user->id,
+                        'token' => $hashedToken,
+                        'expires_at' => \Carbon\Carbon::now()->addHours(24),
+                    ]);
+                    
+                    // Send email with reset link
+                    $resetUrl = url('/password/reset/' . $token . '?email=' . urlencode($user->email));
+                    
+                    try {
+                        \Illuminate\Support\Facades\Mail::raw(
+                            "Hello {$user->name},\n\n" .
+                            "You are receiving this email because your administrator has initiated a password reset for your account.\n\n" .
+                            "Please click the following link to reset your password:\n" .
+                            "$resetUrl\n\n" .
+                            "This password reset link will expire in 24 hours.\n\n" .
+                            "If you did not request this password reset, please contact your administrator immediately.\n\n" .
+                            "Best regards,\n" .
+                            "Curriculum Implementation System",
+                            function ($message) use ($user) {
+                                $message->to($user->email, $user->name)
+                                        ->subject('Password Reset Request');
+                            }
+                        );
+                        
+                        $sentCount++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Email failed for {$user->name} ({$user->email}): " . $e->getMessage();
+                    }
+
+                } catch (\Exception $e) {
+                    $user = User::find($userId);
+                    $userName = $user ? $user->name : "User ID: {$userId}";
+                    $errors[] = "Error processing {$userName}: " . $e->getMessage();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Password reset emails sent to {$sentCount} user(s)",
+                'sent_count' => $sentCount,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error sending password reset emails: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk change user roles
+     */
+    public function bulkChangeRole(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'exists:users,id',
+                'role' => 'required|in:admin,user'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed: ' . $validator->errors()->first()
+                ], 422);
+            }
+
+            $currentUserId = Auth::id();
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($request->user_ids as $userId) {
+                try {
+                    // Prevent admin from changing their own role
+                    if ($userId == $currentUserId) {
+                        $errors[] = "Cannot change your own role";
+                        continue;
+                    }
+
+                    $user = User::findOrFail($userId);
+                    $user->role = $request->role;
+                    $user->save();
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $user = User::find($userId);
+                    $userName = $user ? $user->name : "User ID: {$userId}";
+                    $errors[] = "Failed to update {$userName}: " . $e->getMessage();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully updated role for {$successCount} user(s)",
+                'updated_count' => $successCount,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error during bulk role change: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk delete users
+     */
+    public function bulkDeleteUsers(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed: ' . $validator->errors()->first()
+                ], 422);
+            }
+
+            $currentUserId = Auth::id();
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($request->user_ids as $userId) {
+                try {
+                    // Prevent admin from deleting themselves
+                    if ($userId == $currentUserId) {
+                        $errors[] = "Cannot delete your own account";
+                        continue;
+                    }
+
+                    $user = User::findOrFail($userId);
+                    
+                    // Delete related records first (cascade)
+                    UserWorkplace::where('user_id', $userId)->delete();
+                    \App\Models\AttendanceLog::where('user_id', $userId)->delete();
+                    \App\Models\Attendance::where('user_id', $userId)->delete();
+                    
+                    // Delete user
+                    $user->delete();
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $user = User::find($userId);
+                    $userName = $user ? $user->name : "User ID: {$userId}";
+                    $errors[] = "Failed to delete {$userName}: " . $e->getMessage();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted {$successCount} user(s)",
+                'deleted_count' => $successCount,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error during bulk deletion: ' . $e->getMessage()
             ], 500);
         }
     }

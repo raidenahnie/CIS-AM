@@ -77,6 +77,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/employee-locations', [App\Http\Controllers\AdminController::class, 'getEmployeeLocations']);
     Route::get('/user-location-details/{user}', [App\Http\Controllers\AdminController::class, 'getUserLocationDetails']);
     
+    // Bulk operations
+    Route::post('/bulk-password-reset', [App\Http\Controllers\AdminController::class, 'bulkPasswordReset']);
+    Route::post('/bulk-change-role', [App\Http\Controllers\AdminController::class, 'bulkChangeRole']);
+    Route::post('/bulk-delete-users', [App\Http\Controllers\AdminController::class, 'bulkDeleteUsers']);
+    
     // Password reset (admin only)
     Route::post('/users/{user}/reset-password', [PasswordResetController::class, 'sendResetEmail']);
 });
