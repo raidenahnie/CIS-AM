@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\AdminActivityLog;
 
 class AuthController extends Controller
 {
@@ -50,6 +51,21 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
+            
+            $user = Auth::user();
+            
+            // Log admin login
+            if ($user->role === 'admin') {
+                AdminActivityLog::log(
+                    'login',
+                    "Admin logged in: {$user->name} ({$user->email})",
+                    'User',
+                    $user->id,
+                    null,
+                    $user->id
+                );
+            }
+            
             return redirect()->route('dashboard');
         }
 
@@ -60,6 +76,20 @@ class AuthController extends Controller
 
     // Handle logout
     public function logout(Request $request) {
+        $user = Auth::user();
+        
+        // Log admin logout before logging out
+        if ($user && $user->role === 'admin') {
+            AdminActivityLog::log(
+                'logout',
+                "Admin logged out: {$user->name} ({$user->email})",
+                'User',
+                $user->id,
+                null,
+                $user->id
+            );
+        }
+        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

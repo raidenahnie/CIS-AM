@@ -84,4 +84,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Password reset (admin only)
     Route::post('/users/{user}/reset-password', [PasswordResetController::class, 'sendResetEmail']);
+    
+    // System settings
+    Route::get('/activity-logs', [App\Http\Controllers\AdminController::class, 'getActivityLogs']);
+    Route::post('/update-admin-account', [App\Http\Controllers\AdminController::class, 'updateAdminAccount']);
+    Route::get('/settings', [App\Http\Controllers\AdminController::class, 'getSettings']);
+    Route::post('/settings', [App\Http\Controllers\AdminController::class, 'updateSetting']);
+    
+    // Attendance monitoring
+    Route::get('/attendance-stats', [App\Http\Controllers\AdminController::class, 'getAttendanceStats']);
 });

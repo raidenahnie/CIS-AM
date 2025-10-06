@@ -1206,11 +1206,11 @@
             <div id="attendance-section" class="admin-section hidden">
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-900">Attendance Overview</h1>
-                    <p class="mt-2 text-sm text-gray-600">Monitor and analyze attendance data.</p>
+                    <p class="mt-2 text-sm text-gray-600">Monitor and analyze attendance data. Late time threshold: 9:00 AM</p>
                 </div>
                 
                 <!-- Attendance Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
@@ -1220,7 +1220,9 @@
                             </div>
                             <div class="ml-4 flex-1">
                                 <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Today's Check-ins</p>
-                                <p class="text-2xl font-bold text-gray-900">0</p>
+                                <p class="text-2xl font-bold text-gray-900" id="stat-checkins">
+                                    <i class="fas fa-spinner fa-spin text-lg"></i>
+                                </p>
                                 <p class="text-xs text-green-600 mt-1">Active employees</p>
                             </div>
                         </div>
@@ -1235,7 +1237,9 @@
                             </div>
                             <div class="ml-4 flex-1">
                                 <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Average Hours</p>
-                                <p class="text-2xl font-bold text-gray-900">0</p>
+                                <p class="text-2xl font-bold text-gray-900" id="stat-avg-hours">
+                                    <i class="fas fa-spinner fa-spin text-lg"></i>
+                                </p>
                                 <p class="text-xs text-blue-600 mt-1">Per employee today</p>
                             </div>
                         </div>
@@ -1250,17 +1254,90 @@
                             </div>
                             <div class="ml-4 flex-1">
                                 <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Late Arrivals</p>
-                                <p class="text-2xl font-bold text-gray-900">0</p>
-                                <p class="text-xs text-red-600 mt-1">Today</p>
+                                <p class="text-2xl font-bold text-gray-900" id="stat-late">
+                                    <i class="fas fa-spinner fa-spin text-lg"></i>
+                                </p>
+                                <p class="text-xs text-red-600 mt-1">After 9:00 AM</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-lg rounded-xl p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-coffee text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">On Break</p>
+                                <p class="text-2xl font-bold text-gray-900" id="stat-on-break">
+                                    <i class="fas fa-spinner fa-spin text-lg"></i>
+                                </p>
+                                <p class="text-xs text-yellow-600 mt-1">Currently</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                    <i class="fas fa-clock text-gray-300 text-6xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Attendance Reports</h3>
-                    <p class="text-gray-500">Detailed attendance analytics and logs will be available here.</p>
+                <!-- Detailed Attendance Table -->
+                <div class="bg-white shadow-xl rounded-xl overflow-hidden mb-8">
+                    <div class="px-6 py-6 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-900">Today's Attendance Details</h3>
+                                <p class="mt-1 text-sm text-gray-600">Real-time monitoring of employee attendance</p>
+                            </div>
+                            <div class="mt-4 sm:mt-0 flex space-x-3">
+                                <div class="relative">
+                                    <input type="text" id="attendanceSearch" placeholder="Search employees..." 
+                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                                <button onclick="refreshAttendanceData()" 
+                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <i class="fas fa-sync-alt mr-2"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="attendanceTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check In</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check Out</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Break Time</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Hours</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workplace</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="attendanceTableBody">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p>Loading attendance data...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-700">
+                                Showing <span class="font-medium" id="attendance-count">0</span> employee(s)
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                Last updated: <span id="last-updated">Never</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1332,15 +1409,15 @@
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-700">Require password change every 90 days</span>
-                                <input type="checkbox" class="toggle-switch" checked disabled>
+                                <input type="checkbox" class="toggle-switch" id="setting-security_password_expiry" {{ isset($settings['security_password_expiry']) && $settings['security_password_expiry'] ? 'checked' : '' }}>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-700">Two-factor authentication</span>
-                                <input type="checkbox" class="toggle-switch" disabled>
+                                <input type="checkbox" class="toggle-switch" id="setting-security_2fa" {{ isset($settings['security_2fa']) && $settings['security_2fa'] ? 'checked' : '' }}>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-700">Session timeout (30 mins)</span>
-                                <input type="checkbox" class="toggle-switch" checked disabled>
+                                <input type="checkbox" class="toggle-switch" id="setting-security_session_timeout" {{ isset($settings['security_session_timeout']) && $settings['security_session_timeout'] ? 'checked' : '' }}>
                             </div>
                         </div>
                     </div>
@@ -1354,38 +1431,52 @@
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-700">High accuracy GPS</span>
-                                <input type="checkbox" class="toggle-switch" checked disabled>
+                                <input type="checkbox" class="toggle-switch" id="setting-location_gps_accuracy" {{ isset($settings['location_gps_accuracy']) && $settings['location_gps_accuracy'] ? 'checked' : '' }}>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-700">Allow manual location entry</span>
-                                <input type="checkbox" class="toggle-switch" disabled>
+                                <input type="checkbox" class="toggle-switch" id="setting-location_manual_entry" {{ isset($settings['location_manual_entry']) && $settings['location_manual_entry'] ? 'checked' : '' }}>
                             </div>
                             <div class="mb-2">
                                 <label class="block text-sm text-gray-700">Default radius (meters)</label>
-                                <input type="number" value="100" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded text-sm" disabled>
+                                <input type="number" value="{{ $settings['location_default_radius'] ?? 100 }}" id="setting-location_default_radius" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded text-sm" min="10" max="1000">
                             </div>
                         </div>
                     </div>
                     
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <div class="flex items-center mb-4">
-                            <i class="fas fa-bell text-yellow-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Notification Settings</h3>
+                            <i class="fas fa-user-shield text-red-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">System Account Settings</h3>
+                            <span class="ml-2 px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded">DANGER ZONE</span>
                         </div>
-                        <p class="text-gray-600 mb-4">Configure system notifications and alerts</p>
+                        <p class="text-gray-600 mb-4">Modify admin account credentials and information</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 mr-2"></i>
+                                <div class="text-xs text-red-700">
+                                    <strong>Warning:</strong> Requires password and security phrase for confirmation.
+                                </div>
+                            </div>
+                        </div>
+                        <button class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold" onclick="openAdminAccountModal()">
+                            <i class="fas fa-user-cog mr-2"></i>Modify Admin Account
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-history text-purple-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Activity Logs</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Monitor all admin actions and system activities</p>
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Late arrival notifications</span>
-                                <input type="checkbox" class="toggle-switch" checked disabled>
+                            <div class="text-sm text-gray-700">
+                                Track all administrative actions including user management, workplace modifications, and system changes.
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Daily attendance reports</span>
-                                <input type="checkbox" class="toggle-switch" disabled>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">System maintenance alerts</span>
-                                <input type="checkbox" class="toggle-switch" checked disabled>
-                            </div>
+                            <button class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-sm" onclick="openActivityLogsModal()">
+                                <i class="fas fa-list mr-2"></i>View Activity Logs
+                            </button>
                         </div>
                     </div>
                     
@@ -1413,6 +1504,7 @@
                     <i class="fas fa-cog text-gray-300 text-6xl mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-700 mb-2">Advanced Configuration</h3>
                     <p class="text-gray-500">Additional system configuration options will be available here.</p>
+                    <p class="mt-1 text-md text-center text-gray-900 bg-red-300 italic"><b>TODO:</b> Security settings, location settings, and Data Management settings are not yet implemented. Just a placeholder for now.</p>
                 </div>
             </div>
 
@@ -1688,6 +1780,163 @@
                 </div>
                 <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end">
                     <button type="button" onclick="closeBulkOperationsModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Account Modal -->
+    <div id="adminAccountModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-0 border-0 w-96 shadow-lg rounded-2xl">
+            <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
+                <div class="px-6 py-4 border-b border-white border-opacity-20 bg-red-50 bg-opacity-50">
+                    <h3 class="text-lg font-semibold text-black mb-0 flex items-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                        Modify Admin Account
+                    </h3>
+                    <p class="text-xs text-red-700 mt-1">DANGER ZONE - Requires double confirmation</p>
+                </div>
+                <div class="px-6 py-4">
+                <form id="adminAccountForm">
+                    <div class="bg-red-100 border border-red-300 rounded-lg p-3 mb-4">
+                        <p class="text-xs text-red-800">
+                            <strong>Security Requirements:</strong><br>
+                            1. Enter your current admin password<br>
+                            2. Type the exact phrase: <code class="bg-red-200 px-1 rounded">CONFIRM UPDATE ADMIN</code>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-black mb-2">
+                            <i class="fas fa-lock mr-1"></i>Current Password *
+                        </label>
+                        <input type="password" id="adminCurrentPassword" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-black mb-2">
+                            <i class="fas fa-shield-alt mr-1"></i>Security Phrase *
+                        </label>
+                        <input type="text" id="adminSecurityPhrase" placeholder="Type: CONFIRM UPDATE ADMIN" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black font-mono" required>
+                    </div>
+                    
+                    <hr class="my-4 border-gray-400">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-black mb-2">New Name</label>
+                        <input type="text" id="adminNewName" value="{{ Auth::user()->name }}" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-black mb-2">New Email</label>
+                        <input type="email" id="adminNewEmail" value="{{ Auth::user()->email }}" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-black mb-2">New Password (leave blank to keep current)</label>
+                        <input type="password" id="adminNewPassword" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-black mb-2">Confirm New Password</label>
+                        <input type="password" id="adminNewPasswordConfirm" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black">
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end space-x-3">
+                    <button type="button" onclick="closeAdminAccountModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 bg-opacity-70 backdrop-filter backdrop-blur-sm text-white rounded-lg hover:bg-opacity-80 transition-all duration-200 border border-white border-opacity-30 font-semibold">
+                        <i class="fas fa-save mr-1"></i>Update Admin Account
+                    </button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Logs Modal -->
+    <div id="activityLogsModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-0 border-0 w-11/12 max-w-6xl shadow-lg rounded-2xl">
+            <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
+                <div class="px-6 py-4 border-b border-white border-opacity-20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-black mb-0 flex items-center">
+                                <i class="fas fa-history text-purple-600 mr-2"></i>
+                                Admin Activity Logs
+                            </h3>
+                            <p class="text-sm text-gray-700 mt-1">Complete audit trail of all administrative actions</p>
+                        </div>
+                        <button onclick="closeActivityLogsModal()" class="text-black hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4">
+                    <!-- Filters -->
+                    <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="text" id="activitySearchInput" placeholder="Search logs..." 
+                               class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white bg-opacity-80">
+                        <select id="activityActionFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white bg-opacity-80">
+                            <option value="">All Actions</option>
+                            <option value="login">Login</option>
+                            <option value="logout">Logout</option>
+                            <option value="create_user">Create User</option>
+                            <option value="update_user">Update User</option>
+                            <option value="delete_user">Delete User</option>
+                            <option value="create_workplace">Create Workplace</option>
+                            <option value="update_workplace">Update Workplace</option>
+                            <option value="delete_workplace">Delete Workplace</option>
+                            <option value="assign_user_workplace">Assign User to Workplace</option>
+                            <option value="remove_user_workplace">Remove User from Workplace</option>
+                            <option value="update_admin_account">Update Admin Account</option>
+                            <option value="failed_admin_update">Failed Admin Update</option>
+                        </select>
+                        <button onclick="loadActivityLogs()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+                            <i class="fas fa-sync-alt mr-1"></i>Refresh
+                        </button>
+                    </div>
+                    
+                    <!-- Logs Table -->
+                    <div class="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg overflow-hidden">
+                        <div class="overflow-x-auto max-h-96">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead class="bg-gray-100 bg-opacity-80 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Time</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Admin</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Action</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Description</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">IP Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activityLogsTableBody" class="bg-white bg-opacity-40 divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-gray-600">
+                                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                            <p>Loading activity logs...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div id="activityLogsPagination" class="mt-4 flex justify-between items-center">
+                        <div class="text-sm text-black">
+                            Showing <span id="activityLogsShowing">0</span> entries
+                        </div>
+                        <div class="flex space-x-2" id="activityLogsPaginationButtons">
+                            <!-- Pagination buttons will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end">
+                    <button type="button" onclick="closeActivityLogsModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">
                         Close
                     </button>
                 </div>
@@ -2787,6 +3036,234 @@
             showNotification(`Generating ${type} report... This feature will be available soon.`, 'info');
         }
 
+        // Attendance monitoring functions
+        async function loadAttendanceData() {
+            try {
+                const response = await fetch('/admin/attendance-stats', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update stats
+                    document.getElementById('stat-checkins').textContent = data.stats.total_checkins;
+                    document.getElementById('stat-avg-hours').textContent = data.stats.average_hours + ' hrs';
+                    document.getElementById('stat-late').textContent = data.stats.late_arrivals;
+                    
+                    // Count employees on break
+                    const onBreak = data.attendance.filter(emp => emp.status === 'On Break').length;
+                    document.getElementById('stat-on-break').textContent = onBreak;
+
+                    // Populate table
+                    populateAttendanceTable(data.attendance);
+
+                    // Update last updated time
+                    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                    document.getElementById('attendance-count').textContent = data.attendance.length;
+                } else {
+                    showNotification('Failed to load attendance data: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading attendance data:', error);
+                showNotification('Error loading attendance data', 'error');
+            }
+        }
+
+        function populateAttendanceTable(attendanceData) {
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+
+            if (attendanceData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2"></i>
+                            <p>No attendance data for today</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            attendanceData.forEach(emp => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors attendance-row';
+
+                // Employee info with late badge
+                const employeeCell = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                    <span class="text-white font-semibold text-sm">${emp.user_name.charAt(0).toUpperCase()}</span>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-semibold text-gray-900">${emp.user_name}</div>
+                                <div class="text-sm text-gray-600">${emp.user_email}</div>
+                            </div>
+                            ${emp.is_late ? `
+                                <span class="ml-2 inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Late ${emp.late_by}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+
+                // Check in time
+                const checkInCell = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${emp.check_in ? `
+                            <div class="flex items-center">
+                                <i class="fas fa-sign-in-alt text-green-600 mr-2"></i>
+                                <span class="font-medium ${emp.is_late ? 'text-red-600' : 'text-green-600'}">${emp.check_in}</span>
+                            </div>
+                        ` : '<span class="text-gray-400">--</span>'}
+                    </td>
+                `;
+
+                // Check out time
+                const checkOutCell = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${emp.check_out ? `
+                            <div class="flex items-center">
+                                <i class="fas fa-sign-out-alt text-red-600 mr-2"></i>
+                                <span class="font-medium text-red-600">${emp.check_out}</span>
+                            </div>
+                        ` : '<span class="text-gray-400">--</span>'}
+                    </td>
+                `;
+
+                // Break time
+                const breakCell = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${emp.break_start ? `
+                            <div class="text-xs">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-pause text-yellow-600 mr-1"></i>
+                                    <span>Start: ${emp.break_start}</span>
+                                </div>
+                                ${emp.break_end ? `
+                                    <div class="flex items-center">
+                                        <i class="fas fa-play text-green-600 mr-1"></i>
+                                        <span>End: ${emp.break_end}</span>
+                                    </div>
+                                    <div class="mt-1 font-medium text-gray-700">
+                                        Duration: ${emp.break_duration}
+                                    </div>
+                                ` : '<span class="text-yellow-600 italic">On break</span>'}
+                            </div>
+                        ` : '<span class="text-gray-400">No break</span>'}
+                    </td>
+                `;
+
+                // Work hours
+                const hoursCell = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="font-bold text-indigo-600">${emp.work_hours}</span>
+                    </td>
+                `;
+
+                // Status badge
+                let statusClass = 'bg-gray-100 text-gray-800';
+                let statusIcon = 'fa-minus';
+                if (emp.status === 'Working') {
+                    statusClass = 'bg-green-100 text-green-800';
+                    statusIcon = 'fa-circle';
+                } else if (emp.status === 'On Break') {
+                    statusClass = 'bg-yellow-100 text-yellow-800';
+                    statusIcon = 'fa-coffee';
+                } else if (emp.status === 'Completed') {
+                    statusClass = 'bg-blue-100 text-blue-800';
+                    statusIcon = 'fa-check-circle';
+                }
+
+                const statusCell = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                            <i class="fas ${statusIcon} mr-1"></i>
+                            ${emp.status}
+                        </span>
+                    </td>
+                `;
+
+                // Workplace
+                const workplaceCell = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <i class="fas fa-building text-gray-400 mr-2"></i>
+                            <span>${emp.workplace}</span>
+                        </div>
+                    </td>
+                `;
+
+                row.innerHTML = employeeCell + checkInCell + checkOutCell + breakCell + hoursCell + statusCell + workplaceCell;
+                tbody.appendChild(row);
+            });
+
+            // Setup search
+            setupAttendanceSearch(attendanceData);
+        }
+
+        function setupAttendanceSearch(attendanceData) {
+            const searchInput = document.getElementById('attendanceSearch');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('.attendance-row');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Update count
+                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none').length;
+                document.getElementById('attendance-count').textContent = visibleRows;
+            });
+        }
+
+        function refreshAttendanceData() {
+            const btn = event.target.closest('button');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Refreshing...';
+            btn.disabled = true;
+
+            loadAttendanceData().then(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                showNotification('Attendance data refreshed', 'success');
+            }).catch(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            });
+        }
+
+        // Load attendance data when switching to attendance section
+        document.addEventListener('DOMContentLoaded', function() {
+            const attendanceLink = document.querySelector('[data-section="attendance"]');
+            if (attendanceLink) {
+                attendanceLink.addEventListener('click', function() {
+                    // Small delay to ensure section is visible
+                    setTimeout(() => {
+                        loadAttendanceData();
+                    }, 100);
+                });
+            }
+        });
+
         // Notification system
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
@@ -3708,6 +4185,367 @@
         document.getElementById('locationHistoryModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeLocationHistoryModal();
+            }
+        });
+
+        // Admin Account Modal Functions
+        function openAdminAccountModal() {
+            document.getElementById('adminAccountForm').reset();
+            // Pre-fill current values
+            document.getElementById('adminNewName').value = '{{ Auth::user()->name }}';
+            document.getElementById('adminNewEmail').value = '{{ Auth::user()->email }}';
+            document.getElementById('adminAccountModal').classList.remove('hidden');
+        }
+
+        function closeAdminAccountModal() {
+            document.getElementById('adminAccountModal').classList.add('hidden');
+            document.getElementById('adminAccountForm').reset();
+        }
+
+        document.getElementById('adminAccountForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('adminCurrentPassword').value;
+            const securityPhrase = document.getElementById('adminSecurityPhrase').value;
+            const newName = document.getElementById('adminNewName').value;
+            const newEmail = document.getElementById('adminNewEmail').value;
+            const newPassword = document.getElementById('adminNewPassword').value;
+            const newPasswordConfirm = document.getElementById('adminNewPasswordConfirm').value;
+
+            // Validate security phrase
+            if (securityPhrase !== 'CONFIRM UPDATE ADMIN') {
+                showNotification('Security phrase must be exactly: CONFIRM UPDATE ADMIN', 'error');
+                return;
+            }
+
+            // Validate password confirmation
+            if (newPassword && newPassword !== newPasswordConfirm) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+
+            // Confirm action
+            if (!confirm('Are you absolutely sure you want to modify the admin account? This action will be logged.')) {
+                return;
+            }
+
+            const requestData = {
+                current_password: currentPassword,
+                security_phrase: securityPhrase,
+                name: newName,
+                email: newEmail
+            };
+
+            if (newPassword) {
+                requestData.new_password = newPassword;
+                requestData.new_password_confirmation = newPasswordConfirm;
+            }
+
+            fetch('/admin/update-admin-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Admin account updated successfully', 'success');
+                    closeAdminAccountModal();
+                    
+                    // If email or password was changed, might need to re-login
+                    if (data.changes.includes('Email changed') || data.changes.includes('Password changed')) {
+                        setTimeout(() => {
+                            showNotification('Please log in again with your new credentials', 'info');
+                            window.location.href = '/logout';
+                        }, 2000);
+                    } else {
+                        // Just reload the page to update the name
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    }
+                } else {
+                    showNotification(data.message || 'Error updating admin account', 'error');
+                    if (data.errors) {
+                        Object.values(data.errors).forEach(errorArray => {
+                            errorArray.forEach(error => showNotification(error, 'error'));
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while updating admin account', 'error');
+            });
+        });
+
+        // Activity Logs Modal Functions
+        let currentActivityPage = 1;
+        let activityLogsData = [];
+
+        function openActivityLogsModal() {
+            document.getElementById('activityLogsModal').classList.remove('hidden');
+            loadActivityLogs();
+        }
+
+        function closeActivityLogsModal() {
+            document.getElementById('activityLogsModal').classList.add('hidden');
+        }
+
+        function loadActivityLogs(page = 1) {
+            currentActivityPage = page;
+            const searchQuery = document.getElementById('activitySearchInput').value;
+            const actionFilter = document.getElementById('activityActionFilter').value;
+
+            const tbody = document.getElementById('activityLogsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-600">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p>Loading activity logs...</p>
+                    </td>
+                </tr>
+            `;
+
+            // Build query parameters
+            let queryParams = `page=${page}&per_page=50`;
+            if (searchQuery) {
+                queryParams += `&search=${encodeURIComponent(searchQuery)}`;
+            }
+            if (actionFilter) {
+                queryParams += `&action=${encodeURIComponent(actionFilter)}`;
+            }
+
+            fetch(`/admin/activity-logs?${queryParams}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        activityLogsData = data.logs.data;
+                        renderActivityLogs(data.logs);
+                    } else {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="px-4 py-8 text-center text-red-600">
+                                    <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                                    <p>Error loading activity logs</p>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-red-600">
+                                <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                                <p>Error loading activity logs</p>
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        function renderActivityLogs(logsData) {
+            const tbody = document.getElementById('activityLogsTableBody');
+            
+            if (!logsData.data || logsData.data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-gray-600">
+                            <i class="fas fa-inbox text-4xl mb-2"></i>
+                            <p>No activity logs found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = logsData.data.map(log => {
+                const date = new Date(log.created_at);
+                const actionBadgeColors = {
+                    'login': 'bg-blue-100 text-blue-800',
+                    'logout': 'bg-gray-100 text-gray-800',
+                    'create_user': 'bg-green-100 text-green-800',
+                    'update_user': 'bg-yellow-100 text-yellow-800',
+                    'delete_user': 'bg-red-100 text-red-800',
+                    'create_workplace': 'bg-green-100 text-green-800',
+                    'update_workplace': 'bg-yellow-100 text-yellow-800',
+                    'delete_workplace': 'bg-red-100 text-red-800',
+                    'assign_user_workplace': 'bg-indigo-100 text-indigo-800',
+                    'remove_user_workplace': 'bg-orange-100 text-orange-800',
+                    'update_admin_account': 'bg-purple-100 text-purple-800',
+                    'failed_admin_update': 'bg-red-100 text-red-800'
+                };
+                const badgeColor = actionBadgeColors[log.action] || 'bg-gray-100 text-gray-800';
+
+                return `
+                    <tr class="hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <td class="px-4 py-3 text-xs text-gray-800">
+                            ${date.toLocaleString()}
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-800">
+                            ${log.admin ? log.admin.name : 'Unknown'}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${badgeColor}">
+                                ${log.action.replace(/_/g, ' ').toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-800">
+                            ${log.description}
+                        </td>
+                        <td class="px-4 py-3 text-xs text-gray-700">
+                            ${log.ip_address || 'N/A'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update pagination info
+            document.getElementById('activityLogsShowing').textContent = 
+                `${logsData.from || 0} - ${logsData.to || 0} of ${logsData.total || 0}`;
+
+            // Render pagination buttons
+            renderActivityLogsPagination(logsData);
+        }
+
+        function renderActivityLogsPagination(logsData) {
+            const paginationContainer = document.getElementById('activityLogsPaginationButtons');
+            
+            if (logsData.last_page <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let buttonsHtml = '';
+
+            // Previous button
+            if (logsData.current_page > 1) {
+                buttonsHtml += `
+                    <button onclick="loadActivityLogs(${logsData.current_page - 1})" 
+                            class="px-3 py-1 bg-white bg-opacity-40 text-black rounded hover:bg-opacity-60 text-sm">
+                        Previous
+                    </button>
+                `;
+            }
+
+            // Page numbers
+            for (let i = 1; i <= logsData.last_page; i++) {
+                if (i === logsData.current_page) {
+                    buttonsHtml += `
+                        <button class="px-3 py-1 bg-purple-600 text-white rounded text-sm font-semibold">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === 1 || i === logsData.last_page || Math.abs(i - logsData.current_page) <= 2) {
+                    buttonsHtml += `
+                        <button onclick="loadActivityLogs(${i})" 
+                                class="px-3 py-1 bg-white bg-opacity-40 text-black rounded hover:bg-opacity-60 text-sm">
+                            ${i}
+                        </button>
+                    `;
+                } else if (Math.abs(i - logsData.current_page) === 3) {
+                    buttonsHtml += `<span class="px-2 text-black">...</span>`;
+                }
+            }
+
+            // Next button
+            if (logsData.current_page < logsData.last_page) {
+                buttonsHtml += `
+                    <button onclick="loadActivityLogs(${logsData.current_page + 1})" 
+                            class="px-3 py-1 bg-white bg-opacity-40 text-black rounded hover:bg-opacity-60 text-sm">
+                        Next
+                    </button>
+                `;
+            }
+
+            paginationContainer.innerHTML = buttonsHtml;
+        }
+
+        // Settings functionality
+        function saveSetting(key, value) {
+            fetch('/admin/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ key: key, value: value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Setting saved:', key, value);
+                } else {
+                    showNotification('Error saving setting', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving setting:', error);
+            });
+        }
+
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const settingName = this.id.replace('setting-', '');
+                const isEnabled = this.checked;
+                
+                // Save to backend
+                saveSetting(settingName, isEnabled);
+                
+                showNotification(`Setting "${settingName.replace(/-/g, ' ')}" ${isEnabled ? 'enabled' : 'disabled'}`, 'success');
+            });
+        });
+
+        // Default radius change handler
+        const defaultRadiusInput = document.getElementById('setting-default-radius');
+        if (defaultRadiusInput) {
+            let radiusTimeout;
+            defaultRadiusInput.addEventListener('input', function() {
+                clearTimeout(radiusTimeout);
+                const value = this.value;
+                radiusTimeout = setTimeout(() => {
+                    // Save to backend
+                    saveSetting('default_radius', parseInt(value));
+                    showNotification(`Default radius updated to ${value} meters`, 'success');
+                }, 1000);
+            });
+        }
+
+        // Activity logs search and filter handlers
+        const activitySearchInput = document.getElementById('activitySearchInput');
+        if (activitySearchInput) {
+            let searchTimeout;
+            activitySearchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadActivityLogs(1); // Reset to page 1 when searching
+                }, 500); // Debounce for 500ms
+            });
+        }
+
+        const activityActionFilter = document.getElementById('activityActionFilter');
+        if (activityActionFilter) {
+            activityActionFilter.addEventListener('change', function() {
+                loadActivityLogs(1); // Reset to page 1 when filtering
+            });
+        }
+
+        // Close admin account modal when clicking outside
+        document.getElementById('adminAccountModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAdminAccountModal();
+            }
+        });
+
+        // Close activity logs modal when clicking outside
+        document.getElementById('activityLogsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeActivityLogsModal();
             }
         });
     </script>

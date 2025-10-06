@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Workplace;
 use App\Models\UserWorkplace;
+use App\Models\AdminActivityLog;
+use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
@@ -38,7 +41,10 @@ class AdminController extends Controller
             }
         }
         
-        return view('admin.dashboard', compact('users', 'workplaces', 'latestAttendance'));
+        // Get system settings
+        $settings = SystemSetting::getAll();
+        
+        return view('admin.dashboard', compact('users', 'workplaces', 'latestAttendance', 'settings'));
     }
 
     /**
@@ -108,6 +114,15 @@ class AdminController extends Controller
             'role' => $request->role
         ]);
 
+        // Log activity
+        $this->logActivity(
+            'create_user',
+            "Created new user: {$user->name} ({$user->email})",
+            'User',
+            $user->id,
+            ['user' => $user->only(['name', 'email', 'role'])]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'User created successfully',
@@ -145,6 +160,8 @@ class AdminController extends Controller
             ], 422);
         }
 
+        $oldData = $user->only(['name', 'email', 'role']);
+
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
@@ -156,6 +173,21 @@ class AdminController extends Controller
         }
 
         $user->update($updateData);
+
+        // Log activity
+        $changes = [];
+        if ($oldData['name'] !== $request->name) $changes[] = 'name';
+        if ($oldData['email'] !== $request->email) $changes[] = 'email';
+        if ($oldData['role'] !== $request->role) $changes[] = 'role';
+        if ($request->filled('password')) $changes[] = 'password';
+
+        $this->logActivity(
+            'update_user',
+            "Updated user: {$user->name} (" . implode(', ', $changes) . ")",
+            'User',
+            $user->id,
+            ['old' => $oldData, 'new' => $user->only(['name', 'email', 'role'])]
+        );
 
         return response()->json([
             'success' => true,
@@ -185,10 +217,21 @@ class AdminController extends Controller
             ], 422);
         }
 
+        $userName = $user->name;
+        $userId = $user->id;
+
         // Remove all workplace assignments
         $user->workplaces()->detach();
         
         $user->delete();
+
+        // Log activity
+        $this->logActivity(
+            'delete_user',
+            "Deleted user: {$userName}",
+            'User',
+            $userId
+        );
 
         return response()->json([
             'success' => true,
@@ -334,6 +377,15 @@ class AdminController extends Controller
             'is_active' => true
         ]);
 
+        // Log activity
+        $this->logActivity(
+            'create_workplace',
+            "Created new workplace: {$workplace->name}",
+            'Workplace',
+            $workplace->id,
+            ['workplace' => $workplace->only(['name', 'address', 'latitude', 'longitude', 'radius'])]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Workplace created successfully',
@@ -362,7 +414,25 @@ class AdminController extends Controller
             ], 422);
         }
 
+        $oldData = $workplace->only(['name', 'address', 'latitude', 'longitude', 'radius', 'is_active']);
+
         $workplace->update($request->all());
+
+        // Log activity
+        $changes = [];
+        foreach ($oldData as $key => $value) {
+            if ($workplace->$key != $value) {
+                $changes[] = $key;
+            }
+        }
+
+        $this->logActivity(
+            'update_workplace',
+            "Updated workplace: {$workplace->name} (" . implode(', ', $changes) . ")",
+            'Workplace',
+            $workplace->id,
+            ['old' => $oldData, 'new' => $workplace->only(['name', 'address', 'latitude', 'longitude', 'radius', 'is_active'])]
+        );
 
         return response()->json([
             'success' => true,
@@ -386,7 +456,18 @@ class AdminController extends Controller
             ], 422);
         }
 
+        $workplaceName = $workplace->name;
+        $workplaceId = $workplace->id;
+
         $workplace->delete();
+
+        // Log activity
+        $this->logActivity(
+            'delete_workplace',
+            "Deleted workplace: {$workplaceName}",
+            'Workplace',
+            $workplaceId
+        );
 
         return response()->json([
             'success' => true,
@@ -440,6 +521,17 @@ class AdminController extends Controller
             'effective_from' => now()
         ]);
 
+        // Log activity
+        $user = User::find($request->user_id);
+        $workplace = Workplace::find($request->workplace_id);
+        $this->logActivity(
+            'assign_user_workplace',
+            "Assigned user '{$user->name}' to workplace '{$workplace->name}'" . ($request->is_primary ? ' (primary)' : ''),
+            'UserWorkplace',
+            null,
+            ['user_id' => $user->id, 'workplace_id' => $workplace->id, 'role' => $request->role ?? 'employee']
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'User assigned to workplace successfully'
@@ -474,7 +566,20 @@ class AdminController extends Controller
             ], 404);
         }
 
+        // Get user and workplace info before deleting
+        $user = User::find($request->user_id);
+        $workplace = Workplace::find($request->workplace_id);
+
         $assignment->delete();
+
+        // Log activity
+        $this->logActivity(
+            'remove_user_workplace',
+            "Removed user '{$user->name}' from workplace '{$workplace->name}'",
+            'UserWorkplace',
+            null,
+            ['user_id' => $user->id, 'workplace_id' => $workplace->id]
+        );
 
         return response()->json([
             'success' => true,
@@ -787,4 +892,359 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get admin activity logs
+     */
+    public function getActivityLogs(Request $request)
+    {
+        $perPage = $request->get('per_page', 50);
+        $search = $request->get('search');
+        $action = $request->get('action');
+        
+        $query = AdminActivityLog::with('admin:id,name,email');
+        
+        // Apply search filter
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('description', 'like', '%' . $search . '%')
+                  ->orWhere('action', 'like', '%' . $search . '%')
+                  ->orWhere('ip_address', 'like', '%' . $search . '%')
+                  ->orWhereHas('admin', function($q) use ($search) {
+                      $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+        
+        // Apply action filter
+        if ($action) {
+            $query->where('action', $action);
+        }
+        
+        $logs = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        
+        return response()->json([
+            'success' => true,
+            'logs' => $logs
+        ]);
+    }
+
+    /**
+     * Update admin account with double security
+     */
+    public function updateAdminAccount(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'security_phrase' => 'required|string',
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:users,email,' . Auth::id(),
+            'new_password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $admin = Auth::user();
+
+        // First security check: current password
+        if (!Hash::check($request->current_password, $admin->password)) {
+            AdminActivityLog::log(
+                'failed_admin_update',
+                'Failed attempt to update admin account - incorrect password',
+                'AdminAccount',
+                $admin->id
+            );
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password is incorrect.'
+            ], 403);
+        }
+
+        // Second security check: security phrase (must be "CONFIRM UPDATE ADMIN")
+        if ($request->security_phrase !== 'CONFIRM UPDATE ADMIN') {
+            AdminActivityLog::log(
+                'failed_admin_update',
+                'Failed attempt to update admin account - incorrect security phrase',
+                'AdminAccount',
+                $admin->id
+            );
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Security phrase is incorrect. Please type "CONFIRM UPDATE ADMIN" exactly.'
+            ], 403);
+        }
+
+        $changes = [];
+        $oldData = [
+            'name' => $admin->name,
+            'email' => $admin->email,
+        ];
+
+        // Update name if provided
+        if ($request->has('name') && $request->name !== $admin->name) {
+            $changes[] = 'Name changed from "' . $admin->name . '" to "' . $request->name . '"';
+            $admin->name = $request->name;
+        }
+
+        // Update email if provided
+        if ($request->has('email') && $request->email !== $admin->email) {
+            $changes[] = 'Email changed from "' . $admin->email . '" to "' . $request->email . '"';
+            $admin->email = $request->email;
+        }
+
+        // Update password if provided
+        if ($request->filled('new_password')) {
+            $changes[] = 'Password changed';
+            $admin->password = Hash::make($request->new_password);
+        }
+
+        if (empty($changes)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No changes were made.'
+            ], 400);
+        }
+
+        $admin->save();
+
+        $newData = [
+            'name' => $admin->name,
+            'email' => $admin->email,
+        ];
+
+        // Log the activity
+        AdminActivityLog::log(
+            'update_admin_account',
+            'Admin account updated: ' . implode(', ', $changes),
+            'AdminAccount',
+            $admin->id,
+            [
+                'old' => $oldData,
+                'new' => $newData,
+                'changes' => $changes
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin account updated successfully.',
+            'changes' => $changes
+        ]);
+    }
+
+    /**
+     * Helper method to log admin activities
+     */
+    protected function logActivity($action, $description, $entityType = null, $entityId = null, $changes = null)
+    {
+        AdminActivityLog::log($action, $description, $entityType, $entityId, $changes);
+    }
+
+    /**
+     * Get all system settings
+     */
+    public function getSettings()
+    {
+        return response()->json([
+            'success' => true,
+            'settings' => SystemSetting::getAll()
+        ]);
+    }
+
+    /**
+     * Update a system setting
+     */
+    public function updateSetting(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'key' => 'required|string',
+            'value' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        SystemSetting::set($request->key, $request->value);
+
+        // Log activity
+        $this->logActivity(
+            'update_setting',
+            "Updated system setting: {$request->key} to {$request->value}",
+            'SystemSetting',
+            null,
+            ['key' => $request->key, 'value' => $request->value]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Setting updated successfully'
+        ]);
+    }
+
+    /**
+     * Get attendance statistics for admin dashboard
+     */
+    public function getAttendanceStats()
+    {
+        try {
+            $today = now()->startOfDay();
+            $lateTimeThreshold = now()->setTime(9, 0, 0); // 9:00 AM
+            
+            // Get all attendance logs for today
+            $todayLogs = \App\Models\AttendanceLog::whereDate('timestamp', $today)
+                ->with(['user', 'workplace'])
+                ->orderBy('timestamp', 'asc')
+                ->get();
+
+            // Group logs by user
+            $userLogs = $todayLogs->groupBy('user_id');
+            
+            $attendanceData = [];
+            $totalCheckIns = 0;
+            $lateArrivals = 0;
+            $totalWorkHours = 0;
+            $usersWithHours = 0;
+
+            foreach ($userLogs as $userId => $logs) {
+                $user = $logs->first()->user;
+                if (!$user) continue;
+
+                $checkIn = $logs->firstWhere('action', 'check_in');
+                $checkOut = $logs->firstWhere('action', 'check_out');
+                $breakStart = $logs->firstWhere('action', 'break_start');
+                $breakEnd = $logs->firstWhere('action', 'break_end');
+
+                if ($checkIn) {
+                    $totalCheckIns++;
+                }
+
+                // Check if late (after 9:00 AM)
+                $isLate = false;
+                if ($checkIn && $checkIn->timestamp->gt($lateTimeThreshold)) {
+                    $isLate = true;
+                    $lateArrivals++;
+                }
+
+                // Calculate work hours
+                $workHours = 0;
+                $breakDuration = 0;
+                $status = 'No activity';
+                
+                if ($checkIn && $checkOut) {
+                    // Full day worked
+                    $workMinutes = $checkIn->timestamp->diffInMinutes($checkOut->timestamp);
+                    
+                    // Subtract break time if exists
+                    if ($breakStart && $breakEnd) {
+                        $breakDuration = $breakStart->timestamp->diffInMinutes($breakEnd->timestamp);
+                        $workMinutes -= $breakDuration;
+                    }
+                    
+                    $workHours = round($workMinutes / 60, 2);
+                    $totalWorkHours += $workHours;
+                    $usersWithHours++;
+                    $status = 'Completed';
+                } elseif ($checkIn && !$checkOut) {
+                    // Still working
+                    $workMinutes = $checkIn->timestamp->diffInMinutes(now());
+                    
+                    // Subtract break time if currently on break or break completed
+                    if ($breakStart && $breakEnd) {
+                        $breakDuration = $breakStart->timestamp->diffInMinutes($breakEnd->timestamp);
+                        $workMinutes -= $breakDuration;
+                    } elseif ($breakStart && !$breakEnd) {
+                        // Currently on break
+                        $workMinutes = $checkIn->timestamp->diffInMinutes($breakStart->timestamp);
+                        $status = 'On Break';
+                    }
+                    
+                    if ($status !== 'On Break') {
+                        $status = 'Working';
+                    }
+                    
+                    $workHours = round($workMinutes / 60, 2);
+                }
+
+                // Calculate break duration in minutes
+                $breakMinutes = 0;
+                if ($breakStart && $breakEnd) {
+                    $breakMinutes = abs((int) $breakStart->timestamp->diffInMinutes($breakEnd->timestamp));
+                } elseif ($breakStart && !$breakEnd) {
+                    $breakMinutes = abs((int) $breakStart->timestamp->diffInMinutes(now()));
+                }
+
+                // Format late_by text
+                $lateByText = null;
+                if ($isLate && $checkIn) {
+                    // Get absolute integer minutes - diffInMinutes returns float
+                    $lateMinutes = abs((int) $checkIn->timestamp->diffInMinutes($lateTimeThreshold));
+                    
+                    if ($lateMinutes >= 60) {
+                        $lateHours = floor($lateMinutes / 60);
+                        $remainingMinutes = $lateMinutes % 60;
+                        if ($remainingMinutes > 0) {
+                            $lateByText = $lateHours . ' hr ' . $remainingMinutes . ' min';
+                        } else {
+                            $lateByText = $lateHours . ($lateHours == 1 ? ' hr' : ' hrs');
+                        }
+                    } else {
+                        $lateByText = $lateMinutes . ' min';
+                    }
+                }
+
+                $attendanceData[] = [
+                    'user_id' => $userId,
+                    'user_name' => $user->name,
+                    'user_email' => $user->email,
+                    'check_in' => $checkIn ? $checkIn->timestamp->format('g:i A') : null,
+                    'check_in_raw' => $checkIn ? $checkIn->timestamp : null,
+                    'check_out' => $checkOut ? $checkOut->timestamp->format('g:i A') : null,
+                    'check_out_raw' => $checkOut ? $checkOut->timestamp : null,
+                    'break_start' => $breakStart ? $breakStart->timestamp->format('g:i A') : null,
+                    'break_end' => $breakEnd ? $breakEnd->timestamp->format('g:i A') : null,
+                    'break_duration' => $breakMinutes > 0 ? round($breakMinutes) . ' min' : 'N/A',
+                    'work_hours' => $workHours > 0 ? $workHours . ' hrs' : '0 hrs',
+                    'work_hours_raw' => $workHours,
+                    'is_late' => $isLate,
+                    'late_by' => $lateByText,
+                    'status' => $status,
+                    'workplace' => $checkIn && $checkIn->workplace ? $checkIn->workplace->name : 'N/A',
+                    'location' => $checkIn ? $checkIn->address : null
+                ];
+            }
+
+            // Calculate average hours
+            $avgHours = $usersWithHours > 0 ? round($totalWorkHours / $usersWithHours, 1) : 0;
+
+            return response()->json([
+                'success' => true,
+                'stats' => [
+                    'total_checkins' => $totalCheckIns,
+                    'late_arrivals' => $lateArrivals,
+                    'average_hours' => $avgHours
+                ],
+                'attendance' => $attendanceData
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching attendance statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
+
