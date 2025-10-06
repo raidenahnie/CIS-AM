@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CID-AMS | Admin Dashboard</title>
+    <title>CISAM | Admin Dashboard</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -62,7 +62,7 @@
         <div class="flex items-center justify-between p-5 pb-6 border-b-2 border-indigo-500">
             <h2 class="text-xl font-bold text-indigo-600">
                 <i class="fas fa-user-shield mr-2"></i>
-                CIS-AM Admin
+                CISAM Admin
             </h2>
             <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700">
                 <i class="fas fa-times text-xl"></i>
@@ -878,6 +878,11 @@
                                                     title="Manage workplaces">
                                                 <i class="fas fa-building"></i>
                                             </button>
+                                            <button onclick="resetUserPassword({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')" 
+                                                    class="text-orange-600 hover:text-orange-900 p-2 hover:bg-orange-50 rounded-lg transition-colors"
+                                                    title="Reset password">
+                                                <i class="fas fa-key"></i>
+                                            </button>
                                             @if($user->id !== auth()->id())
                                             <button onclick="deleteUser({{ $user->id }})" 
                                                     class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
@@ -1526,6 +1531,31 @@
                 .catch(error => {
                     console.error('Error:', error);
                     showNotification('An error occurred while deleting user', 'error');
+                });
+            }
+        }
+
+        // Reset User Password Function
+        function resetUserPassword(userId, userName, userEmail) {
+            if (confirm(`Are you sure you want to send a password reset email to ${userName} (${userEmail})?`)) {
+                fetch(`/admin/users/${userId}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(`Password reset email sent to ${userEmail}`, 'success');
+                    } else {
+                        showNotification('Error: ' + (data.message || 'Failed to send reset email'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while sending reset email', 'error');
                 });
             }
         }

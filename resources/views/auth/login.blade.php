@@ -54,6 +54,25 @@
             </div>
         @endif
 
+        <!-- Success Messages -->
+        @if (session('success'))
+            <div class="mb-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium">Success</h3>
+                        <div class="mt-1 text-sm">
+                            {{ session('success') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Form -->
         <form action="{{ route('login.submit') }}" method="POST" class="space-y-5">
             @csrf
@@ -80,7 +99,7 @@
                     <input type="checkbox" name="remember" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
                     <span class="ml-2 text-sm text-gray-600">Remember me</span>
                 </label>
-                <a href="#" class="text-sm text-indigo-600 hover:underline">Forgot password?</a>
+                <a href="#" onclick="showForgotPasswordModal()" class="text-sm text-indigo-600 hover:underline">Forgot password?</a>
             </div>
 
             <button type="submit" 
@@ -96,6 +115,76 @@
            Return to <a href="{{ route('landing') }}" class="text-indigo-600 hover:underline">home page</a>
         </p>
     </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-0 border-0 w-96 shadow-lg rounded-2xl">
+            <!-- Glassmorphism container -->
+            <div class="relative bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-800">Forgot Password?</h3>
+                        <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-gray-600 text-xl">
+                            &times;
+                        </button>
+                    </div>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 mb-4">
+                            <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Password Reset Required</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            For security reasons, password resets must be handled by your system administrator.
+                        </p>
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                            <p class="text-sm text-indigo-800 font-medium mb-2">Contact Information:</p>
+                            <p class="text-sm text-indigo-700">
+                                📧 Email: admin@company.com<br>
+                                📞 Phone: +1 (555) 123-4567<br>
+                                💬 Or contact your CIS administrator
+                            </p>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3">
+                            Please include your name and email address when contacting the administrator.
+                        </p>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-center">
+                    <button onclick="closeForgotPasswordModal()" class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                        Understood
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('forgotPasswordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeForgotPasswordModal();
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeForgotPasswordModal();
+            }
+        });
+    </script>
 
 </body>
 </html>
