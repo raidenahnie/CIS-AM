@@ -38,7 +38,7 @@ class AdminReportController extends Controller
             }
         }
 
-        $query = Attendance::with(['user', 'workplace'])
+        $query = Attendance::with(['user', 'workplace', 'logs'])
             ->whereBetween('date', [$startDate, $endDate]);
 
         // Filter by user if individual report
@@ -251,6 +251,27 @@ class AdminReportController extends Controller
     }
 
     /**
+     * Format minutes to hours and minutes display
+     */
+    private function formatHoursMinutes($totalMinutes)
+    {
+        if (!$totalMinutes || $totalMinutes <= 0) {
+            return '0mins';
+        }
+        
+        $hours = floor($totalMinutes / 60);
+        $minutes = round($totalMinutes % 60);
+        
+        if ($hours > 0 && $minutes > 0) {
+            return sprintf('%dhr%s %dmin%s', $hours, $hours > 1 ? 's' : '', $minutes, $minutes > 1 ? 's' : '');
+        } elseif ($hours > 0) {
+            return sprintf('%dhr%s', $hours, $hours > 1 ? 's' : '');
+        } else {
+            return sprintf('%dmin%s', $minutes, $minutes > 1 ? 's' : '');
+        }
+    }
+
+    /**
      * Export to modern Excel format (.xlsx) using PhpSpreadsheet
      */
     private function exportToExcel($attendances, $filename, $reportType, $startDate, $endDate)
@@ -278,11 +299,11 @@ class AdminReportController extends Controller
                 'Employee Name',
                 'Email',
                 'Workplace',
-                'Time In',
-                'Time Out',
+                'Check In',
+                'Check Out',
                 'Status',
                 'Hours Worked',
-                'Late Duration (min)',
+                'Late',
                 'Notes'
             ]);
 
@@ -351,8 +372,8 @@ class AdminReportController extends Controller
                     $checkInDisplay,
                     $checkOutDisplay,
                     ucfirst($attendance->status),
-                    $hoursWorked,
-                    $lateMinutes,
+                    $this->formatHoursMinutes($hoursWorked * 60), // Convert hours to minutes
+                    $this->formatHoursMinutes($lateMinutes),
                     $attendance->notes ?? ''
                 ]);
             }

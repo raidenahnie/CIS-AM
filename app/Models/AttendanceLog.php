@@ -38,6 +38,14 @@ class AttendanceLog extends Model
         'metadata' => 'array'
     ];
 
+    /**
+     * Prepare timestamp for JSON serialization (without timezone conversion)
+     */
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

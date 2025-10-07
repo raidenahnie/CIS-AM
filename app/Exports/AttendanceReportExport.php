@@ -28,6 +28,28 @@ class AttendanceReportExport
     }
 
     /**
+     * Format minutes to hours and minutes display
+     * Examples: "5hrs 30mins", "45mins", "2hrs"
+     */
+    private function formatHoursMinutes($totalMinutes)
+    {
+        if (!$totalMinutes || $totalMinutes <= 0) {
+            return '0mins';
+        }
+        
+        $hours = floor($totalMinutes / 60);
+        $minutes = round($totalMinutes % 60);
+        
+        if ($hours > 0 && $minutes > 0) {
+            return sprintf('%dhr%s %dmin%s', $hours, $hours > 1 ? 's' : '', $minutes, $minutes > 1 ? 's' : '');
+        } elseif ($hours > 0) {
+            return sprintf('%dhr%s', $hours, $hours > 1 ? 's' : '');
+        } else {
+            return sprintf('%dmin%s', $minutes, $minutes > 1 ? 's' : '');
+        }
+    }
+
+    /**
      * Generate the Excel file and return the Spreadsheet object
      */
     public function generate()
@@ -42,11 +64,11 @@ class AttendanceReportExport
             'Employee Name',
             'Email',
             'Workplace',
-            'Time In',
-            'Time Out',
+            'Check In',
+            'Check Out',
             'Status',
             'Hours Worked',
-            'Late Duration (min)',
+            'Late',
             'Notes'
         ];
         
@@ -158,8 +180,8 @@ class AttendanceReportExport
                 $checkInDisplay,
                 $checkOutDisplay,
                 $status,
-                $hoursWorked,
-                $lateMinutes, // Show late minutes instead of break duration
+                $this->formatHoursMinutes($hoursWorked * 60), // Convert hours back to minutes for formatting
+                $this->formatHoursMinutes($lateMinutes),
                 $attendance->notes ?? ''
             ];
             

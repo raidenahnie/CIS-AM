@@ -1497,11 +1497,11 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workplace</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time In</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Out</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check In</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check Out</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Late (min)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours Worked</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Late</th>
                                 </tr>
                             </thead>
                             <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
@@ -1526,50 +1526,6 @@
                 
                 <!-- Settings Categories -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-shield-alt text-indigo-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Security Settings</h3>
-                        </div>
-                        <p class="text-gray-600 mb-4">Manage password policies and security requirements</p>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Require password change every 90 days</span>
-                                <input type="checkbox" class="toggle-switch" id="setting-security_password_expiry" {{ isset($settings['security_password_expiry']) && $settings['security_password_expiry'] ? 'checked' : '' }}>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Two-factor authentication</span>
-                                <input type="checkbox" class="toggle-switch" id="setting-security_2fa" {{ isset($settings['security_2fa']) && $settings['security_2fa'] ? 'checked' : '' }}>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Session timeout (30 mins)</span>
-                                <input type="checkbox" class="toggle-switch" id="setting-security_session_timeout" {{ isset($settings['security_session_timeout']) && $settings['security_session_timeout'] ? 'checked' : '' }}>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-map-marker-alt text-green-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Location Settings</h3>
-                        </div>
-                        <p class="text-gray-600 mb-4">Configure GPS accuracy and location services</p>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">High accuracy GPS</span>
-                                <input type="checkbox" class="toggle-switch" id="setting-location_gps_accuracy" {{ isset($settings['location_gps_accuracy']) && $settings['location_gps_accuracy'] ? 'checked' : '' }}>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700">Allow manual location entry</span>
-                                <input type="checkbox" class="toggle-switch" id="setting-location_manual_entry" {{ isset($settings['location_manual_entry']) && $settings['location_manual_entry'] ? 'checked' : '' }}>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm text-gray-700">Default radius (meters)</label>
-                                <input type="number" value="{{ $settings['location_default_radius'] ?? 100 }}" id="setting-location_default_radius" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded text-sm" min="10" max="1000">
-                            </div>
-                        </div>
-                    </div>
-                    
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <div class="flex items-center mb-4">
                             <i class="fas fa-user-shield text-red-500 text-2xl mr-3"></i>
@@ -1605,33 +1561,6 @@
                             </button>
                         </div>
                     </div>
-                    
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-database text-blue-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Data Management</h3>
-                        </div>
-                        <p class="text-gray-600 mb-4">Backup and data retention settings</p>
-                        <div class="space-y-3">
-                            <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm" onclick="showNotification('Backup feature coming soon', 'info')">
-                                Create Backup
-                            </button>
-                            <button class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm" onclick="showNotification('Export feature coming soon', 'info')">
-                                Export Data
-                            </button>
-                            <div class="text-xs text-gray-500">
-                                Last backup: Never
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                    <i class="fas fa-cog text-gray-300 text-6xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Advanced Configuration</h3>
-                    <p class="text-gray-500">Additional system configuration options will be available here.</p>
-                    <p class="mt-1 text-md text-center text-gray-900 bg-red-300 italic"><b>TODO:</b> Security settings, location settings, and Data Management settings are not yet implemented. Just a placeholder for now.</p>
-                </div>
             </div>
 
         </div>
@@ -1930,7 +1859,7 @@
                         <p class="text-xs text-red-800">
                             <strong>Security Requirements:</strong><br>
                             1. Enter your current admin password<br>
-                            2. Type the exact phrase: <code class="bg-red-200 px-1 rounded">CONFIRM UPDATE ADMIN</code>
+                            2. Type the security phrase
                         </p>
                     </div>
                     
@@ -1945,7 +1874,7 @@
                         <label class="block text-sm font-medium text-black mb-2">
                             <i class="fas fa-shield-alt mr-1"></i>Security Phrase *
                         </label>
-                        <input type="text" id="adminSecurityPhrase" placeholder="Type: CONFIRM UPDATE ADMIN" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black font-mono" required>
+                        <input type="text" id="adminSecurityPhrase"class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black font-mono" required>
                     </div>
                     
                     <hr class="my-4 border-gray-400">
@@ -4829,6 +4758,143 @@
             document.getElementById('reportUserResults').classList.add('hidden');
         }
 
+        // Format minutes to hours and minutes display (e.g., "5hrs 30mins", "45mins", "2hrs")
+        function formatHoursMinutes(totalMinutes) {
+            if (!totalMinutes || totalMinutes === 0) return '0mins';
+            
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = Math.round(totalMinutes % 60);
+            
+            if (hours > 0 && minutes > 0) {
+                return `${hours}hr${hours > 1 ? 's' : ''} ${minutes}min${minutes > 1 ? 's' : ''}`;
+            } else if (hours > 0) {
+                return `${hours}hr${hours > 1 ? 's' : ''}`;
+            } else {
+                return `${minutes}min${minutes > 1 ? 's' : ''}`;
+            }
+        }
+
+        // Calculate work hours and late minutes from attendance logs
+        function calculateAttendanceMetrics(attendance) {
+            let workMinutes = 0;
+            let lateMinutes = 0;
+            let checkInTime = null;
+            let checkOutTime = null;
+            let status = attendance.status || 'N/A';
+            
+            // Extract times from logs if available
+            if (attendance.logs && attendance.logs.length > 0) {
+                const checkInLog = attendance.logs.find(log => log.action === 'check_in');
+                const checkOutLog = attendance.logs.find(log => log.action === 'check_out');
+                
+                checkInTime = checkInLog ? checkInLog.timestamp : attendance.check_in_time;
+                checkOutTime = checkOutLog ? checkOutLog.timestamp : attendance.check_out_time;
+            } else {
+                checkInTime = attendance.check_in_time;
+                checkOutTime = attendance.check_out_time;
+            }
+            
+            // Debug: Log the raw times
+            console.log('Raw checkInTime:', checkInTime, 'for user:', attendance.user?.name);
+            
+            // Helper to parse datetime properly
+            function parseDateTime(dateTimeStr) {
+                if (!dateTimeStr) return null;
+                
+                // Try to parse as ISO format first
+                let dateObj = null;
+                
+                // If it contains a space, replace with T for ISO format
+                if (typeof dateTimeStr === 'string') {
+                    if (dateTimeStr.includes(' ')) {
+                        const isoStr = dateTimeStr.replace(' ', 'T');
+                        dateObj = new Date(isoStr);
+                    } else if (dateTimeStr.includes('T')) {
+                        dateObj = new Date(dateTimeStr);
+                    } else if (dateTimeStr.match(/^\d{2}:\d{2}/)) {
+                        // Just a time string like "08:28:33"
+                        const date = attendance.date;
+                        dateObj = new Date(`${date}T${dateTimeStr}`);
+                    } else {
+                        dateObj = new Date(dateTimeStr);
+                    }
+                } else {
+                    dateObj = new Date(dateTimeStr);
+                }
+                
+                console.log('Parsed datetime:', dateTimeStr, '→', dateObj);
+                return dateObj;
+            }
+            
+            // Calculate work hours
+            if (checkInTime && checkOutTime) {
+                const checkIn = parseDateTime(checkInTime);
+                const checkOut = parseDateTime(checkOutTime);
+                
+                if (checkIn && checkOut && !isNaN(checkIn) && !isNaN(checkOut)) {
+                    workMinutes = (checkOut - checkIn) / (1000 * 60);
+                    
+                    // Subtract break duration
+                    if (attendance.break_duration) {
+                        workMinutes -= attendance.break_duration;
+                    }
+                    
+                    workMinutes = Math.max(0, workMinutes);
+                    
+                    // Calculate late minutes (after 9:00 AM)
+                    const checkInHour = checkIn.getHours();
+                    const checkInMinute = checkIn.getMinutes();
+                    const checkInTotalMinutes = (checkInHour * 60) + checkInMinute;
+                    const lateThreshold = 9 * 60; // 9:00 AM
+                    
+                    console.log('Check-in hour:', checkInHour, 'minute:', checkInMinute, 'total minutes:', checkInTotalMinutes);
+                    
+                    if (checkInTotalMinutes > lateThreshold) {
+                        lateMinutes = checkInTotalMinutes - lateThreshold;
+                        if (status !== 'absent') {
+                            status = 'late';
+                        }
+                    } else {
+                        if (status !== 'absent') {
+                            status = 'present';
+                        }
+                    }
+                }
+            } else if (checkInTime && !checkOutTime) {
+                // Still working
+                const checkIn = parseDateTime(checkInTime);
+                
+                if (checkIn && !isNaN(checkIn)) {
+                    const now = new Date();
+                    workMinutes = (now - checkIn) / (1000 * 60);
+                    
+                    if (attendance.break_duration) {
+                        workMinutes -= attendance.break_duration;
+                    }
+                    
+                    workMinutes = Math.max(0, workMinutes);
+                    
+                    // Calculate late
+                    const checkInHour = checkIn.getHours();
+                    const checkInMinute = checkIn.getMinutes();
+                    const checkInTotalMinutes = (checkInHour * 60) + checkInMinute;
+                    
+                    if (checkInTotalMinutes > 540) {
+                        lateMinutes = checkInTotalMinutes - 540;
+                        status = 'late';
+                    }
+                }
+            }
+            
+            return {
+                workMinutes: workMinutes,
+                lateMinutes: lateMinutes,
+                status: status,
+                checkInTime: checkInTime,
+                checkOutTime: checkOutTime
+            };
+        }
+
         // Generate attendance report
         function generateAttendanceReport() {
             const reportType = document.getElementById('reportType').value;
@@ -4922,12 +4988,15 @@
             }
 
             tbody.innerHTML = attendances.map(attendance => {
+                // Calculate metrics from logs
+                const metrics = calculateAttendanceMetrics(attendance);
+                
                 const statusColors = {
                     'present': 'bg-green-100 text-green-800',
                     'late': 'bg-yellow-100 text-yellow-800',
                     'absent': 'bg-red-100 text-red-800'
                 };
-                const statusColor = statusColors[attendance.status] || 'bg-gray-100 text-gray-800';
+                const statusColor = statusColors[metrics.status] || 'bg-gray-100 text-gray-800';
 
                 return `
                     <tr class="hover:bg-gray-50 transition-colors">
@@ -4951,21 +5020,21 @@
                             ${attendance.workplace ? attendance.workplace.name : 'N/A'}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${attendance.check_in_time ? formatTime(attendance.check_in_time) : '-'}
+                            ${metrics.checkInTime ? formatTime(metrics.checkInTime) : '-'}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${attendance.check_out_time ? formatTime(attendance.check_out_time) : '-'}
+                            ${metrics.checkOutTime ? formatTime(metrics.checkOutTime) : '-'}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">
-                                ${attendance.status.toUpperCase()}
+                                ${metrics.status.toUpperCase()}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${attendance.total_hours ? (parseFloat(attendance.total_hours) / 60).toFixed(2) : '0.00'}h
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-indigo-600">
+                            ${formatHoursMinutes(metrics.workMinutes)}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${attendance.break_duration || '0'}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${metrics.lateMinutes > 0 ? 'text-yellow-700 font-medium' : 'text-gray-500'}">
+                            ${formatHoursMinutes(metrics.lateMinutes)}
                         </td>
                     </tr>
                 `;
