@@ -78,22 +78,80 @@ class AdminReportController extends Controller
     private function calculateAttendanceStats($attendances, $startDate, $endDate)
     {
         $totalRecords = $attendances->count();
-        $presentCount = $attendances->where('status', 'present')->count();
-        $lateCount = $attendances->where('status', 'late')->count();
-        $absentCount = $attendances->where('status', 'absent')->count();
+        $presentCount = 0;
+        $lateCount = 0;
+        $absentCount = 0;
         
-        // Calculate total hours worked (total_hours is in minutes in DB)
+        // Late threshold: 9:00 AM
+        $lateTimeThreshold = Carbon::today()->setTime(9, 0, 0);
+        
+        // Calculate total hours worked and late arrivals
         $totalMinutes = 0;
         $totalLateMinutes = 0;
         
         foreach ($attendances as $attendance) {
-            if ($attendance->total_hours) {
-                $totalMinutes += $attendance->total_hours; // Already in minutes
-            }
-            // Calculate late duration if check-in time is after expected time
-            // For now, we'll assume late duration is calculated elsewhere or use break_duration
-            if ($attendance->break_duration) {
-                $totalLateMinutes += $attendance->break_duration;
+            // Calculate work hours from check-in and check-out times
+            if ($attendance->check_in_time && $attendance->check_out_time) {
+                $checkIn = Carbon::parse($attendance->check_in_time);
+                $checkOut = Carbon::parse($attendance->check_out_time);
+                
+                // Calculate total minutes worked
+                $workMinutes = $checkIn->diffInMinutes($checkOut);
+                
+                // Subtract break duration if exists
+                if ($attendance->break_duration) {
+                    $workMinutes -= $attendance->break_duration;
+                }
+                
+                $totalMinutes += max(0, $workMinutes);
+                
+                // Check if late (checked in after 9:00 AM)
+                $dateThreshold = Carbon::parse($attendance->date)->setTime(9, 0, 0);
+                
+                if ($checkIn->gt($dateThreshold)) {
+                    $lateCount++;
+                    // Calculate how many minutes late
+                    $lateMinutes = $checkIn->diffInMinutes($dateThreshold);
+                    $totalLateMinutes += $lateMinutes;
+                    
+                    // Update status to 'late' if not already set
+                    if ($attendance->status !== 'late' && $attendance->status !== 'absent') {
+                        $presentCount++; // Still count as present
+                    }
+                } else {
+                    // On time
+                    if ($attendance->status !== 'absent') {
+                        $presentCount++;
+                    }
+                }
+            } elseif ($attendance->check_in_time && !$attendance->check_out_time) {
+                // Still working (partial day)
+                $checkIn = Carbon::parse($attendance->check_in_time);
+                $now = Carbon::now();
+                
+                $workMinutes = $checkIn->diffInMinutes($now);
+                
+                // Subtract break duration if exists
+                if ($attendance->break_duration) {
+                    $workMinutes -= $attendance->break_duration;
+                }
+                
+                $totalMinutes += max(0, $workMinutes);
+                
+                // Check if late
+                $dateThreshold = Carbon::parse($attendance->date)->setTime(9, 0, 0);
+                
+                if ($checkIn->gt($dateThreshold)) {
+                    $lateCount++;
+                    $lateMinutes = $checkIn->diffInMinutes($dateThreshold);
+                    $totalLateMinutes += $lateMinutes;
+                }
+                
+                if ($attendance->status !== 'absent') {
+                    $presentCount++;
+                }
+            } elseif ($attendance->status === 'absent') {
+                $absentCount++;
             }
         }
 
@@ -156,7 +214,7 @@ class AdminReportController extends Controller
     }
 
     /**
-     * Export attendance report to CSV
+     * Export attendance report to Excel or CSV
      */
     public function exportReport(Request $request)
     {
@@ -165,10 +223,10 @@ class AdminReportController extends Controller
         $workplaceId = $request->input('workplace_id', null);
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
-        $format = $request->input('format', 'csv'); // csv or excel
+        $format = $request->input('format', 'excel'); // excel or csv
 
-        // Get the data
-        $query = Attendance::with(['user', 'workplace'])
+        // Get the data with logs
+        $query = Attendance::with(['user', 'workplace', 'logs'])
             ->whereBetween('date', [$startDate, $endDate]);
 
         if ($userId) {
@@ -187,79 +245,18 @@ class AdminReportController extends Controller
         if ($format === 'csv') {
             return $this->exportToCsv($attendances, $filename);
         } else {
-            // Export as tab-delimited format that Excel can open with formatting
-            return $this->exportToExcelCompatible($attendances, $filename);
+            // Use modern PhpSpreadsheet for .xlsx export
+            return $this->exportToExcel($attendances, $filename, $reportType, $startDate, $endDate);
         }
     }
 
     /**
-     * Export to Excel-compatible format (tab-delimited with HTML table)
+     * Export to modern Excel format (.xlsx) using PhpSpreadsheet
      */
-    private function exportToExcelCompatible($attendances, $filename)
+    private function exportToExcel($attendances, $filename, $reportType, $startDate, $endDate)
     {
-        $html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
-        $html .= '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style>';
-        $html .= 'table { border-collapse: collapse; font-family: "Bookman Old Style", serif; font-size: 11pt; }';
-        $html .= 'th { background-color: #f0f0f0; font-weight: bold; text-align: center; border: 1px solid black; padding: 8px; height: 20px; }';
-        $html .= 'td { border: 1px solid black; padding: 6px; height: 18px; vertical-align: middle; }';
-        $html .= '.center { text-align: center; }';
-        $html .= '</style></head><body>';
-        $html .= '<table>';
-        
-        // Header row
-        $html .= '<tr>';
-        $html .= '<th width="100">Date</th>';
-        $html .= '<th width="150">Employee Name</th>';
-        $html .= '<th width="180">Email</th>';
-        $html .= '<th width="180">Workplace</th>';
-        $html .= '<th width="80">Time In</th>';
-        $html .= '<th width="80">Time Out</th>';
-        $html .= '<th width="80">Status</th>';
-        $html .= '<th width="100">Hours Worked</th>';
-        $html .= '<th width="120">Late Duration (min)</th>';
-        $html .= '<th width="180">Notes</th>';
-        $html .= '</tr>';
-        
-        // Data rows
-        foreach ($attendances as $attendance) {
-            $hoursWorked = $attendance->total_hours ? round($attendance->total_hours / 60, 2) : 0;
-            $checkInTime = $attendance->check_in_time ? date('h:i A', strtotime($attendance->check_in_time)) : 'N/A';
-            $checkOutTime = $attendance->check_out_time ? date('h:i A', strtotime($attendance->check_out_time)) : 'N/A';
-            $date = date('m/d/Y', strtotime($attendance->date));
-            
-            $html .= '<tr>';
-            $html .= '<td>' . htmlspecialchars($date) . '</td>';
-            $html .= '<td>' . htmlspecialchars($attendance->user->name ?? 'N/A') . '</td>';
-            $html .= '<td>' . htmlspecialchars($attendance->user->email ?? 'N/A') . '</td>';
-            $html .= '<td>' . htmlspecialchars($attendance->workplace->name ?? 'N/A') . '</td>';
-            $html .= '<td class="center">' . htmlspecialchars($checkInTime) . '</td>';
-            $html .= '<td class="center">' . htmlspecialchars($checkOutTime) . '</td>';
-            $html .= '<td class="center">' . htmlspecialchars(ucfirst($attendance->status)) . '</td>';
-            $html .= '<td class="center">' . $hoursWorked . '</td>';
-            $html .= '<td class="center">' . ($attendance->break_duration ?? 0) . '</td>';
-            $html .= '<td>' . htmlspecialchars($attendance->notes ?? '') . '</td>';
-            $html .= '</tr>';
-        }
-        
-        $html .= '</table></body></html>';
-        
-        // Set headers for Excel download
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
-        header('Cache-Control: max-age=0');
-        
-        echo $html;
-        exit;
-    }
-
-    /**
-     * Old PHPExcel method - Not used due to PHP 8.4 incompatibility
-     */
-    private function exportToExcel_OLD($attendances, $filename)
-    {
-        // This method is disabled because PHPExcel is not compatible with PHP 8.4
-        // Using exportToExcelCompatible() instead
-        return $this->exportToExcelCompatible($attendances, $filename);
+        $export = new AttendanceReportExport($attendances, $reportType, $startDate, $endDate);
+        $export->download($filename);
     }
 
     /**
@@ -291,23 +288,71 @@ class AdminReportController extends Controller
 
             // Add data rows
             foreach ($attendances as $attendance) {
-                // Calculate hours worked from minutes
-                $hoursWorked = $attendance->total_hours ? round($attendance->total_hours / 60, 2) : 0;
+                // Get check-in and check-out from logs if available
+                $checkInLog = null;
+                $checkOutLog = null;
+                
+                if ($attendance->logs && $attendance->logs->count() > 0) {
+                    $checkInLog = $attendance->logs->firstWhere('action', 'check_in');
+                    $checkOutLog = $attendance->logs->firstWhere('action', 'check_out');
+                }
+                
+                // Use log timestamps or fall back to attendance table fields
+                $checkInTime = null;
+                $checkOutTime = null;
+                
+                if ($checkInLog && $checkInLog->timestamp) {
+                    $checkInTime = $checkInLog->timestamp;
+                } elseif ($attendance->check_in_time) {
+                    $checkInTime = $attendance->check_in_time;
+                }
+                
+                if ($checkOutLog && $checkOutLog->timestamp) {
+                    $checkOutTime = $checkOutLog->timestamp;
+                } elseif ($attendance->check_out_time) {
+                    $checkOutTime = $attendance->check_out_time;
+                }
+                
+                // Calculate hours worked
+                $hoursWorked = 0;
+                $lateMinutes = 0;
+                
+                if ($checkInTime && $checkOutTime) {
+                    $checkIn = new \DateTime($checkInTime);
+                    $checkOut = new \DateTime($checkOutTime);
+                    
+                    $workMinutes = ($checkOut->getTimestamp() - $checkIn->getTimestamp()) / 60;
+                    
+                    if ($attendance->break_duration) {
+                        $workMinutes -= $attendance->break_duration;
+                    }
+                    
+                    $hoursWorked = round(max(0, $workMinutes) / 60, 2);
+                    
+                    // Check if late
+                    $checkInHour = (int)$checkIn->format('H');
+                    $checkInMinute = (int)$checkIn->format('i');
+                    $checkInTotalMinutes = ($checkInHour * 60) + $checkInMinute;
+                    
+                    if ($checkInTotalMinutes > 540) { // 9:00 AM
+                        $lateMinutes = $checkInTotalMinutes - 540;
+                    }
+                }
                 
                 // Format check-in and check-out times
-                $checkInTime = $attendance->check_in_time ? date('H:i', strtotime($attendance->check_in_time)) : 'N/A';
-                $checkOutTime = $attendance->check_out_time ? date('H:i', strtotime($attendance->check_out_time)) : 'N/A';
+                $checkInDisplay = $checkInTime ? date('H:i', strtotime($checkInTime)) : 'N/A';
+                $checkOutDisplay = $checkOutTime ? date('H:i', strtotime($checkOutTime)) : 'N/A';
                 
                 fputcsv($file, [
                     $attendance->date,
                     $attendance->user->name ?? 'N/A',
                     $attendance->user->email ?? 'N/A',
                     $attendance->workplace->name ?? 'N/A',
-                    $checkInTime,
-                    $checkOutTime,
+                    $checkInDisplay,
+                    $checkOutDisplay,
                     ucfirst($attendance->status),
                     $hoursWorked,
-                    $attendance->break_duration ?? '0',
+                    $lateMinutes,
                     $attendance->notes ?? ''
                 ]);
             }
