@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Attendance;
 use App\Models\AttendanceLog;
 use App\Models\Workplace;
+use App\Models\AdminActivityLog;
 use App\Exports\AttendanceReportExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -238,6 +239,31 @@ class AdminReportController extends Controller
         }
 
         $attendances = $query->orderBy('date', 'desc')->get();
+        $recordCount = $attendances->count();
+
+        // Build log description
+        $filters = [];
+        if ($userId) {
+            $user = User::find($userId);
+            $filters[] = "User: {$user->name}";
+        }
+        if ($workplaceId) {
+            $workplace = Workplace::find($workplaceId);
+            $filters[] = "Workplace: {$workplace->name}";
+        }
+        $filters[] = "Date Range: {$startDate} to {$endDate}";
+        $filters[] = "Report Type: {$reportType}";
+        $filterString = implode(', ', $filters);
+
+        // Log the export action
+        $action = $format === 'csv' ? 'export_attendance_report_csv' : 'export_attendance_report_excel';
+        AdminActivityLog::log(
+            $action,
+            "Exported {$recordCount} attendance records as " . strtoupper($format) . " ({$filterString})",
+            'attendance_report',
+            null,
+            ['format' => $format, 'report_type' => $reportType, 'filters' => $filters, 'record_count' => $recordCount]
+        );
 
         // Generate filename
         $filename = 'attendance_report_' . $reportType . '_' . Carbon::now()->format('Y-m-d_His');

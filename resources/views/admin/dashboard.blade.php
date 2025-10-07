@@ -1948,6 +1948,8 @@
                             <option value="remove_user_workplace">Remove User from Workplace</option>
                             <option value="update_admin_account">Update Admin Account</option>
                             <option value="failed_admin_update">Failed Admin Update</option>
+                            <option value="export_attendance_report_csv">Export Attendance Report CSV</option>
+                            <option value="export_attendance_report_excel">Export Attendance Report Excel</option>
                         </select>
                         <button onclick="loadActivityLogs()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
                             <i class="fas fa-sync-alt mr-1"></i>Refresh
@@ -4269,7 +4271,7 @@
 
             // Validate security phrase
             if (securityPhrase !== 'CONFIRM UPDATE ADMIN') {
-                showNotification('Security phrase must be exactly: CONFIRM UPDATE ADMIN', 'error');
+                showNotification('Security phrase incorrect!', 'error');
                 return;
             }
 
@@ -4433,7 +4435,14 @@
                     'assign_user_workplace': 'bg-indigo-100 text-indigo-800',
                     'remove_user_workplace': 'bg-orange-100 text-orange-800',
                     'update_admin_account': 'bg-purple-100 text-purple-800',
-                    'failed_admin_update': 'bg-red-100 text-red-800'
+                    'failed_admin_update': 'bg-red-100 text-red-800',
+                    'update_setting': 'bg-indigo-100 text-indigo-800',
+                    // Legacy export actions (for old logs only)
+                    'export_activity_logs_csv': 'bg-teal-100 text-teal-800',
+                    'export_activity_logs_excel': 'bg-cyan-100 text-cyan-800',
+                    // Active report export actions
+                    'export_attendance_report_csv': 'bg-emerald-100 text-emerald-800',
+                    'export_attendance_report_excel': 'bg-lime-100 text-lime-800'
                 };
                 const badgeColor = actionBadgeColors[log.action] || 'bg-gray-100 text-gray-800';
 
