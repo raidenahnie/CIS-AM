@@ -1345,49 +1345,175 @@
             <div id="reports-section" class="admin-section hidden">
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
-                    <p class="mt-2 text-sm text-gray-600">Generate comprehensive reports and insights.</p>
+                    <p class="mt-2 text-sm text-gray-600">Generate comprehensive attendance reports and insights.</p>
                 </div>
                 
-                <!-- Report Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Report Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-calendar-week text-blue-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Weekly Report</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Total Records</p>
+                                <h3 class="text-2xl font-bold text-gray-900" id="report-total-records">0</h3>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <i class="fas fa-clipboard-list text-blue-600 text-2xl"></i>
+                            </div>
                         </div>
-                        <p class="text-gray-600 mb-4">Weekly attendance summary for all employees</p>
-                        <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors" onclick="generateReport('weekly')">
-                            Generate Report
-                        </button>
                     </div>
                     
                     <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-calendar-alt text-green-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Monthly Report</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Present</p>
+                                <h3 class="text-2xl font-bold text-green-600" id="report-present-count">0</h3>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                            </div>
                         </div>
-                        <p class="text-gray-600 mb-4">Monthly attendance and performance metrics</p>
-                        <button class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors" onclick="generateReport('monthly')">
-                            Generate Report
-                        </button>
                     </div>
                     
                     <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-user-clock text-purple-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">Employee Report</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Late</p>
+                                <h3 class="text-2xl font-bold text-yellow-600" id="report-late-count">0</h3>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-lg">
+                                <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                            </div>
                         </div>
-                        <p class="text-gray-600 mb-4">Individual employee attendance details</p>
-                        <button class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors" onclick="generateReport('employee')">
-                            Generate Report
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Attendance Rate</p>
+                                <h3 class="text-2xl font-bold text-indigo-600" id="report-attendance-rate">0%</h3>
+                            </div>
+                            <div class="bg-indigo-100 p-3 rounded-lg">
+                                <i class="fas fa-chart-line text-indigo-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filters Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-filter mr-2 text-indigo-600"></i>Report Filters
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- Report Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                            <select id="reportType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Start Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                            <input type="date" id="reportStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+                        
+                        <!-- End Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                            <input type="date" id="reportEndDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+                        
+                        <!-- Employee Filter -->
+                        <div class="relative">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Employee</label>
+                            <input type="text" 
+                                   id="reportUserSearch" 
+                                   placeholder="Search employee..." 
+                                   autocomplete="off"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <input type="hidden" id="reportUserFilter" value="">
+                            
+                            <!-- Dropdown results -->
+                            <div id="reportUserResults" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Workplace Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Workplace</label>
+                            <select id="reportWorkplaceFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">All Workplaces</option>
+                                @foreach($workplaces as $workplace)
+                                    <option value="{{ $workplace->id }}">{{ $workplace->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3 mt-6">
+                        <button onclick="generateAttendanceReport()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="fas fa-play mr-2"></i>Generate Report
+                        </button>
+                        <button onclick="exportReport('csv')" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-file-csv mr-2"></i>Export CSV
+                        </button>
+                        <button onclick="exportReport('excel')" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors">
+                            <i class="fas fa-file-excel mr-2"></i>Export Excel
+                        </button>
+                        <button onclick="resetReportFilters()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-redo mr-2"></i>Reset Filters
                         </button>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                    <i class="fas fa-chart-bar text-gray-300 text-6xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Analytics Dashboard</h3>
-                    <p class="text-gray-500">Advanced reporting and data visualization tools will be available here.</p>
+                <!-- Report Results Table -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                <i class="fas fa-table mr-2 text-indigo-600"></i>Attendance Report
+                            </h3>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Showing <span id="report-showing-count">0</span> records from 
+                                <span id="report-date-range">-</span>
+                            </p>
+                        </div>
+                        <div>
+                            <input type="text" id="reportTableSearch" placeholder="Search records..." 
+                                   class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workplace</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time In</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Out</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Late (min)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                                        <p>No data available. Please select filters and generate a report.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -4548,6 +4674,452 @@
                 closeActivityLogsModal();
             }
         });
+
+        // ============================================
+        // REPORTS FUNCTIONALITY
+        // ============================================
+        
+        let currentReportData = null;
+
+        // Initialize report dates based on report type
+        function initializeReportDates() {
+            const reportType = document.getElementById('reportType').value;
+            const today = new Date();
+            let startDate, endDate;
+
+            if (reportType === 'weekly') {
+                // Get start of week (Monday)
+                const day = today.getDay();
+                const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+                startDate = new Date(today.setDate(diff));
+                endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+            } else if (reportType === 'monthly') {
+                // Get start and end of month
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            } else {
+                // Custom - default to last 30 days
+                endDate = new Date();
+                startDate = new Date();
+                startDate.setDate(startDate.getDate() - 30);
+            }
+
+            document.getElementById('reportStartDate').value = formatDateForInput(startDate);
+            document.getElementById('reportEndDate').value = formatDateForInput(endDate);
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Report type change handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const reportTypeSelect = document.getElementById('reportType');
+            if (reportTypeSelect) {
+                reportTypeSelect.addEventListener('change', initializeReportDates);
+                initializeReportDates(); // Initialize on load
+            }
+            
+            // Set initial value for employee search
+            const reportUserSearch = document.getElementById('reportUserSearch');
+            if (reportUserSearch && !reportUserSearch.value) {
+                reportUserSearch.value = 'All Employees';
+            }
+
+            // Report table search
+            const reportTableSearch = document.getElementById('reportTableSearch');
+            if (reportTableSearch) {
+                reportTableSearch.addEventListener('input', function(e) {
+                    filterReportTable(e.target.value);
+                });
+            }
+            
+            // Employee search functionality
+            const reportUserResults = document.getElementById('reportUserResults');
+            const reportUserFilter = document.getElementById('reportUserFilter');
+            
+            if (reportUserSearch) {
+                let searchTimeout;
+                
+                reportUserSearch.addEventListener('input', function(e) {
+                    clearTimeout(searchTimeout);
+                    const searchTerm = e.target.value.trim();
+                    
+                    if (searchTerm.length === 0) {
+                        reportUserResults.classList.add('hidden');
+                        reportUserFilter.value = '';
+                        return;
+                    }
+                    
+                    if (searchTerm.length < 2) return;
+                    
+                    searchTimeout = setTimeout(() => {
+                        searchEmployees(searchTerm);
+                    }, 300);
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!reportUserSearch.contains(e.target) && !reportUserResults.contains(e.target)) {
+                        reportUserResults.classList.add('hidden');
+                    }
+                });
+            }
+        });
+        
+        // Search employees function
+        function searchEmployees(searchTerm) {
+            const resultsDiv = document.getElementById('reportUserResults');
+            
+            fetch(`/admin/users?search=${encodeURIComponent(searchTerm)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="py-2">
+                            <div onclick="selectEmployee(null, 'All Employees')" 
+                                 class="px-4 py-2 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 font-medium border-b border-gray-200">
+                                <i class="fas fa-users mr-2 text-indigo-600"></i>All Employees
+                            </div>
+                            ${data.map(user => `
+                                <div onclick="selectEmployee(${user.id}, '${user.name.replace(/'/g, "\\'")}')" 
+                                     class="px-4 py-2 hover:bg-indigo-50 cursor-pointer text-sm flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+                                        <span class="text-indigo-600 font-semibold text-xs">
+                                            ${user.name.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">${user.name}</div>
+                                        <div class="text-xs text-gray-500">${user.email}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="px-4 py-3 text-sm text-gray-500 text-center">
+                            No employees found
+                        </div>
+                    `;
+                    resultsDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error searching employees:', error);
+            });
+        }
+        
+        // Select employee from search results
+        function selectEmployee(userId, userName) {
+            document.getElementById('reportUserFilter').value = userId || '';
+            document.getElementById('reportUserSearch').value = userName;
+            document.getElementById('reportUserResults').classList.add('hidden');
+        }
+
+        // Generate attendance report
+        function generateAttendanceReport() {
+            const reportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const userId = document.getElementById('reportUserFilter').value;
+            const workplaceId = document.getElementById('reportWorkplaceFilter').value;
+
+            if (!startDate || !endDate) {
+                showNotification('Please select start and end dates', 'error');
+                return;
+            }
+
+            // Show loading state
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="px-6 py-12 text-center">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-3 text-indigo-600"></i>
+                        <p class="text-gray-500">Generating report...</p>
+                    </td>
+                </tr>
+            `;
+
+            // Build query parameters
+            let queryParams = new URLSearchParams({
+                report_type: reportType,
+                start_date: startDate,
+                end_date: endDate
+            });
+
+            if (userId) queryParams.append('user_id', userId);
+            if (workplaceId) queryParams.append('workplace_id', workplaceId);
+
+            // Fetch report data
+            fetch(`/admin/reports/attendance?${queryParams.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentReportData = data;
+                    displayReportData(data);
+                    updateReportStats(data.stats);
+                    showNotification('Report generated successfully', 'success');
+                } else {
+                    showNotification('Failed to generate report', 'error');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center text-red-500">
+                                <i class="fas fa-exclamation-triangle text-4xl mb-3"></i>
+                                <p>Failed to generate report</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while generating report', 'error');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-red-500">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-3"></i>
+                            <p>Error generating report</p>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Display report data in table
+        function displayReportData(reportData) {
+            const tbody = document.getElementById('reportTableBody');
+            const attendances = reportData.data;
+
+            if (attendances.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                            <p>No attendance records found for the selected filters</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = attendances.map(attendance => {
+                const statusColors = {
+                    'present': 'bg-green-100 text-green-800',
+                    'late': 'bg-yellow-100 text-yellow-800',
+                    'absent': 'bg-red-100 text-red-800'
+                };
+                const statusColor = statusColors[attendance.status] || 'bg-gray-100 text-gray-800';
+
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${formatDisplayDate(attendance.date)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="flex items-center">
+                                <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+                                    <span class="text-indigo-600 font-semibold text-xs">
+                                        ${attendance.user.name.charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="font-medium">${attendance.user.name}</div>
+                                    <div class="text-xs text-gray-500">${attendance.user.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${attendance.workplace ? attendance.workplace.name : 'N/A'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${attendance.check_in_time ? formatTime(attendance.check_in_time) : '-'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${attendance.check_out_time ? formatTime(attendance.check_out_time) : '-'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">
+                                ${attendance.status.toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${attendance.total_hours ? (parseFloat(attendance.total_hours) / 60).toFixed(2) : '0.00'}h
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${attendance.break_duration || '0'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update record count
+            document.getElementById('report-showing-count').textContent = attendances.length;
+            document.getElementById('report-date-range').textContent = 
+                `${reportData.filters.start_date} to ${reportData.filters.end_date}`;
+        }
+
+        // Update report statistics
+        function updateReportStats(stats) {
+            document.getElementById('report-total-records').textContent = stats.total_records;
+            document.getElementById('report-present-count').textContent = stats.present_count;
+            document.getElementById('report-late-count').textContent = stats.late_count;
+            document.getElementById('report-attendance-rate').textContent = stats.attendance_rate + '%';
+        }
+
+        // Filter report table
+        function filterReportTable(searchTerm) {
+            const tbody = document.getElementById('reportTableBody');
+            const rows = tbody.getElementsByTagName('tr');
+            let visibleCount = 0;
+
+            searchTerm = searchTerm.toLowerCase();
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+
+            // Update showing count
+            if (currentReportData && currentReportData.data) {
+                document.getElementById('report-showing-count').textContent = visibleCount;
+            }
+        }
+
+        // Export report
+        function exportReport(format) {
+            if (!currentReportData || !currentReportData.data || currentReportData.data.length === 0) {
+                showNotification('Please generate a report first before exporting', 'warning');
+                return;
+            }
+
+            const reportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const userId = document.getElementById('reportUserFilter').value;
+            const workplaceId = document.getElementById('reportWorkplaceFilter').value;
+
+            // Build query parameters
+            let queryParams = new URLSearchParams({
+                report_type: reportType,
+                start_date: startDate,
+                end_date: endDate,
+                format: format
+            });
+
+            if (userId) queryParams.append('user_id', userId);
+            if (workplaceId) queryParams.append('workplace_id', workplaceId);
+
+            // Show loading notification
+            showNotification(`Preparing ${format.toUpperCase()} export...`, 'info');
+
+            // Trigger download
+            window.location.href = `/admin/reports/export?${queryParams.toString()}`;
+
+            // Show success notification after a delay
+            setTimeout(() => {
+                showNotification(`Report exported as ${format.toUpperCase()}`, 'success');
+            }, 1000);
+        }
+
+        // Reset report filters
+        function resetReportFilters() {
+            document.getElementById('reportType').value = 'weekly';
+            document.getElementById('reportUserFilter').value = '';
+            document.getElementById('reportUserSearch').value = 'All Employees';
+            document.getElementById('reportWorkplaceFilter').value = '';
+            document.getElementById('reportUserResults').classList.add('hidden');
+            initializeReportDates();
+            
+            // Clear table
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                        <p>No data available. Please select filters and generate a report.</p>
+                    </td>
+                </tr>
+            `;
+
+            // Reset stats
+            document.getElementById('report-total-records').textContent = '0';
+            document.getElementById('report-present-count').textContent = '0';
+            document.getElementById('report-late-count').textContent = '0';
+            document.getElementById('report-attendance-rate').textContent = '0%';
+            document.getElementById('report-showing-count').textContent = '0';
+            document.getElementById('report-date-range').textContent = '-';
+
+            currentReportData = null;
+            showNotification('Filters reset', 'info');
+        }
+
+        // Helper: Format display date
+        function formatDisplayDate(dateString) {
+            const date = new Date(dateString);
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Helper: Format time
+        function formatTime(timeString) {
+            if (!timeString) return '-';
+            
+            // Handle timestamp format (YYYY-MM-DD HH:MM:SS)
+            let timePart = timeString;
+            if (timeString.includes(' ')) {
+                timePart = timeString.split(' ')[1]; // Extract time part from timestamp
+            }
+            
+            const parts = timePart.split(':');
+            if (parts.length >= 2) {
+                let hours = parseInt(parts[0]);
+                const minutes = parts[1];
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                return `${hours}:${minutes} ${ampm}`;
+            }
+            return timeString;
+        }
+
+        // Load reports when switching to reports section
+        const reportsLink = document.querySelector('[data-section="reports"]');
+        if (reportsLink) {
+            reportsLink.addEventListener('click', function() {
+                // Auto-generate weekly report on first load if no data
+                if (!currentReportData) {
+                    setTimeout(() => {
+                        generateAttendanceReport();
+                    }, 300);
+                }
+            });
+        }
+
     </script>
 
 </body>

@@ -93,4 +93,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Attendance monitoring
     Route::get('/attendance-stats', [App\Http\Controllers\AdminController::class, 'getAttendanceStats']);
+    
+    // Reports
+    Route::get('/reports/attendance', [App\Http\Controllers\AdminReportController::class, 'getAttendanceReports']);
+    Route::get('/reports/individual/{user}', [App\Http\Controllers\AdminReportController::class, 'getIndividualReport']);
+    Route::get('/reports/export', [App\Http\Controllers\AdminReportController::class, 'exportReport']);
+    Route::get('/reports/summary-stats', [App\Http\Controllers\AdminReportController::class, 'getSummaryStats']);
 });

@@ -48,12 +48,30 @@ class AdminController extends Controller
     }
 
     /**
-     * Get all users for API
+     * Get all users for API (with optional search)
      */
-    public function getUsers()
+    public function getUsers(Request $request)
     {
-        $users = User::select('id', 'name', 'email', 'role')->get();
+        $search = $request->input('search', '');
         
+        $query = User::select('id', 'name', 'email', 'role');
+        
+        // Apply search filter if provided
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+        
+        $users = $query->orderBy('name', 'asc')->get();
+        
+        // If it's a search request, return simple array
+        if ($search) {
+            return response()->json($users);
+        }
+        
+        // Otherwise return with success wrapper
         return response()->json([
             'success' => true,
             'users' => $users
