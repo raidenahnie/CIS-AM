@@ -7,10 +7,10 @@ use App\Http\Controllers\PasswordResetController;
 
 Route::get('/', function () {
     return view('welcome');
-})->name('landing');
+})->middleware('guest')->name('landing');
 
 // Auth routes
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/login', [AuthController::class, 'showLogin'])->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 
 // Registration disabled - users are created by admin only

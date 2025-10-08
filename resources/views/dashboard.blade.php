@@ -35,136 +35,140 @@
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 min-h-screen flex">
 
     <!-- Enhanced Sidebar -->
-    <aside class="w-72 bg-white shadow-xl h-screen fixed border-r border-gray-200">
-        <div class="p-6 border-b border-gray-100">
-            <div class="text-indigo-600 text-3xl font-bold flex items-center">
-                <i class="fas fa-map-marker-alt mr-3"></i>
+    <aside class="w-64 lg:w-72 bg-white shadow-xl h-screen fixed border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[60]" id="sidebar">
+        <div class="p-4 lg:p-6 border-b border-gray-100">
+            <div class="text-indigo-600 text-2xl lg:text-3xl font-bold flex items-center">
+                <i class="fas fa-map-marker-alt mr-2 lg:mr-3"></i>
                 CISAM
             </div>
-            <p class="text-gray-500 text-sm mt-1">Curriculum Implementation System - Attendance Monitoring</p>
+            <p class="text-gray-500 text-xs lg:text-sm mt-1">Curriculum Implementation System - Attendance Monitoring</p>
         </div>
-        <nav class="mt-8 space-y-1 px-4">
-            <a href="#dashboard" class="sidebar-link active" data-section="dashboard">
+        <nav class="mt-6 lg:mt-8 space-y-1 px-3 lg:px-4">
+            <a href="javascript:void(0)" class="sidebar-link active" data-section="dashboard">
                 <i class="fas fa-home w-5"></i>
                 <span>My Dashboard</span>
             </a>
-            <a href="#my-workplace" class="sidebar-link" data-section="my-workplace">
+            <a href="javascript:void(0)" class="sidebar-link" data-section="my-workplace">
                 <i class="fas fa-map-marked-alt w-5"></i>
                 <span>My Workplace</span>
             </a>
-            <a href="#gps-checkin" class="sidebar-link" data-section="gps-checkin">
+            <a href="javascript:void(0)" class="sidebar-link" data-section="gps-checkin">
                 <i class="fas fa-map-pin w-5"></i>
                 <span>Check In/Out</span>
             </a>
-            <a href="#attendance-history" class="sidebar-link" data-section="attendance-history">
+            <a href="javascript:void(0)" class="sidebar-link" data-section="attendance-history">
                 <i class="fas fa-history w-5"></i>
                 <span>My Attendance History</span>
             </a>
         </nav>
 
         <!-- Location Status Indicator -->
-        <div class="absolute bottom-6 left-4 right-4">
-            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+        <div class="absolute bottom-4 lg:bottom-6 left-3 lg:left-4 right-3 lg:right-4">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-2 lg:p-3">
                 <div class="flex items-center">
                     <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                    <span class="text-green-700 text-sm font-medium" id="location-status">Location Active</span>
+                    <span class="text-green-700 text-xs lg:text-sm font-medium" id="location-status">Location Active</span>
                 </div>
             </div>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="ml-72 flex-1">
+    <main class="ml-0 lg:ml-72 flex-1 w-full">
         <!-- Enhanced Topbar -->
-        <div class="bg-white shadow-sm border-b border-gray-200 p-6">
+        <div class="bg-white shadow-sm border-b border-gray-200 p-4 lg:p-6">
             <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800" id="page-title">My Dashboard</h1>
-                    <p class="text-gray-600 mt-1" id="page-subtitle">Welcome to your attendance management portal</p>
+                <!-- Mobile Menu Button -->
+                <button class="lg:hidden text-gray-600 hover:text-indigo-600 mr-3" onclick="toggleMobileSidebar()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="flex-1">
+                    <h1 class="text-xl lg:text-3xl font-bold text-gray-800" id="page-title">My Dashboard</h1>
+                    <p class="text-xs lg:text-base text-gray-600 mt-1 hidden sm:block" id="page-subtitle">Welcome to your attendance management portal</p>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right">
-                        <p class="text-sm text-gray-500">Welcome back,</p>
-                        <p class="font-semibold text-gray-800">{{ Auth::user()->name ?? 'User' }}</p>
+                <div class="flex items-center space-x-2 lg:space-x-4">
+                    <div class="text-right hidden md:block">
+                        <p class="text-xs lg:text-sm text-gray-500">Welcome back,</p>
+                        <p class="text-sm lg:text-base font-semibold text-gray-800">{{ Auth::user()->name ?? 'User' }}</p>
                     </div>
                     <div
-                        class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
+                        class="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm lg:text-base">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </div>
-                    <div class="flex items-center space-x-3 border-l border-gray-200 pl-4">
+                    <div class="flex items-center space-x-2 lg:space-x-3 border-l border-gray-200 pl-2 lg:pl-4">
                         @if (Auth::user()->isAdmin())
                             <a href="{{ route('admin.dashboard') }}"
-                                class="px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:bg-indigo-600 transition-colors duration-200 flex items-center">
-                                <i class="fas fa-user-shield mr-2"></i>
-                                Admin
+                                class="px-2 lg:px-4 py-2 text-xs lg:text-sm bg-indigo-500 text-white rounded-lg shadow hover:bg-indigo-600 transition-colors duration-200 flex items-center">
+                                <i class="fas fa-user-shield mr-1 lg:mr-2"></i>
+                                <span class="hidden sm:inline">Admin</span>
                             </a>
                         @endif
                         <a href="{{ route('logout.get') }}"
-                            class="px-6 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-200 flex items-center">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
-                            Logout
+                            class="px-3 lg:px-6 py-2 text-xs lg:text-sm bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-200 flex items-center">
+                            <i class="fas fa-sign-out-alt mr-1 lg:mr-2"></i>
+                            <span class="hidden sm:inline">Logout</span>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="p-8">
+        <div class="p-4 sm:p-6 lg:p-8">
             <!-- Dashboard Overview Section -->
             <div id="dashboard-section" class="section-content">
                 <!-- Personal Stats Cards -->
-                <div class="grid lg:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
                     <div
-                        class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-200">
+                        class="bg-white p-4 lg:p-6 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-3xl font-bold text-green-600" id="my-checkins">
-                                    <i class="fas fa-spinner fa-spin text-lg"></i>
+                                <h3 class="text-2xl lg:text-3xl font-bold text-green-600" id="my-checkins">
+                                    <i class="fas fa-spinner fa-spin text-base lg:text-lg"></i>
                                 </h3>
-                                <p class="text-gray-600 font-medium">Days Present This Month</p>
-                                <p class="text-sm text-green-600 mt-1" id="attendance-rate">Loading...</p>
+                                <p class="text-sm lg:text-base text-gray-600 font-medium">Days Present This Month</p>
+                                <p class="text-xs lg:text-sm text-green-600 mt-1" id="attendance-rate">Loading...</p>
                             </div>
-                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-calendar-check text-green-600 text-lg lg:text-xl"></i>
                             </div>
                         </div>
                     </div>
 
                     <div
-                        class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow duration-200">
+                        class="bg-white p-4 lg:p-6 rounded-xl shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow duration-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-3xl font-bold text-blue-600" id="avg-checkin">
-                                    <i class="fas fa-spinner fa-spin text-lg"></i>
+                                <h3 class="text-2xl lg:text-3xl font-bold text-blue-600" id="avg-checkin">
+                                    <i class="fas fa-spinner fa-spin text-base lg:text-lg"></i>
                                 </h3>
-                                <p class="text-gray-600 font-medium">Average Check-in Time</p>
-                                <p class="text-sm text-blue-600 mt-1" id="checkin-trend">Loading...</p>
+                                <p class="text-sm lg:text-base text-gray-600 font-medium">Average Check-in Time</p>
+                                <p class="text-xs lg:text-sm text-blue-600 mt-1" id="checkin-trend">Loading...</p>
                             </div>
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-clock text-blue-600 text-xl"></i>
+                            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clock text-blue-600 text-lg lg:text-xl"></i>
                             </div>
                         </div>
                     </div>
 
                     <div
-                        class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500 hover:shadow-xl transition-shadow duration-200">
+                        class="bg-white p-4 lg:p-6 rounded-xl shadow-lg border-l-4 border-indigo-500 hover:shadow-xl transition-shadow duration-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-3xl font-bold text-indigo-600" id="hours-worked">
-                                    <i class="fas fa-spinner fa-spin text-lg"></i>
+                                <h3 class="text-2xl lg:text-3xl font-bold text-indigo-600" id="hours-worked">
+                                    <i class="fas fa-spinner fa-spin text-base lg:text-lg"></i>
                                 </h3>
-                                <p class="text-gray-600 font-medium">Today's Work Hours</p>
-                                <p class="text-sm text-indigo-600 mt-1" id="work-status">Loading...</p>
+                                <p class="text-sm lg:text-base text-gray-600 font-medium">Today's Work Hours</p>
+                                <p class="text-xs lg:text-sm text-indigo-600 mt-1" id="work-status">Loading...</p>
                             </div>
-                            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-hourglass-half text-indigo-600 text-xl"></i>
+                            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-hourglass-half text-indigo-600 text-lg lg:text-xl"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 mb-6 lg:mb-8">
                     <div
                         class="bg-gradient-to-br from-green-500 to-green-600 text-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
                         <div class="flex items-center mb-4">
@@ -593,143 +597,150 @@
 
             <!-- Attendance History Section -->
             <div id="attendance-history-section" class="section-content hidden">
-                <div class="bg-white rounded-xl shadow-lg p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <i class="fas fa-history text-indigo-600 mr-3"></i>
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
+                    <!-- Header with responsive controls -->
+                    <div class="mb-4 sm:mb-6">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center mb-4">
+                            <i class="fas fa-history text-indigo-600 mr-2 sm:mr-3"></i>
                             My Attendance History
                         </h2>
-                        <div class="flex items-center space-x-4">
+                        
+                        <!-- Controls - Stack on mobile -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <!-- View Toggle -->
                             <div class="flex items-center space-x-2">
-                                <span class="text-sm text-gray-600">View:</span>
+                                <span class="text-xs sm:text-sm text-gray-600">View:</span>
                                 <div class="flex bg-gray-100 rounded-lg p-1">
                                     <button id="detailed-view-btn"
-                                        class="px-3 py-1 text-sm rounded-md bg-indigo-600 text-white transition-colors"
+                                        class="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md bg-indigo-600 text-white transition-colors"
                                         onclick="switchAttendanceView('detailed')">
-                                        Detailed Logs
+                                        Detailed
                                     </button>
                                     <button id="summary-view-btn"
-                                        class="px-3 py-1 text-sm rounded-md text-gray-600 hover:bg-white transition-colors"
+                                        class="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md text-gray-600 hover:bg-white transition-colors"
                                         onclick="switchAttendanceView('summary')">
-                                        Daily Summary
+                                        Summary
                                     </button>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <label for="records-per-page" class="text-sm text-gray-600">Records per page:</label>
-                                <select id="records-per-page"
-                                    class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-indigo-500"
-                                    onchange="changeRecordsPerPage(this.value)">
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
+                            
+                            <!-- Records per page and filter - responsive -->
+                            <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                                <div class="flex items-center space-x-2">
+                                    <label for="records-per-page" class="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Per page:</label>
+                                    <select id="records-per-page"
+                                        class="px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500"
+                                        onchange="changeRecordsPerPage(this.value)">
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                                <select
+                                    class="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+                                    <option value="thisweek">This Week</option>
+                                    <option value="lastweek">Last Week</option>
+                                    <option value="thismonth">This Month</option>
+                                    <option value="lastmonth">Last Month</option>
                                 </select>
                             </div>
-                            <select
-                                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
-                                <option value="thisweek">This Week</option>
-                                <option value="lastweek">Last Week</option>
-                                <option value="thismonth">This Month</option>
-                                <option value="lastmonth">Last Month</option>
-                            </select>
                         </div>
                     </div>
 
-                    <!-- Weekly Summary -->
-                    <div class="grid lg:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <!-- Weekly Summary - Responsive Grid -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                        <div class="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
                             <div class="text-center">
-                                <h3 class="text-2xl font-bold text-green-600" id="weekly-hours">
-                                    <i class="fas fa-spinner fa-spin text-sm"></i>
+                                <h3 class="text-lg sm:text-2xl font-bold text-green-600" id="weekly-hours">
+                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
                                 </h3>
-                                <p class="text-green-700 font-medium">Total Hours</p>
-                                <p class="text-sm text-green-600">This Week</p>
+                                <p class="text-xs sm:text-sm text-green-700 font-medium">Total Hours</p>
+                                <p class="text-xs text-green-600">This Week</p>
                             </div>
                         </div>
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div class="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
                             <div class="text-center">
-                                <h3 class="text-2xl font-bold text-blue-600" id="weekly-days">
-                                    <i class="fas fa-spinner fa-spin text-sm"></i>
+                                <h3 class="text-lg sm:text-2xl font-bold text-blue-600" id="weekly-days">
+                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
                                 </h3>
-                                <p class="text-blue-700 font-medium">Days Present This Week</p>
+                                <p class="text-xs sm:text-sm text-blue-700 font-medium">Days Present</p>
                                 <p class="text-xs text-blue-500" id="weekly-date-range">Loading...</p>
-                                <p class="text-sm text-blue-600" id="weekly-days-total">Out of 0</p>
+                                <p class="text-xs sm:text-sm text-blue-600" id="weekly-days-total">Out of 0</p>
                             </div>
                         </div>
-                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <div class="bg-yellow-50 p-3 sm:p-4 rounded-lg border border-yellow-200">
                             <div class="text-center">
-                                <h3 class="text-2xl font-bold text-yellow-600" id="weekly-avg-checkin">
-                                    <i class="fas fa-spinner fa-spin text-sm"></i>
+                                <h3 class="text-lg sm:text-2xl font-bold text-yellow-600" id="weekly-avg-checkin">
+                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
                                 </h3>
-                                <p class="text-yellow-700 font-medium">Avg Check-in</p>
-                                <p class="text-sm text-yellow-600" id="weekly-checkin-trend">Loading...</p>
+                                <p class="text-xs sm:text-sm text-yellow-700 font-medium">Avg Check-in</p>
+                                <p class="text-xs sm:text-sm text-yellow-600" id="weekly-checkin-trend">Loading...</p>
                             </div>
                         </div>
-                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                        <div class="bg-indigo-50 p-3 sm:p-4 rounded-lg border border-indigo-200">
                             <div class="text-center">
-                                <h3 class="text-2xl font-bold text-indigo-600" id="weekly-attendance">
-                                    <i class="fas fa-spinner fa-spin text-sm"></i>
+                                <h3 class="text-lg sm:text-2xl font-bold text-indigo-600" id="weekly-attendance">
+                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
                                 </h3>
-                                <p class="text-indigo-700 font-medium">Attendance</p>
-                                <p class="text-sm text-indigo-600" id="weekly-performance">Loading...</p>
+                                <p class="text-xs sm:text-sm text-indigo-700 font-medium">Attendance</p>
+                                <p class="text-xs sm:text-sm text-indigo-600" id="weekly-performance">Loading...</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Detailed Records -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Date</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Action</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Time</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Shift Type</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Location</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200" id="attendance-history-tbody">
-                                <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                        <div class="flex flex-col items-center">
-                                            <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
-                                            <p>Loading attendance history...</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- Detailed Records - Scrollable on mobile -->
+                    <div class="overflow-x-auto -mx-4 sm:mx-0">
+                        <div class="inline-block min-w-full align-middle">
+                            <div class="overflow-hidden">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Date</th>
+                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Action</th>
+                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Time</th>
+                                            <th class="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Shift Type</th>
+                                            <th class="hidden lg:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Location</th>
+                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200" id="attendance-history-tbody">
+                                        <tr>
+                                            <td colspan="6" class="px-3 sm:px-6 py-8 sm:py-12 text-center text-gray-500">
+                                                <div class="flex flex-col items-center">
+                                                    <i class="fas fa-spinner fa-spin text-xl sm:text-2xl mb-2 sm:mb-3"></i>
+                                                    <p class="text-xs sm:text-sm">Loading attendance history...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mt-6 flex items-center justify-between" id="attendance-pagination">
-                        <div class="text-sm text-gray-500" id="pagination-info">
+                    <!-- Pagination - Responsive -->
+                    <div class="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3" id="attendance-pagination">
+                        <div class="text-xs sm:text-sm text-gray-500 text-center sm:text-left" id="pagination-info">
                             No records to show
                         </div>
-                        <div class="flex space-x-2" id="pagination-controls">
+                        <div class="flex flex-wrap items-center justify-center gap-2" id="pagination-controls">
                             <button id="prev-btn"
-                                class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 onclick="changePage(-1)" disabled>
-                                Previous
+                                Prev
                             </button>
                             <div id="page-numbers" class="flex space-x-1">
                                 <!-- Page numbers will be dynamically generated -->
                             </div>
                             <button id="next-btn"
-                                class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 onclick="changePage(1)" disabled>
                                 Next
                             </button>
@@ -751,11 +762,21 @@
             color: #64748b;
             transition: all 0.2s ease-in-out;
             cursor: pointer;
+            -webkit-tap-highlight-color: rgba(79, 70, 229, 0.1);
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .sidebar-link:hover {
             background-color: #f8fafc;
             color: #4f46e5;
+        }
+
+        /* Active state for touch devices */
+        .sidebar-link:active {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            transform: scale(0.98);
         }
 
         .sidebar-link.active {
@@ -848,6 +869,14 @@
     </style>
 
     <script>
+        // Simple mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('-translate-x-full');
+            }
+        }
+
         // Section switching functionality
         function switchToSection(sectionName) {
             // Hide all sections
@@ -859,6 +888,14 @@
             const targetSection = document.getElementById(sectionName + '-section');
             if (targetSection) {
                 targetSection.classList.remove('hidden');
+            }
+            
+            // Close sidebar on mobile ONLY if it's currently open
+            if (window.innerWidth < 1024) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                    toggleMobileSidebar();
+                }
             }
 
             // Update sidebar active state
@@ -940,11 +977,17 @@
                 if (avgCheckinEl) avgCheckinEl.textContent = data.average_checkin_time || 'N/A';
                 if (hoursEl) hoursEl.textContent = data.today_hours || '0.0 hrs';
 
-                // Update attendance rate display
+                // Update attendance rate display with more context
                 const attendanceRateEl = document.getElementById('attendance-rate');
                 if (attendanceRateEl) {
-                    if (data.attendance_rate > 0) {
-                        attendanceRateEl.textContent = data.attendance_rate + '% work attendance rate';
+                    const daysPresent = data.days_present_this_month || 0;
+                    const totalWorkDays = data.total_work_days_this_month || 0;
+                    
+                    if (totalWorkDays > 0) {
+                        const percentage = Math.round((daysPresent / totalWorkDays) * 100);
+                        attendanceRateEl.textContent = `${percentage}% (${daysPresent} of ${totalWorkDays} work days)`;
+                    } else if (daysPresent > 0) {
+                        attendanceRateEl.textContent = `${daysPresent} day(s) this month`;
                     } else {
                         attendanceRateEl.textContent = 'No attendance data yet';
                     }
@@ -2728,15 +2771,14 @@
             }
         }
 
-        // Initialize sidebar click handlers
+        // Initialize event listeners
         document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar link clicks
             document.querySelectorAll('.sidebar-link').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const section = this.getAttribute('data-section');
-                    if (section) {
-                        switchToSection(section);
-                    }
+                    switchToSection(section);
                 });
             });
 

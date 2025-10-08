@@ -64,18 +64,30 @@
         .admin-section.hidden {
             display: none;
         }
+
+        /* Mobile responsive table wrapper */
+        @media (max-width: 768px) {
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table-wrapper table {
+                min-width: 600px;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white shadow-lg sidebar-transition z-30">
-        <div class="flex items-center justify-between p-5 pb-6 border-b-2 border-indigo-500">
-            <h2 class="text-xl font-bold text-indigo-600">
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white shadow-2xl sidebar-transition z-[50] transform -translate-x-full lg:translate-x-0">
+        <div class="flex items-center justify-between p-4 lg:p-5 pb-4 lg:pb-6 border-b-2 border-indigo-500">
+            <h2 class="text-lg lg:text-xl font-bold text-indigo-600">
                 <i class="fas fa-user-shield mr-2"></i>
                 CISAM Admin
             </h2>
-            <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700">
+            <button type="button" onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg transition-colors active:bg-gray-200" aria-label="Close Sidebar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -139,41 +151,41 @@
     </div>
 
     <!-- Overlay -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 z-50 hidden lg:hidden transition-opacity duration-300" onclick="toggleSidebar()"></div>
 
     <!-- Header -->
     <header class="bg-white shadow-sm ml-0 lg:ml-64 transition-all duration-300">
         <div class="px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700 mr-4">
+                    <button type="button" onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700 mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors active:bg-gray-200" aria-label="Toggle Sidebar">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     
                     <!-- Breadcrumbs -->
-                    <nav class="flex" aria-label="Breadcrumb">
-                        <ol class="flex items-center space-x-4">
+                    <nav class="hidden sm:flex" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-2 lg:space-x-4">
                             <li>
                                 <div class="flex items-center">
-                                    <i class="fas fa-home text-gray-400"></i>
-                                    <span class="ml-2 text-sm font-medium text-gray-500">Admin</span>
+                                    <i class="fas fa-home text-gray-400 text-sm lg:text-base"></i>
+                                    <span class="ml-1 lg:ml-2 text-xs lg:text-sm font-medium text-gray-500">Admin</span>
                                 </div>
                             </li>
                             <li>
                                 <div class="flex items-center">
-                                    <i class="fas fa-chevron-right text-gray-300 mx-2"></i>
-                                    <span class="text-sm font-medium text-gray-900" id="current-section">Dashboard</span>
+                                    <i class="fas fa-chevron-right text-gray-300 mx-1 lg:mx-2 text-xs"></i>
+                                    <span class="text-xs lg:text-sm font-medium text-gray-900" id="current-section">Dashboard</span>
                                 </div>
                             </li>
                         </ol>
                     </nav>
                 </div>
                 
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 lg:space-x-4">
                     <button class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
-                        <i class="fas fa-bell"></i>
+                        <i class="fas fa-bell text-sm lg:text-base"></i>
                     </button>
-                    <div class="hidden sm:block text-sm text-gray-600">
+                    <div class="hidden md:block text-xs lg:text-sm text-gray-600">
                         {{ now()->format('F j, Y') }}
                     </div>
                 </div>
@@ -183,28 +195,28 @@
 
     <!-- Main Content -->
     <main class="ml-0 lg:ml-64 transition-all duration-300">
-        <div class="px-4 py-6 sm:px-6 lg:px-8">
+        <div class="px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
             <!-- Dashboard Section -->
             <div id="dashboard-section" class="admin-section">
                 <!-- Page Title -->
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-                    <p class="mt-2 text-sm text-gray-600">Welcome back! Here's what's happening in your system today.</p>
+                <div class="mb-6 lg:mb-8">
+                    <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+                    <p class="mt-1 lg:mt-2 text-xs lg:text-sm text-gray-600">Welcome back! Here's what's happening in your system today.</p>
                 </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in">
-                    <div class="p-6">
+                    <div class="p-4 lg:p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-users text-white text-xl"></i>
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-users text-white text-lg lg:text-xl"></i>
                                 </div>
                             </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Users</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ $users->count() }}</p>
+                            <div class="ml-3 lg:ml-4 flex-1">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Total Users</p>
+                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ $users->count() }}</p>
                                 <p class="text-xs text-green-600 mt-1">
                                     <i class="fas fa-arrow-up mr-1"></i>
                                     Active system users
@@ -215,16 +227,16 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in" style="animation-delay: 0.1s">
-                    <div class="p-6">
+                    <div class="p-4 lg:p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-user-shield text-white text-xl"></i>
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-user-shield text-white text-lg lg:text-xl"></i>
                                 </div>
                             </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Admin Users</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ $users->where('role', 'admin')->count() }}</p>
+                            <div class="ml-3 lg:ml-4 flex-1">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Admin Users</p>
+                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ $users->where('role', 'admin')->count() }}</p>
                                 <p class="text-xs text-red-600 mt-1">
                                     <i class="fas fa-shield-alt mr-1"></i>
                                     System administrators
@@ -235,16 +247,16 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in" style="animation-delay: 0.2s">
-                    <div class="p-6">
+                    <div class="p-4 lg:p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-user text-white text-xl"></i>
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-user text-white text-lg lg:text-xl"></i>
                                 </div>
                             </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Regular Users</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ $users->where('role', 'user')->count() }}</p>
+                            <div class="ml-3 lg:ml-4 flex-1">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Regular Users</p>
+                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ $users->where('role', 'user')->count() }}</p>
                                 <p class="text-xs text-green-600 mt-1">
                                     <i class="fas fa-check-circle mr-1"></i>
                                     Employee accounts
@@ -255,16 +267,16 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in" style="animation-delay: 0.3s">
-                    <div class="p-6">
+                    <div class="p-4 lg:p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-building text-white text-xl"></i>
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-building text-white text-lg lg:text-xl"></i>
                                 </div>
                             </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Workplaces</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ isset($workplaces) ? $workplaces->count() : 0 }}</p>
+                            <div class="ml-3 lg:ml-4 flex-1">
+                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Workplaces</p>
+                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ isset($workplaces) ? $workplaces->count() : 0 }}</p>
                                 <p class="text-xs text-blue-600 mt-1">
                                     <i class="fas fa-map-marker-alt mr-1"></i>
                                     Active locations
@@ -276,7 +288,7 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6 lg:mb-8">
                 <a href="#" onclick="switchAdminSection('workplaces'); return false;" 
                    class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500">
                     <div class="flex items-center">
@@ -1567,17 +1579,17 @@
     </main>
 
     <!-- Workplace Modal -->
-    <div id="workplaceModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-0 border-0 w-96 shadow-lg rounded-2xl">
+    <div id="workplaceModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-4">
+        <div class="relative top-4 sm:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
             <!-- Glassmorphism container -->
             <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
-                <div class="px-6 py-4 border-b border-white border-opacity-20">
-                    <h3 class="text-lg font-semibold text-black mb-0" id="modalTitle">Add New Workplace</h3>
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-white border-opacity-20">
+                    <h3 class="text-base sm:text-lg font-semibold text-black mb-0" id="modalTitle">Add New Workplace</h3>
                 </div>
-                <div class="px-6 py-4">
+                <div class="px-4 sm:px-6 py-3 sm:py-4">
                 <form id="workplaceForm">
                     <input type="hidden" id="workplaceId">
-                    <div class="mb-4">
+                    <div class="mb-3 sm:mb-4">
                         <label class="block text-sm font-medium text-black mb-2">Name</label>
                         <input type="text" id="workplaceName" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
                     </div>
@@ -1616,12 +1628,12 @@
     </div>
 
     <!-- Assignment Modal -->
-    <div id="assignmentModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-0 border-0 w-96 shadow-lg rounded-2xl">
+    <div id="assignmentModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-4">
+        <div class="relative top-4 sm:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
             <!-- Glassmorphism container -->
             <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
-                <div class="px-6 py-4 border-b border-white border-opacity-20">
-                    <h3 class="text-lg font-semibold text-black mb-0">Assign User to Workplace</h3>
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-white border-opacity-20">
+                    <h3 class="text-base sm:text-lg font-semibold text-black mb-0">Assign User to Workplace</h3>
                 </div>
                 <div class="px-6 py-4">
                 <form id="assignmentForm">
@@ -1664,12 +1676,12 @@
     </div>
 
     <!-- User Modal -->
-    <div id="userModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-0 border-0 w-96 shadow-lg rounded-2xl">
+    <div id="userModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-4">
+        <div class="relative top-4 sm:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
             <!-- Glassmorphism container -->
             <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
-                <div class="px-6 py-4 border-b border-white border-opacity-20">
-                    <h3 class="text-lg font-semibold text-black mb-0" id="userModalTitle">Add New User</h3>
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-white border-opacity-20">
+                    <h3 class="text-base sm:text-lg font-semibold text-black mb-0" id="userModalTitle">Add New User</h3>
                 </div>
                 <div class="px-6 py-4">
                 <form id="userForm">
@@ -2146,6 +2158,16 @@
 
         // Admin section switching functionality
         function switchAdminSection(sectionName) {
+            // Close mobile sidebar when switching sections
+            if (window.innerWidth < 1024) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                if (sidebar && overlay) {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            }
+            
             // Hide all sections
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.classList.add('hidden');
@@ -2193,9 +2215,16 @@
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
-            if (window.innerWidth < 1024) {
-                sidebar.classList.toggle('-translate-x-full');
-                overlay.classList.toggle('hidden');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Open sidebar
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                overlay.classList.remove('hidden');
+            } else {
+                // Close sidebar
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+                overlay.classList.add('hidden');
             }
         }
 

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'password',
         'role',
         'last_activity',
+        'current_session_id',
     ];
 
     /**

@@ -26,22 +26,22 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center animated-gradient">
+<body class="min-h-screen flex items-center justify-center animated-gradient p-4">
 
     <!-- Reset Password Card -->
-    <div class="w-full max-w-md bg-white rounded-xl shadow-slate-500 shadow-2xl p-8">
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-indigo-600">CIS-AM</h1>
-            <p class="text-gray-500">Reset your password</p>
-            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-slate-500 shadow-2xl p-6 sm:p-8 mx-4">
+        <div class="text-center mb-4 sm:mb-6">
+            <h1 class="text-xl sm:text-2xl font-bold text-indigo-600">CIS-AM</h1>
+            <p class="text-sm sm:text-base text-gray-500">Reset your password</p>
+            <div class="mt-3 sm:mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm text-blue-700">
+                        <p class="text-xs sm:text-sm text-blue-700">
                             Please create a new secure password for your account.
                         </p>
                     </div>
@@ -104,38 +104,38 @@
             </div>
 
             <!-- Password Requirements -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="text-sm font-medium text-gray-700 mb-2">Password Requirements:</h4>
+            <div class="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h4 class="text-xs sm:text-sm font-medium text-gray-700 mb-2">Password Requirements:</h4>
                 <ul class="text-xs text-gray-600 space-y-1">
                     <li class="flex items-center">
-                        <svg class="h-3 w-3 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="h-3 w-3 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                         </svg>
-                        At least 8 characters long
+                        <span>At least 8 characters long</span>
                     </li>
                     <li class="flex items-center">
-                        <svg class="h-3 w-3 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="h-3 w-3 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                         </svg>
-                        Mix of letters, numbers, and symbols recommended
+                        <span>Mix of letters, numbers, and symbols recommended</span>
                     </li>
                     <li class="flex items-center">
-                        <svg class="h-3 w-3 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="h-3 w-3 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                         </svg>
-                        Different from your previous password
+                        <span>Different from your previous password</span>
                     </li>
                 </ul>
             </div>
 
             <button type="submit" 
-                    class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    class="w-full py-2 px-4 bg-indigo-600 text-white text-sm sm:text-base font-semibold rounded-lg shadow hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 Reset Password
             </button>
         </form>
 
         <!-- Back to Login -->
-        <p class="mt-6 text-center text-sm text-gray-600">
+        <p class="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600 px-2">
             Remember your password? <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Back to login</a>
         </p>
     </div>

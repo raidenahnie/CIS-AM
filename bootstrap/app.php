@@ -13,11 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
         
-        // Apply user activity tracking to authenticated routes
+        // Apply user activity tracking and session validation to authenticated routes
         $middleware->web([
             \App\Http\Middleware\UpdateUserActivity::class,
+            \App\Http\Middleware\ValidateSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

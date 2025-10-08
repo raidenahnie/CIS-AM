@@ -27,15 +27,26 @@ class DashboardController extends Controller
         $currentMonth = now()->startOfMonth();
         $today = now()->format('Y-m-d');
 
+        // Calculate total work days in current month (Monday-Friday only)
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+        $totalWorkDaysInMonth = 0;
+        
+        for ($date = $startOfMonth->copy(); $date <= $endOfMonth; $date->addDay()) {
+            // Count Monday (1) to Friday (5)
+            if ($date->dayOfWeek >= 1 && $date->dayOfWeek <= 5) {
+                $totalWorkDaysInMonth++;
+            }
+        }
+
         // Get user's attendances for current month (work days only - Monday to Friday)
         $attendances = Attendance::where('user_id', $userId)
             ->where('date', '>=', $currentMonth)
             ->whereRaw('DAYOFWEEK(date) BETWEEN 2 AND 6') // Monday=2, Friday=6 in MySQL
             ->get();
 
-        $totalDays = $attendances->count();
         $presentDays = $attendances->where('status', '!=', 'absent')->count();
-        $attendanceRate = $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 1) : 0;
+        $attendanceRate = $totalWorkDaysInMonth > 0 ? round(($presentDays / $totalWorkDaysInMonth) * 100, 1) : 0;
 
         // Calculate average check-in time
         $checkInTimes = $attendances->whereNotNull('check_in_time');
@@ -76,6 +87,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'days_present_this_month' => $presentDays,
+            'total_work_days_this_month' => $totalWorkDaysInMonth,
             'attendance_rate' => $attendanceRate,
             'average_checkin_time' => $avgCheckIn,
             'today_hours' => $todayHours,
