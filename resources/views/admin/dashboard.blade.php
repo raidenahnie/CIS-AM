@@ -75,6 +75,34 @@
             .table-wrapper table {
                 min-width: 600px;
             }
+            
+            /* Better touch targets for mobile buttons */
+            .table-wrapper button,
+            .table-wrapper a {
+                min-height: 36px;
+                min-width: 36px;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 640px) {
+            /* Make tables fully scrollable */
+            .table-wrapper {
+                margin: 0 -1rem;
+                padding: 0 1rem;
+            }
+            
+            /* Compact table cells */
+            .table-wrapper td,
+            .table-wrapper th {
+                padding: 0.5rem !important;
+                font-size: 0.75rem;
+            }
+            
+            /* Hide less critical columns on very small screens */
+            .mobile-hide {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -88,7 +116,7 @@
                 CISAM Admin
             </h2>
             <button type="button" onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg transition-colors active:bg-gray-200" aria-label="Close Sidebar">
-                <i class="fas fa-times text-xl"></i>
+                <i class="fas fa-times text-xl" onclick="toggleSidebar()"></i>
             </button>
         </div>
         
@@ -205,21 +233,21 @@
                 </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6 lg:mb-6">
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in">
-                    <div class="p-4 lg:p-6">
+                    <div class="p-3 sm:p-4 lg:p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-users text-white text-lg lg:text-xl"></i>
+                                <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-11 lg:h-11 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-users text-white text-base sm:text-lg lg:text-lg"></i>
                                 </div>
                             </div>
-                            <div class="ml-3 lg:ml-4 flex-1">
-                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Total Users</p>
-                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ $users->count() }}</p>
-                                <p class="text-xs text-green-600 mt-1">
+                            <div class="ml-2 sm:ml-3 lg:ml-3 flex-1 min-w-0">
+                                <p class="text-[10px] xs:text-xs lg:text-xs font-medium text-gray-600 uppercase tracking-wide truncate">Total Users</p>
+                                <p class="text-lg sm:text-xl lg:text-xl font-bold text-gray-900">{{ $users->count() }}</p>
+                                <p class="text-[10px] xs:text-xs lg:text-xs text-green-600 mt-0.5 sm:mt-1 truncate">
                                     <i class="fas fa-arrow-up mr-1"></i>
-                                    Active system users
+                                    <span class="hidden xs:inline">Active </span>system users
                                 </p>
                             </div>
                         </div>
@@ -227,19 +255,19 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in" style="animation-delay: 0.1s">
-                    <div class="p-4 lg:p-6">
+                    <div class="p-3 sm:p-4 lg:p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-user-shield text-white text-lg lg:text-xl"></i>
+                                <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-11 lg:h-11 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-user-shield text-white text-base sm:text-lg lg:text-lg"></i>
                                 </div>
                             </div>
-                            <div class="ml-3 lg:ml-4 flex-1">
-                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Admin Users</p>
-                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ $users->where('role', 'admin')->count() }}</p>
-                                <p class="text-xs text-red-600 mt-1">
+                            <div class="ml-2 sm:ml-3 lg:ml-3 flex-1 min-w-0">
+                                <p class="text-[10px] xs:text-xs lg:text-xs font-medium text-gray-600 uppercase tracking-wide truncate">Admin Users</p>
+                                <p class="text-lg sm:text-xl lg:text-xl font-bold text-gray-900">{{ $users->where('role', 'admin')->count() }}</p>
+                                <p class="text-[10px] xs:text-xs lg:text-xs text-red-600 mt-0.5 sm:mt-1 truncate">
                                     <i class="fas fa-shield-alt mr-1"></i>
-                                    System administrators
+                                    <span class="hidden xs:inline">System </span>administrators
                                 </p>
                             </div>
                         </div>
@@ -247,17 +275,17 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in" style="animation-delay: 0.2s">
-                    <div class="p-4 lg:p-6">
+                    <div class="p-3 sm:p-4 lg:p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-user text-white text-lg lg:text-xl"></i>
+                                <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-11 lg:h-11 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-user text-white text-base sm:text-lg lg:text-lg"></i>
                                 </div>
                             </div>
-                            <div class="ml-3 lg:ml-4 flex-1">
-                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Regular Users</p>
-                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ $users->where('role', 'user')->count() }}</p>
-                                <p class="text-xs text-green-600 mt-1">
+                            <div class="ml-2 sm:ml-3 lg:ml-3 flex-1 min-w-0">
+                                <p class="text-[10px] xs:text-xs lg:text-xs font-medium text-gray-600 uppercase tracking-wide truncate">Regular Users</p>
+                                <p class="text-lg sm:text-xl lg:text-xl font-bold text-gray-900">{{ $users->where('role', 'user')->count() }}</p>
+                                <p class="text-[10px] xs:text-xs lg:text-xs text-green-600 mt-0.5 sm:mt-1 truncate">
                                     <i class="fas fa-check-circle mr-1"></i>
                                     Employee accounts
                                 </p>
@@ -267,17 +295,17 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-lg rounded-xl card-hover transition-all duration-300 fade-in" style="animation-delay: 0.3s">
-                    <div class="p-4 lg:p-6">
+                    <div class="p-3 sm:p-4 lg:p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-building text-white text-lg lg:text-xl"></i>
+                                <div class="w-10 h-10 sm:w-11 sm:h-11 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-building text-white text-base sm:text-lg lg:text-lg"></i>
                                 </div>
                             </div>
-                            <div class="ml-3 lg:ml-4 flex-1">
-                                <p class="text-xs lg:text-sm font-medium text-gray-600 uppercase tracking-wide">Workplaces</p>
-                                <p class="text-xl lg:text-2xl font-bold text-gray-900">{{ isset($workplaces) ? $workplaces->count() : 0 }}</p>
-                                <p class="text-xs text-blue-600 mt-1">
+                            <div class="ml-2 sm:ml-3 lg:ml-3 flex-1 min-w-0">
+                                <p class="text-[10px] xs:text-xs lg:text-xs font-medium text-gray-600 uppercase tracking-wide truncate">Workplaces</p>
+                                <p class="text-lg sm:text-xl lg:text-xl font-bold text-gray-900">{{ isset($workplaces) ? $workplaces->count() : 0 }}</p>
+                                <p class="text-[10px] xs:text-xs lg:text-xs text-blue-600 mt-0.5 sm:mt-1 truncate">
                                     <i class="fas fa-map-marker-alt mr-1"></i>
                                     Active locations
                                 </p>
@@ -288,47 +316,47 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6 lg:mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6 lg:mb-6">
                 <a href="#" onclick="switchAdminSection('workplaces'); return false;" 
-                   class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500">
+                   class="bg-white p-3 sm:p-4 lg:p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500">
                     <div class="flex items-center">
-                        <i class="fas fa-building text-2xl text-green-500 mr-4"></i>
-                        <div>
-                            <h3 class="font-semibold text-gray-900">Manage Workplaces</h3>
-                            <p class="text-sm text-gray-600">Add & edit locations</p>
+                        <i class="fas fa-building text-lg sm:text-xl lg:text-xl text-green-500 mr-2 sm:mr-3 lg:mr-3 flex-shrink-0"></i>
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-sm sm:text-base lg:text-sm text-gray-900 truncate">Manage Workplaces</h3>
+                            <p class="text-xs sm:text-sm lg:text-xs text-gray-600 truncate">Add & edit locations</p>
                         </div>
                     </div>
                 </a>
                 
                 <a href="#" onclick="switchAdminSection('users'); return false;"
-                   class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500">
+                   class="bg-white p-3 sm:p-4 lg:p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500">
                     <div class="flex items-center">
-                        <i class="fas fa-user-group text-2xl text-blue-500 mr-4"></i>
-                        <div>
-                            <h3 class="font-semibold text-gray-900">Manage Users</h3>
-                            <p class="text-sm text-gray-600">Create, edit and monitor user accounts</p>
+                        <i class="fas fa-user-group text-lg sm:text-xl lg:text-xl text-blue-500 mr-2 sm:mr-3 lg:mr-3 flex-shrink-0"></i>
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-sm sm:text-base lg:text-sm text-gray-900 truncate">Manage Users</h3>
+                            <p class="text-xs sm:text-sm lg:text-xs text-gray-600 truncate"><span class="hidden sm:inline lg:hidden">Create, edit and monitor </span>User accounts</p>
                         </div>
                     </div>
                 </a>
                 
                 <a href="#" onclick="switchAdminSection('reports'); return false;"
-                   class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500">
+                   class="bg-white p-3 sm:p-4 lg:p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500">
                     <div class="flex items-center">
-                        <i class="fas fa-chart-line text-2xl text-purple-500 mr-4"></i>
-                        <div>
-                            <h3 class="font-semibold text-gray-900">View Reports</h3>
-                            <p class="text-sm text-gray-600">Attendance analytics</p>
+                        <i class="fas fa-chart-line text-lg sm:text-xl lg:text-xl text-purple-500 mr-2 sm:mr-3 lg:mr-3 flex-shrink-0"></i>
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-sm sm:text-base lg:text-sm text-gray-900 truncate">View Reports</h3>
+                            <p class="text-xs sm:text-sm lg:text-xs text-gray-600 truncate">Attendance analytics</p>
                         </div>
                     </div>
                 </a>
                 
                 <a href="{{ route('dashboard') }}" 
-                   class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-indigo-500">
+                   class="bg-white p-3 sm:p-4 lg:p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-indigo-500">
                     <div class="flex items-center">
-                        <i class="fas fa-arrow-left text-2xl text-indigo-500 mr-4"></i>
-                        <div>
-                            <h3 class="font-semibold text-gray-900">User Dashboard</h3>
-                            <p class="text-sm text-gray-600">Switch to user view</p>
+                        <i class="fas fa-arrow-left text-lg sm:text-xl lg:text-xl text-indigo-500 mr-2 sm:mr-3 lg:mr-3 flex-shrink-0"></i>
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-sm sm:text-base lg:text-sm text-gray-900 truncate">User Dashboard</h3>
+                            <p class="text-xs sm:text-sm lg:text-xs text-gray-600 truncate">Switch to user view</p>
                         </div>
                     </div>
                 </a>
@@ -451,33 +479,33 @@
                 </div>
 
                 <!-- Quick Actions for Workplaces -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <button onclick="openWorkplaceModal()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <button onclick="openWorkplaceModal()" class="bg-white p-4 sm:p-5 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
                         <div class="flex items-center">
-                            <i class="fas fa-plus text-2xl text-green-500 mr-4"></i>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Add New Workplace</h3>
-                                <p class="text-sm text-gray-600">Create a new location</p>
+                            <i class="fas fa-plus text-xl sm:text-2xl text-green-500 mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0">
+                                <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">Add New Workplace</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 truncate">Create a new location</p>
                             </div>
                         </div>
                     </button>
                     
-                    <button onclick="scrollToAllWorkplaces()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
+                    <button onclick="scrollToAllWorkplaces()" class="bg-white p-4 sm:p-5 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
                         <div class="flex items-center">
-                            <i class="fas fa-list text-2xl text-blue-500 mr-4"></i>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">View All Workplaces</h3>
-                                <p class="text-sm text-gray-600">Browse all locations</p>
+                            <i class="fas fa-list text-xl sm:text-2xl text-blue-500 mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0">
+                                <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">View All Workplaces</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 truncate">Browse all locations</p>
                             </div>
                         </div>
                     </button>
                     
-                    <button onclick="scrollToAssignments()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left">
+                    <button onclick="scrollToAssignments()" class="bg-white p-4 sm:p-5 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left">
                         <div class="flex items-center">
-                            <i class="fas fa-user-cog text-2xl text-purple-500 mr-4"></i>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Manage Assignments</h3>
-                                <p class="text-sm text-gray-600">User-workplace links</p>
+                            <i class="fas fa-user-cog text-xl sm:text-2xl text-purple-500 mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0">
+                                <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">Manage Assignments</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 truncate">User-workplace links</p>
                             </div>
                         </div>
                     </button>
@@ -485,22 +513,22 @@
 
                 <!-- All Workplaces Table -->
                 <div id="all-workplaces-table" class="bg-white shadow-xl rounded-xl overflow-hidden mb-8">
-                    <div class="px-6 py-6 border-b border-gray-200">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="px-3 sm:px-4 lg:px-5 py-3 sm:py-4 lg:py-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                             <div>
-                                <h3 class="text-xl font-semibold text-gray-900">All Workplaces</h3>
-                                <p class="mt-1 text-sm text-gray-600">Manage all workplace locations</p>
+                                <h3 class="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">All Workplaces</h3>
+                                <p class="mt-0.5 sm:mt-1 text-xs sm:text-sm lg:text-xs text-gray-600">Manage all workplace locations</p>
                             </div>
-                            <div class="mt-4 sm:mt-0 flex space-x-3">
-                                <div class="relative">
-                                    <input type="text" id="workplaceSearchMain" placeholder="Search workplaces..." 
-                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
-                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3">
+                                <div class="relative flex-1 xs:flex-none">
+                                    <input type="text" id="workplaceSearchMain" placeholder="Search..." 
+                                           class="w-full xs:w-auto pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
+                                    <i class="fas fa-search absolute left-2 sm:left-3 top-2 sm:top-3 lg:top-2.5 text-gray-400 text-sm"></i>
                                 </div>
                                 <button onclick="openWorkplaceModal()" 
-                                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-                                    <i class="fas fa-plus mr-2"></i>
-                                    Add Workplace
+                                        class="inline-flex items-center justify-center px-3 sm:px-4 lg:px-3 py-1.5 sm:py-2 bg-green-600 text-white text-xs sm:text-sm lg:text-xs font-medium rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap">
+                                    <i class="fas fa-plus mr-1 sm:mr-2"></i>
+                                    <span class="hidden xs:inline">Add </span>Workplace
                                 </button>
                             </div>
                         </div>
@@ -637,22 +665,22 @@
 
                 <!-- User Assignments Section -->
                 <div id="assignments-section" class="bg-white shadow-xl rounded-xl overflow-hidden">
-                    <div class="px-6 py-6 border-b border-gray-200">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="px-3 sm:px-4 lg:px-5 py-3 sm:py-4 lg:py-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                             <div>
-                                <h3 class="text-xl font-semibold text-gray-900">User Workplace Assignments</h3>
-                                <p class="mt-1 text-sm text-gray-600">Assign users to workplaces and manage their roles</p>
+                                <h3 class="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">User Workplace Assignments</h3>
+                                <p class="mt-0.5 sm:mt-1 text-xs sm:text-sm lg:text-xs text-gray-600">Assign users to workplaces and manage their roles</p>
                             </div>
-                            <div class="mt-4 sm:mt-0 flex space-x-3">
-                                <div class="relative">
-                                    <input type="text" id="assignmentSearch" placeholder="Search assignments..." 
-                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3">
+                                <div class="relative flex-1 xs:flex-none">
+                                    <input type="text" id="assignmentSearch" placeholder="Search..." 
+                                           class="w-full xs:w-auto pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <i class="fas fa-search absolute left-2 sm:left-3 top-2 sm:top-3 lg:top-2.5 text-gray-400 text-sm"></i>
                                 </div>
                                 <button onclick="openAssignmentModal()" 
-                                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                    <i class="fas fa-user-plus mr-2"></i>
-                                    Assign User
+                                        class="inline-flex items-center justify-center px-3 sm:px-4 lg:px-3 py-1.5 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm lg:text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
+                                    <i class="fas fa-user-plus mr-1 sm:mr-2"></i>
+                                    <span class="hidden xs:inline">Assign </span>User
                                 </button>
                             </div>
                         </div>
@@ -811,33 +839,33 @@
                 </div>
 
                 <!-- Quick Actions for Users -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <button onclick="scrollToAllUsers()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <button onclick="scrollToAllUsers()" class="bg-white p-4 sm:p-5 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-green-500 text-left">
                         <div class="flex items-center">
-                            <i class="fas fa-users text-2xl text-green-500 mr-4"></i>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">View All Users</h3>
-                                <p class="text-sm text-gray-600">Browse and manage all users</p>
+                            <i class="fas fa-users text-xl sm:text-2xl text-green-500 mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0">
+                                <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">View All Users</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 truncate">Browse and manage<span class="hidden sm:inline"> all users</span></p>
                             </div>
                         </div>
                     </button>
                     
-                    <button onclick="scrollToAllUsers(); setTimeout(() => { document.getElementById('userSearchMain').focus(); animateSearchBar(); }, 300);" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
+                    <button onclick="scrollToAllUsers(); setTimeout(() => { document.getElementById('userSearchMain').focus(); animateSearchBar(); }, 300);" class="bg-white p-4 sm:p-5 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-blue-500 text-left">
                         <div class="flex items-center">
-                            <i class="fas fa-search text-2xl text-blue-500 mr-4"></i>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Search Users</h3>
-                                <p class="text-sm text-gray-600">Find and manage users</p>
+                            <i class="fas fa-search text-xl sm:text-2xl text-blue-500 mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0">
+                                <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">Search Users</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 truncate">Find and manage users</p>
                             </div>
                         </div>
                     </button>
                     
-                    <button onclick="openBulkOperationsModal()" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left relative">
+                    <button onclick="openBulkOperationsModal()" class="bg-white p-4 sm:p-5 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 card-hover border-l-4 border-purple-500 text-left relative">
                         <div class="flex items-center">
-                            <i class="fas fa-tasks text-2xl text-purple-500 mr-4"></i>
-                            <div>
-                                <h3 class="font-semibold text-gray-900">Bulk Operations</h3>
-                                <p class="text-sm text-gray-600">Mass user management</p>
+                            <i class="fas fa-tasks text-xl sm:text-2xl text-purple-500 mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0">
+                                <h3 class="font-semibold text-sm sm:text-base text-gray-900 truncate">Bulk Operations</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 truncate">Mass user management</p>
                             </div>
                         </div>
                         <!-- Selection count badge -->
@@ -846,31 +874,31 @@
                 </div>
 
                 <!-- Employee Location Map -->
-                <div class="bg-white shadow-xl rounded-xl overflow-hidden mb-8">
-                    <div class="px-6 py-6 border-b border-gray-200">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="bg-white shadow-xl rounded-xl overflow-hidden mb-6 sm:mb-8">
+                    <div class="px-3 sm:px-4 lg:px-5 py-3 sm:py-4 lg:py-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                             <div>
-                                <h3 class="text-xl font-semibold text-gray-900">Employee Locations</h3>
-                                <p class="mt-1 text-sm text-gray-600">Real-time employee check-in/out locations</p>
+                                <h3 class="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">Employee Locations</h3>
+                                <p class="mt-0.5 sm:mt-1 text-xs sm:text-sm lg:text-xs text-gray-600">Real-time employee check-in/out locations</p>
                             </div>
-                            <div class="mt-4 sm:mt-0 flex space-x-3">
-                                <div class="relative">
+                            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3">
+                                <div class="relative flex-1 xs:flex-none">
                                     <input type="text" 
                                            id="employeeLocationSearch"
-                                           placeholder="Search employees..." 
-                                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-search text-gray-400"></i>
+                                           placeholder="Search..." 
+                                           class="w-full xs:w-auto pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <div class="absolute inset-y-0 left-2 sm:left-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400 text-sm"></i>
                                     </div>
                                 </div>
                                 <button onclick="refreshEmployeeMap()" 
-                                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-                                    <i class="fas fa-sync-alt mr-2"></i>
-                                    Refresh
+                                        class="inline-flex items-center justify-center px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 bg-green-600 text-white text-xs sm:text-sm lg:text-xs font-medium rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap">
+                                    <i class="fas fa-sync-alt mr-1 sm:mr-2"></i>
+                                    <span>Refresh</span>
                                 </button>
                                 <button onclick="toggleMapView()" 
-                                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                    <i class="fas fa-map mr-2"></i>
+                                        class="inline-flex items-center justify-center px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm lg:text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
+                                    <i class="fas fa-map mr-1 sm:mr-2"></i>
                                     <span id="mapToggleText">Show Map</span>
                                 </button>
                             </div>
@@ -1052,22 +1080,22 @@
 
                 <!-- Full Users Table -->
                 <div id="all-users-table" class="bg-white shadow-xl rounded-xl overflow-hidden">
-                    <div class="px-6 py-6 border-b border-gray-200">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="px-3 sm:px-4 lg:px-5 py-3 sm:py-4 lg:py-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                             <div>
-                                <h3 class="text-xl font-semibold text-gray-900">All Users</h3>
-                                <p class="mt-1 text-sm text-gray-600">Manage all users in the system</p>
+                                <h3 class="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">All Users</h3>
+                                <p class="mt-0.5 sm:mt-1 text-xs sm:text-sm lg:text-xs text-gray-600">Manage all users in the system</p>
                             </div>
-                            <div class="mt-4 sm:mt-0 flex space-x-3">
-                                <div class="relative">
-                                    <input type="text" id="userSearchMain" placeholder="Search users..." 
-                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300">
-                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3">
+                                <div class="relative flex-1 xs:flex-none">
+                                    <input type="text" id="userSearchMain" placeholder="Search..." 
+                                           class="w-full xs:w-auto pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300">
+                                    <i class="fas fa-search absolute left-2 sm:left-3 top-2 sm:top-3 lg:top-2.5 text-gray-400 text-sm"></i>
                                 </div>
                                 <button onclick="addUser()" 
-                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                                    <i class="fas fa-plus mr-2"></i>
-                                    Add User
+                                        class="inline-flex items-center justify-center px-3 sm:px-4 lg:px-3 py-1.5 sm:py-2 bg-indigo-600 text-white text-xs sm:text-sm lg:text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap">
+                                    <i class="fas fa-plus mr-1 sm:mr-2"></i>
+                                    <span class="hidden xs:inline">Add </span>User
                                 </button>
                             </div>
                         </div>
@@ -1293,23 +1321,23 @@
                 </div>
                 
                 <!-- Detailed Attendance Table -->
-                <div class="bg-white shadow-xl rounded-xl overflow-hidden mb-8">
-                    <div class="px-6 py-6 border-b border-gray-200">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="bg-white shadow-xl rounded-xl overflow-hidden mb-6 sm:mb-8">
+                    <div class="px-3 sm:px-4 lg:px-5 py-3 sm:py-4 lg:py-4 border-b border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                             <div>
-                                <h3 class="text-xl font-semibold text-gray-900">Today's Attendance Details</h3>
-                                <p class="mt-1 text-sm text-gray-600">Real-time monitoring of employee attendance</p>
+                                <h3 class="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">Today's Attendance Details</h3>
+                                <p class="mt-0.5 sm:mt-1 text-xs sm:text-sm lg:text-xs text-gray-600">Real-time monitoring of employee attendance</p>
                             </div>
-                            <div class="mt-4 sm:mt-0 flex space-x-3">
-                                <div class="relative">
-                                    <input type="text" id="attendanceSearch" placeholder="Search employees..." 
-                                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3">
+                                <div class="relative flex-1 xs:flex-none">
+                                    <input type="text" id="attendanceSearch" placeholder="Search..." 
+                                           class="w-full xs:w-auto pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <i class="fas fa-search absolute left-2 sm:left-3 top-2 sm:top-3 lg:top-2.5 text-gray-400 text-sm"></i>
                                 </div>
                                 <button onclick="refreshAttendanceData()" 
-                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                                    <i class="fas fa-sync-alt mr-2"></i>
-                                    Refresh
+                                        class="inline-flex items-center justify-center px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 bg-indigo-600 text-white text-xs sm:text-sm lg:text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap">
+                                    <i class="fas fa-sync-alt mr-1 sm:mr-2"></i>
+                                    <span>Refresh</span>
                                 </button>
                             </div>
                         </div>
@@ -1389,7 +1417,7 @@
                     <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-600 mb-1">Late</p>
+                                <p class="text-sm text-gray-600 mb-1">Late Arrivals</p>
                                 <h3 class="text-2xl font-bold text-yellow-600" id="report-late-count">0</h3>
                             </div>
                             <div class="bg-yellow-100 p-3 rounded-lg">
@@ -1403,6 +1431,7 @@
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">Attendance Rate</p>
                                 <h3 class="text-2xl font-bold text-indigo-600" id="report-attendance-rate">0%</h3>
+                                <p class="text-xs text-gray-500 mt-1" id="attendance-rate-formula">calculating...</p>
                             </div>
                             <div class="bg-indigo-100 p-3 rounded-lg">
                                 <i class="fas fa-chart-line text-indigo-600 text-2xl"></i>
@@ -1412,15 +1441,15 @@
                 </div>
                 
                 <!-- Filters Section -->
-                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <div class="bg-white rounded-xl shadow-lg p-3 sm:p-4 lg:p-5 mb-6 sm:mb-8">
+                    <h3 class="text-base sm:text-lg lg:text-base font-semibold text-gray-900 mb-3 sm:mb-4 lg:mb-3">
                         <i class="fas fa-filter mr-2 text-indigo-600"></i>Report Filters
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-3">
                         <!-- Report Type -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
-                            <select id="reportType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <label class="block text-xs sm:text-sm lg:text-xs font-medium text-gray-700 mb-1 sm:mb-2 lg:mb-1">Report Type</label>
+                            <select id="reportType" class="w-full px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                 <option value="weekly">Weekly</option>
                                 <option value="monthly">Monthly</option>
                                 <option value="custom">Custom Range</option>
@@ -1429,24 +1458,24 @@
                         
                         <!-- Start Date -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                            <input type="date" id="reportStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <label class="block text-xs sm:text-sm lg:text-xs font-medium text-gray-700 mb-1 sm:mb-2 lg:mb-1">Start Date</label>
+                            <input type="date" id="reportStartDate" class="w-full px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         </div>
                         
                         <!-- End Date -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                            <input type="date" id="reportEndDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <label class="block text-xs sm:text-sm lg:text-xs font-medium text-gray-700 mb-1 sm:mb-2 lg:mb-1">End Date</label>
+                            <input type="date" id="reportEndDate" class="w-full px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         </div>
                         
                         <!-- Employee Filter -->
                         <div class="relative">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Employee</label>
+                            <label class="block text-xs sm:text-sm lg:text-xs font-medium text-gray-700 mb-1 sm:mb-2 lg:mb-1">Employee</label>
                             <input type="text" 
                                    id="reportUserSearch" 
                                    placeholder="Search employee..." 
                                    autocomplete="off"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                   class="w-full px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                             <input type="hidden" id="reportUserFilter" value="">
                             
                             <!-- Dropdown results -->
@@ -1457,8 +1486,8 @@
                         
                         <!-- Workplace Filter -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Workplace</label>
-                            <select id="reportWorkplaceFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <label class="block text-xs sm:text-sm lg:text-xs font-medium text-gray-700 mb-1 sm:mb-2 lg:mb-1">Workplace</label>
+                            <select id="reportWorkplaceFilter" class="w-full px-2 sm:px-3 lg:px-3 py-1.5 sm:py-2 text-sm sm:text-base lg:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                 <option value="">All Workplaces</option>
                                 @foreach($workplaces as $workplace)
                                     <option value="{{ $workplace->id }}">{{ $workplace->name }}</option>
@@ -1468,37 +1497,38 @@
                     </div>
                     
                     <!-- Action Buttons -->
-                    <div class="flex flex-wrap gap-3 mt-6">
-                        <button onclick="generateAttendanceReport()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-                            <i class="fas fa-play mr-2"></i>Generate Report
+                    <div class="grid grid-cols-1 xs:grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 lg:gap-2 mt-4 sm:mt-6 lg:mt-4">
+                        <button onclick="generateAttendanceReport()" class="bg-indigo-600 text-white px-3 sm:px-4 lg:px-4 py-2 lg:py-1.5 rounded-lg hover:bg-indigo-700 transition-colors text-sm sm:text-base lg:text-sm">
+                            <i class="fas fa-play mr-2"></i><span>Generate Report</span>
                         </button>
-                        <button onclick="exportReport('csv')" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <button onclick="exportReport('csv')" class="bg-green-600 text-white px-3 sm:px-4 lg:px-4 py-2 lg:py-1.5 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base lg:text-sm">
                             <i class="fas fa-file-csv mr-2"></i>Export CSV
                         </button>
-                        <button onclick="exportReport('excel')" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors">
+                        <button onclick="exportReport('excel')" class="bg-emerald-600 text-white px-3 sm:px-4 lg:px-4 py-2 lg:py-1.5 rounded-lg hover:bg-emerald-700 transition-colors text-sm sm:text-base lg:text-sm">
                             <i class="fas fa-file-excel mr-2"></i>Export Excel
                         </button>
-                        <button onclick="resetReportFilters()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                            <i class="fas fa-redo mr-2"></i>Reset Filters
+                        <button onclick="resetReportFilters()" class="bg-gray-600 text-white px-3 sm:px-4 lg:px-4 py-2 lg:py-1.5 rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base lg:text-sm">
+                            <i class="fas fa-redo mr-2"></i>Reset
                         </button>
                     </div>
                 </div>
                 
                 <!-- Report Results Table -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <div class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">
                                 <i class="fas fa-table mr-2 text-indigo-600"></i>Attendance Report
                             </h3>
-                            <p class="text-sm text-gray-600 mt-1">
+                            <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">
                                 Showing <span id="report-showing-count">0</span> records from 
                                 <span id="report-date-range">-</span>
+                                (<span id="report-working-days-text">0 working days</span>)
                             </p>
                         </div>
-                        <div>
-                            <input type="text" id="reportTableSearch" placeholder="Search records..." 
-                                   class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <div class="w-full sm:w-auto">
+                            <input type="text" id="reportTableSearch" placeholder="Search..." 
+                                   class="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         </div>
                     </div>
                     
@@ -1612,48 +1642,48 @@
     </main>
 
     <!-- Workplace Modal -->
-    <div id="workplaceModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-4">
-        <div class="relative top-4 sm:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
+    <div id="workplaceModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-2 sm:p-4">
+        <div class="relative top-2 sm:top-4 md:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
             <!-- Glassmorphism container -->
             <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
-                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-white border-opacity-20">
-                    <h3 class="text-base sm:text-lg font-semibold text-black mb-0" id="modalTitle">Add New Workplace</h3>
+                <div class="px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-3.5 border-b border-white border-opacity-20">
+                    <h3 class="text-sm sm:text-base md:text-base font-semibold text-black mb-0" id="modalTitle">Add New Workplace</h3>
                 </div>
-                <div class="px-4 sm:px-6 py-3 sm:py-4">
+                <div class="px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-3.5">
                 <form id="workplaceForm">
                     <input type="hidden" id="workplaceId">
-                    <div class="mb-3 sm:mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">Name</label>
-                        <input type="text" id="workplaceName" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
+                    <div class="mb-2 sm:mb-3 md:mb-3">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-1.5">Name</label>
+                        <input type="text" id="workplaceName" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">Address</label>
-                        <textarea id="workplaceAddress" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" rows="2" required></textarea>
+                    <div class="mb-2 sm:mb-3 md:mb-3">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-1.5">Address</label>
+                        <textarea id="workplaceAddress" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" rows="2" required></textarea>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-2 gap-2 sm:gap-3 md:gap-3 mb-2 sm:mb-3 md:mb-3">
                         <div>
-                            <label class="block text-sm font-medium text-black mb-2">Latitude</label>
-                            <input type="number" id="workplaceLatitude" step="any" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
+                            <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-1.5">Latitude</label>
+                            <input type="number" id="workplaceLatitude" step="any" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-black mb-2">Longitude</label>
-                            <input type="number" id="workplaceLongitude" step="any" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
+                            <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-1.5">Longitude</label>
+                            <input type="number" id="workplaceLongitude" step="any" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">Radius (meters)</label>
-                        <input type="number" id="workplaceRadius" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
+                    <div class="mb-2 sm:mb-3 md:mb-3">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-1.5">Radius (meters)</label>
+                        <input type="number" id="workplaceRadius" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
                     </div>
-                    <div class="mb-6">
+                    <div class="mb-3 sm:mb-4 md:mb-4">
                         <label class="flex items-center">
                             <input type="checkbox" id="workplaceActive" class="rounded border-2 border-gray-300 text-indigo-600 focus:ring-indigo-500 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm">
-                            <span class="ml-2 text-sm text-black">Active</span>
+                            <span class="ml-2 text-xs sm:text-sm text-black">Active</span>
                         </label>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end space-x-3">
-                    <button type="button" onclick="closeWorkplaceModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30">Save</button>
+                <div class="px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-3 border-t border-white border-opacity-20 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                    <button type="button" onclick="closeWorkplaceModal()" class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
+                    <button type="submit" class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-indigo-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30">Save</button>
                 </div>
                 </form>
             </div>
@@ -1661,47 +1691,47 @@
     </div>
 
     <!-- Assignment Modal -->
-    <div id="assignmentModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-4">
-        <div class="relative top-4 sm:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
+    <div id="assignmentModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-2 sm:p-4">
+        <div class="relative top-2 sm:top-4 md:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
             <!-- Glassmorphism container -->
             <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
-                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-white border-opacity-20">
-                    <h3 class="text-base sm:text-lg font-semibold text-black mb-0">Assign User to Workplace</h3>
+                <div class="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-b border-white border-opacity-20">
+                    <h3 class="text-sm sm:text-base md:text-lg font-semibold text-black mb-0">Assign User to Workplace</h3>
                 </div>
-                <div class="px-6 py-4">
+                <div class="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
                 <form id="assignmentForm">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">User</label>
-                        <select id="assignmentUser" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black" required>
+                    <div class="mb-2 sm:mb-3 md:mb-4">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">User</label>
+                        <select id="assignmentUser" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black" required>
                             <option value="">Select a user...</option>
                             @foreach($users as $user)
                             <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">Workplace</label>
-                        <select id="assignmentWorkplace" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black" required>
+                    <div class="mb-2 sm:mb-3 md:mb-4">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">Workplace</label>
+                        <select id="assignmentWorkplace" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black" required>
                             <option value="">Select a workplace...</option>
                             @foreach($workplaces as $workplace)
                             <option value="{{ $workplace->id }}">{{ $workplace->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">Role</label>
-                        <input type="text" id="assignmentRole" value="employee" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600">
+                    <div class="mb-2 sm:mb-3 md:mb-4">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">Role</label>
+                        <input type="text" id="assignmentRole" value="employee" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600">
                     </div>
-                    <div class="mb-6">
+                    <div class="mb-3 sm:mb-4 md:mb-6">
                         <label class="flex items-center">
                             <input type="checkbox" id="assignmentPrimary" class="rounded border-2 border-gray-300 text-indigo-600 focus:ring-indigo-500 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm">
-                            <span class="ml-2 text-sm text-black">Set as Primary Workplace</span>
+                            <span class="ml-2 text-xs sm:text-sm text-black">Set as Primary Workplace</span>
                         </label>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end space-x-3">
-                    <button type="button" onclick="closeAssignmentModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30">Assign</button>
+                <div class="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-t border-white border-opacity-20 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                    <button type="button" onclick="closeAssignmentModal()" class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
+                    <button type="submit" class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30">Assign</button>
                 </div>
                 </form>
             </div>
@@ -1709,43 +1739,43 @@
     </div>
 
     <!-- User Modal -->
-    <div id="userModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-4">
-        <div class="relative top-4 sm:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
+    <div id="userModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-2 sm:p-4">
+        <div class="relative top-2 sm:top-4 md:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
             <!-- Glassmorphism container -->
             <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
-                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-white border-opacity-20">
-                    <h3 class="text-base sm:text-lg font-semibold text-black mb-0" id="userModalTitle">Add New User</h3>
+                <div class="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-b border-white border-opacity-20">
+                    <h3 class="text-sm sm:text-base md:text-lg font-semibold text-black mb-0" id="userModalTitle">Add New User</h3>
                 </div>
-                <div class="px-6 py-4">
+                <div class="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
                 <form id="userForm">
                     <input type="hidden" id="userId">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">Name</label>
-                        <input type="text" id="userName" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
+                    <div class="mb-2 sm:mb-3 md:mb-4">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">Name</label>
+                        <input type="text" id="userName" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-black mb-2">Email</label>
-                        <input type="email" id="userEmail" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
+                    <div class="mb-2 sm:mb-3 md:mb-4">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">Email</label>
+                        <input type="email" id="userEmail" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600" required>
                     </div>
-                    <div class="mb-4" id="userPasswordField">
-                        <label class="block text-sm font-medium text-black mb-2">Password</label>
-                        <input type="password" id="userPassword" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600">
+                    <div class="mb-2 sm:mb-3 md:mb-4" id="userPasswordField">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">Password</label>
+                        <input type="password" id="userPassword" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600">
                     </div>
-                    <div class="mb-4" id="userPasswordConfirmField">
-                        <label class="block text-sm font-medium text-black mb-2">Confirm Password</label>
-                        <input type="password" id="userPasswordConfirm" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600">
+                    <div class="mb-2 sm:mb-3 md:mb-4" id="userPasswordConfirmField">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">Confirm Password</label>
+                        <input type="password" id="userPasswordConfirm" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black placeholder-gray-600">
                     </div>
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-black mb-2">Role</label>
-                        <select id="userRole" class="w-full px-3 py-2 bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black" required>
+                    <div class="mb-3 sm:mb-4 md:mb-6">
+                        <label class="block text-xs sm:text-sm font-medium text-black mb-1 sm:mb-2">Role</label>
+                        <select id="userRole" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-black" required>
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end space-x-3">
-                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-green-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30">Save</button>
+                <div class="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-t border-white border-opacity-20 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                    <button type="button" onclick="closeUserModal()" class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
+                    <button type="submit" class="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-green-500 bg-opacity-30 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-40 transition-all duration-200 border border-white border-opacity-30">Save</button>
                 </div>
                 </form>
             </div>
@@ -5285,6 +5315,13 @@
             document.getElementById('report-showing-count').textContent = attendances.length;
             document.getElementById('report-date-range').textContent = 
                 `${reportData.filters.start_date} to ${reportData.filters.end_date}`;
+            
+            // Update working days text
+            if (reportData.stats && reportData.stats.date_range && reportData.stats.date_range.working_days) {
+                const workingDays = reportData.stats.date_range.working_days;
+                document.getElementById('report-working-days-text').textContent = 
+                    `${workingDays} working day${workingDays !== 1 ? 's' : ''} (Mon-Fri)`;
+            }
         }
 
         // Update report statistics
@@ -5293,6 +5330,24 @@
             document.getElementById('report-present-count').textContent = stats.present_count;
             document.getElementById('report-late-count').textContent = stats.late_count;
             document.getElementById('report-attendance-rate').textContent = stats.attendance_rate + '%';
+            
+            // Update attendance rate formula display
+            if (stats.date_range) {
+                const workingDays = stats.date_range.working_days || 0;
+                const userCount = stats.date_range.user_count || 1;
+                const expectedRecords = stats.date_range.expected_records || 0;
+                
+                let formulaText = '';
+                if (userCount === 1) {
+                    // Individual report
+                    formulaText = `${stats.total_records} / ${workingDays} working days`;
+                } else {
+                    // All employees report
+                    formulaText = `${stats.total_records} / (${workingDays} days × ${userCount} users)`;
+                }
+                
+                document.getElementById('attendance-rate-formula').textContent = formulaText;
+            }
         }
 
         // Filter report table

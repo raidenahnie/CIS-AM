@@ -87,7 +87,7 @@
             
             <!-- Subheading -->
             <h2 class="text-2xl sm:text-3xl md:text-4xl text-white/90 font-light mb-4">
-                Attendance Monitoring
+                Attendance Monitoring (Alpha Testing)
             </h2>
             
             <!-- Description -->

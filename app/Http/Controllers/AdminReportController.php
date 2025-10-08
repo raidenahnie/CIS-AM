@@ -56,8 +56,11 @@ class AdminReportController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
+        // Get unique user count for attendance rate calculation
+        $uniqueUserCount = $userId ? 1 : $attendances->pluck('user_id')->unique()->count();
+
         // Calculate statistics
-        $stats = $this->calculateAttendanceStats($attendances, $startDate, $endDate);
+        $stats = $this->calculateAttendanceStats($attendances, $startDate, $endDate, $uniqueUserCount);
 
         return response()->json([
             'success' => true,
@@ -76,7 +79,7 @@ class AdminReportController extends Controller
     /**
      * Calculate attendance statistics
      */
-    private function calculateAttendanceStats($attendances, $startDate, $endDate)
+    private function calculateAttendanceStats($attendances, $startDate, $endDate, $userCount = 1)
     {
         $totalRecords = $attendances->count();
         $presentCount = 0;
@@ -91,20 +94,14 @@ class AdminReportController extends Controller
         $totalLateMinutes = 0;
         
         foreach ($attendances as $attendance) {
-            // Calculate work hours from check-in and check-out times
-            if ($attendance->check_in_time && $attendance->check_out_time) {
+            // Determine if present (has check-in) or absent
+            $hasCheckedIn = $attendance->check_in_time !== null;
+            
+            if ($hasCheckedIn) {
+                // Count as present (includes both on-time and late)
+                $presentCount++;
+                
                 $checkIn = Carbon::parse($attendance->check_in_time);
-                $checkOut = Carbon::parse($attendance->check_out_time);
-                
-                // Calculate total minutes worked
-                $workMinutes = $checkIn->diffInMinutes($checkOut);
-                
-                // Subtract break duration if exists
-                if ($attendance->break_duration) {
-                    $workMinutes -= $attendance->break_duration;
-                }
-                
-                $totalMinutes += max(0, $workMinutes);
                 
                 // Check if late (checked in after 9:00 AM)
                 $dateThreshold = Carbon::parse($attendance->date)->setTime(9, 0, 0);
@@ -114,44 +111,34 @@ class AdminReportController extends Controller
                     // Calculate how many minutes late
                     $lateMinutes = $checkIn->diffInMinutes($dateThreshold);
                     $totalLateMinutes += $lateMinutes;
+                }
+                
+                // Calculate work hours
+                if ($attendance->check_out_time) {
+                    // Full day worked
+                    $checkOut = Carbon::parse($attendance->check_out_time);
+                    $workMinutes = $checkIn->diffInMinutes($checkOut);
                     
-                    // Update status to 'late' if not already set
-                    if ($attendance->status !== 'late' && $attendance->status !== 'absent') {
-                        $presentCount++; // Still count as present
+                    // Subtract break duration if exists
+                    if ($attendance->break_duration) {
+                        $workMinutes -= $attendance->break_duration;
                     }
+                    
+                    $totalMinutes += max(0, $workMinutes);
                 } else {
-                    // On time
-                    if ($attendance->status !== 'absent') {
-                        $presentCount++;
+                    // Still working (partial day)
+                    $now = Carbon::now();
+                    $workMinutes = $checkIn->diffInMinutes($now);
+                    
+                    // Subtract break duration if exists
+                    if ($attendance->break_duration) {
+                        $workMinutes -= $attendance->break_duration;
                     }
-                }
-            } elseif ($attendance->check_in_time && !$attendance->check_out_time) {
-                // Still working (partial day)
-                $checkIn = Carbon::parse($attendance->check_in_time);
-                $now = Carbon::now();
-                
-                $workMinutes = $checkIn->diffInMinutes($now);
-                
-                // Subtract break duration if exists
-                if ($attendance->break_duration) {
-                    $workMinutes -= $attendance->break_duration;
-                }
-                
-                $totalMinutes += max(0, $workMinutes);
-                
-                // Check if late
-                $dateThreshold = Carbon::parse($attendance->date)->setTime(9, 0, 0);
-                
-                if ($checkIn->gt($dateThreshold)) {
-                    $lateCount++;
-                    $lateMinutes = $checkIn->diffInMinutes($dateThreshold);
-                    $totalLateMinutes += $lateMinutes;
-                }
-                
-                if ($attendance->status !== 'absent') {
-                    $presentCount++;
+                    
+                    $totalMinutes += max(0, $workMinutes);
                 }
             } elseif ($attendance->status === 'absent') {
+                // Explicitly marked as absent
                 $absentCount++;
             }
         }
@@ -159,9 +146,38 @@ class AdminReportController extends Controller
         // Convert minutes to hours
         $totalHours = round($totalMinutes / 60, 2);
         
-        // Calculate average hours per day
-        $days = Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1;
+        // Calculate total days in range
+        $totalDays = Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1;
+        
+        // Calculate working days (Monday to Friday only, excluding weekends)
+        $workingDays = 0;
+        $currentDate = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        
+        while ($currentDate->lte($end)) {
+            // 1 = Monday, 5 = Friday (Carbon's dayOfWeek)
+            if ($currentDate->dayOfWeek >= Carbon::MONDAY && $currentDate->dayOfWeek <= Carbon::FRIDAY) {
+                $workingDays++;
+            }
+            $currentDate->addDay();
+        }
+        
+        // Calculate average hours per day (based on actual records)
         $avgHoursPerDay = $totalRecords > 0 ? round($totalHours / $totalRecords, 2) : 0;
+
+        // Calculate attendance rates:
+        // 1. Present Rate: Of the records that exist, how many were present?
+        //    This shows quality of existing attendance records
+        $presentRate = $totalRecords > 0 ? round(($presentCount / $totalRecords) * 100, 2) : 0;
+        
+        // 2. Attendance Rate: Depends on whether it's individual or all employees
+        //    - Individual (userCount = 1): Records / Working Days
+        //    - All Employees (userCount > 1): Records / (Working Days × User Count)
+        $expectedRecords = $workingDays * $userCount; // Total expected attendance records
+        $attendanceRate = $expectedRecords > 0 ? round(($totalRecords / $expectedRecords) * 100, 2) : 0;
+        
+        // Cap attendance rate at 100% (in case there are multiple records per day)
+        $attendanceRate = min($attendanceRate, 100);
 
         return [
             'total_records' => $totalRecords,
@@ -171,11 +187,15 @@ class AdminReportController extends Controller
             'total_hours' => $totalHours,
             'total_late_minutes' => $totalLateMinutes,
             'avg_hours_per_day' => $avgHoursPerDay,
-            'attendance_rate' => $totalRecords > 0 ? round(($presentCount / $totalRecords) * 100, 2) : 0,
+            'attendance_rate' => $attendanceRate, // Based on working days × user count
+            'present_rate' => $presentRate, // Based on existing records
             'date_range' => [
                 'start' => $startDate,
                 'end' => $endDate,
-                'days' => $days
+                'total_days' => $totalDays,
+                'working_days' => $workingDays,
+                'user_count' => $userCount,
+                'expected_records' => $expectedRecords
             ]
         ];
     }
@@ -196,7 +216,7 @@ class AdminReportController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        $stats = $this->calculateAttendanceStats($attendances, $startDate, $endDate);
+        $stats = $this->calculateAttendanceStats($attendances, $startDate, $endDate, 1); // Individual user = 1
 
         // Get attendance logs for detailed timeline
         $logs = AttendanceLog::where('user_id', $userId)
@@ -428,9 +448,13 @@ class AdminReportController extends Controller
 
         $attendances = Attendance::whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])->get();
         
+        // Get unique user count for attendance rate calculation
+        $uniqueUserCount = $attendances->pluck('user_id')->unique()->count();
+        if ($uniqueUserCount === 0) $uniqueUserCount = 1; // Avoid division by zero
+        
         return response()->json([
             'success' => true,
-            'stats' => $this->calculateAttendanceStats($attendances, $startDate->format('Y-m-d'), $endDate->format('Y-m-d'))
+            'stats' => $this->calculateAttendanceStats($attendances, $startDate->format('Y-m-d'), $endDate->format('Y-m-d'), $uniqueUserCount)
         ]);
     }
 }

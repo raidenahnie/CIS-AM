@@ -1238,6 +1238,9 @@ class AdminController extends Controller
                     }
                     
                     $workHours = round($workMinutes / 60, 2);
+                    // Include currently working employees in average calculation
+                    $totalWorkHours += $workHours;
+                    $usersWithHours++;
                 }
 
                 // Calculate break duration in minutes
