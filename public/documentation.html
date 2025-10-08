@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIS-AM Documentation - DepEd Cavite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e40af;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f3f4f6;
+            --white: #ffffff;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .header .agency {
+            color: var(--secondary-color);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-primary { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+
+        /* Navigation */
+        .nav {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .nav h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 10px 15px;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: var(--secondary-color);
+            color: var(--white);
+            transform: translateX(5px);
+        }
+
+        /* Content Cards */
+        .content-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-card h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .content-card h3 {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .content-card h4 {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .content-card p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .content-card ul, .content-card ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+
+        .content-card li {
+            margin-bottom: 8px;
+            line-height: 1.8;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 25px;
+            color: var(--white);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-box h4 {
+            color: var(--white);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .feature-box ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        .feature-box li {
+            padding-left: 20px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .feature-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .code-block .comment {
+            color: #9ca3af;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr:hover {
+            background: var(--light-color);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .footer p {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .footer .agency-name {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content-card {
+                padding: 20px;
+            }
+
+            .nav-links {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+            .nav {
+                display: none;
+            }
+            .content-card {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Emoji Icons */
+        .icon {
+            font-size: 1.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏫 CIS-AM System Documentation</h1>
+            <p class="subtitle">Curriculum Implementation System - Attendance Monitoring</p>
+            <p class="agency">Department of Education - Cavite Province</p>
+            <p class="subtitle" style="font-size: 0.95rem; margin-top: 10px;">Curriculum Implementation Division</p>
+            
+            <div class="badges">
+                <span class="badge badge-primary">Laravel 11.x</span>
+                <span class="badge badge-success">PHP 8.2+</span>
+                <span class="badge badge-warning">DepEd Cavite</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav">
+            <h3>📋 Quick Navigation</h3>
+            <div class="nav-links">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#features" class="nav-link">Key Features</a>
+                <a href="#technology" class="nav-link">Technology Stack</a>
+                <a href="#requirements" class="nav-link">Requirements</a>
+                <a href="#configuration" class="nav-link">Configuration</a>
+                <a href="#usage-employee" class="nav-link">Employee Guide</a>
+                <a href="#usage-admin" class="nav-link">Admin Guide</a>
+                <a href="#api" class="nav-link">API Endpoints</a>
+                <a href="#security" class="nav-link">Security</a>
+                <a href="#support" class="nav-link">Support</a>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div id="about" class="content-card">
+            <h2><span class="icon">🎯</span> About CIS-AM</h2>
+            
+            <p><strong>CIS-AM (Curriculum Implementation System - Attendance Monitoring)</strong> is a specialized web-based attendance management system developed for the <strong>Department of Education - Cavite Province</strong>, specifically designed for use by the <strong>Curriculum Implementation Division</strong>.</p>
+
+            <p>This system provides accurate, GPS-verified attendance tracking for DepEd Cavite personnel, ensuring accountability and efficient workforce management across multiple school locations and division offices throughout Cavite Province.</p>
+
+            <h3>🏛️ Government Agency Information</h3>
+            <ul>
+                <li><strong>Agency:</strong> Department of Education (DepEd)</li>
+                <li><strong>Location:</strong> Cavite Province, Philippines</li>
+                <li><strong>Division:</strong> Curriculum Implementation Division</li>
+                <li><strong>Purpose:</strong> Personnel attendance monitoring and management</li>
+            </ul>
+
+            <h3>🌟 Designed For</h3>
+            <ul>
+                <li>DepEd Cavite Curriculum Implementation Division staff</li>
+                <li>Multi-location school site monitoring</li>
+                <li>Division office personnel tracking</li>
+                <li>Field work and school visit verification</li>
+                <li>GPS-verified attendance for accountability</li>
+            </ul>
+        </div>
+
+        <!-- Key Features -->
+        <div id="features" class="content-card">
+            <h2><span class="icon">🚀</span> Key Features</h2>
+
+            <div class="feature-grid">
+                <div class="feature-box">
+                    <h4>👤 Employee Features</h4>
+                    <ul>
+                        <li>GPS-Based Check-In/Out</li>
+                        <li>Manual Location Entry</li>
+                        <li>Break Time Tracking</li>
+                        <li>Real-Time Dashboard</li>
+                        <li>Multiple Workplace Support</li>
+                        <li>Attendance History</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h4>👨‍💼 Admin Features</h4>
+                    <ul>
+                        <li>Comprehensive Dashboard</li>
+                        <li>Advanced Reporting</li>
+                        <li>User Management</li>
+                        <li>Workplace Management</li>
+                        <li>CSV/Excel Export</li>
+                        <li>Activity Logging</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h4>🔒 Security Features</h4>
+                    <ul>
+                        <li>Single Device Login</li>
+                        <li>Password Reset</li>
+                        <li>Admin Verification</li>
+                        <li>Activity Auditing</li>
+                        <li>Session Management</li>
+                        <li>CSRF Protection</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h4>📊 Reporting & Analytics</h4>
+                    <ul>
+                        <li>Flexible Date Ranges</li>
+                        <li>Late Arrival Tracking</li>
+                        <li>Work Hours Calculation</li>
+                        <li>Attendance Statistics</li>
+                        <li>Advanced Filtering</li>
+                        <li>Export Capabilities</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technology Stack -->
+        <div id="technology" class="content-card">
+            <h2><span class="icon">🛠</span> Technology Stack</h2>
+
+            <h3>Backend</h3>
+            <ul>
+                <li><strong>Framework:</strong> Laravel 11.x</li>
+                <li><strong>PHP Version:</strong> 8.2+</li>
+                <li><strong>Database:</strong> SQLite (configurable for MySQL/PostgreSQL)</li>
+                <li><strong>Authentication:</strong> Laravel built-in authentication</li>
+                <li><strong>Session Management:</strong> Database-driven sessions</li>
+            </ul>
+
+            <h3>Frontend</h3>
+            <ul>
+                <li><strong>CSS Framework:</strong> Tailwind CSS 3.4+</li>
+                <li><strong>JavaScript:</strong> Vanilla JS with modern ES6+</li>
+                <li><strong>Build Tool:</strong> Vite 5.x</li>
+                <li><strong>Icons:</strong> SVG-based custom icons</li>
+                <li><strong>UI Pattern:</strong> Responsive, mobile-first design</li>
+            </ul>
+
+            <h3>Key Packages</h3>
+            <ul>
+                <li><strong>maatwebsite/excel:</strong> Excel import/export functionality</li>
+                <li><strong>phpoffice/phpspreadsheet:</strong> Spreadsheet manipulation</li>
+                <li><strong>laravel/tinker:</strong> Powerful REPL for Laravel</li>
+                <li><strong>spatie/laravel-ignition:</strong> Beautiful error pages</li>
+            </ul>
+        </div>
+
+        <!-- System Requirements -->
+        <div id="requirements" class="content-card">
+            <h2><span class="icon">💻</span> System Requirements</h2>
+
+            <div class="info-box">
+                <h4>Server Requirements</h4>
+                <ul>
+                    <li><strong>PHP:</strong> 8.2 or higher</li>
+                    <li><strong>Composer:</strong> 2.x</li>
+                    <li><strong>Node.js:</strong> 18.x or higher</li>
+                    <li><strong>NPM/Yarn:</strong> Latest version</li>
+                    <li><strong>Web Server:</strong> Apache/Nginx (XAMPP/WAMP/MAMP for local development)</li>
+                    <li><strong>Database:</strong> SQLite/MySQL 5.7+/PostgreSQL 9.6+</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>Client Requirements</h4>
+                <ul>
+                    <li><strong>Browser:</strong> Modern browser with GPS/geolocation support</li>
+                    <li><strong>Internet Connection:</strong> Required for real-time features</li>
+                    <li><strong>Location Services:</strong> Must be enabled for GPS check-in</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div id="configuration" class="content-card">
+            <h2><span class="icon">⚙️</span> Configuration</h2>
+
+            <h3>Database Configuration</h3>
+            
+            <h4>SQLite (Default)</h4>
+            <div class="code-block">
+DB_CONNECTION=sqlite
+<span class="comment"># Database file created automatically at database/database.sqlite</span>
+            </div>
+
+            <h4>MySQL</h4>
+            <div class="code-block">
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=cis_am
+DB_USERNAME=root
+DB_PASSWORD=your_password
+            </div>
+
+            <h3>Application Settings</h3>
+            <div class="code-block">
+APP_NAME="CIS-AM - DepEd Cavite"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+APP_TIMEZONE=Asia/Manila  <span class="comment"># Philippine Standard Time</span>
+            </div>
+
+            <h3>Session Configuration</h3>
+            <div class="code-block">
+SESSION_DRIVER=database
+SESSION_LIFETIME=120  <span class="comment"># Minutes</span>
+            </div>
+
+            <h3>Mail Configuration</h3>
+            <div class="code-block">
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_username
+MAIL_PASSWORD=your_password
+MAIL_FROM_ADDRESS=noreply@deped-cavite.gov.ph
+MAIL_FROM_NAME="DepEd Cavite - CIS-AM"
+            </div>
+        </div>
+
+        <!-- Employee Usage Guide -->
+        <div id="usage-employee" class="content-card">
+            <h2><span class="icon">📖</span> Employee Usage Guide</h2>
+
+            <h3>1. Login</h3>
+            <ol>
+                <li>Navigate to the login page</li>
+                <li>Enter your email and password</li>
+                <li>Click "Sign In"</li>
+            </ol>
+
+            <h3>2. Check In</h3>
+            <ol>
+                <li>Select your workplace from the dashboard</li>
+                <li>Click "Check In" button</li>
+                <li>Allow location access when prompted</li>
+                <li>System verifies you're within the workplace radius</li>
+            </ol>
+
+            <div class="info-box">
+                <strong>Note:</strong> If GPS is unavailable, you can use the Manual Entry option with the access code provided by your administrator.
+            </div>
+
+            <h3>3. Break Management</h3>
+            <ol>
+                <li>Click "Start Break" when taking a break</li>
+                <li>Click "End Break" when returning to work</li>
+                <li>Break duration is automatically calculated</li>
+            </ol>
+
+            <h3>4. Check Out</h3>
+            <ol>
+                <li>Click "Check Out" when ending your work day</li>
+                <li>System calculates total hours worked (minus break time)</li>
+            </ol>
+
+            <h3>5. View Attendance History</h3>
+            <ol>
+                <li>Navigate to "Attendance History" section</li>
+                <li>View detailed logs of all activities</li>
+                <li>Filter by date range</li>
+            </ol>
+        </div>
+
+        <!-- Admin Usage Guide -->
+        <div id="usage-admin" class="content-card">
+            <h2><span class="icon">👨‍💼</span> Administrator Guide</h2>
+
+            <h3>1. Dashboard Overview</h3>
+            <ul>
+                <li>View real-time statistics (check-ins, late arrivals, etc.)</li>
+                <li>Monitor current employee status</li>
+                <li>Quick access to all management functions</li>
+            </ul>
+
+            <h3>2. User Management</h3>
+            <ul>
+                <li>Add new employees with role assignment</li>
+                <li>Edit user information and permissions</li>
+                <li>Deactivate/activate user accounts</li>
+                <li>Perform bulk operations for efficiency</li>
+            </ul>
+
+            <h3>3. Workplace Management</h3>
+            <ul>
+                <li>Create new workplace locations</li>
+                <li>Set GPS coordinates and check-in radius</li>
+                <li>Assign users to workplaces</li>
+                <li>View workplace statistics</li>
+            </ul>
+
+            <h3>4. Reports Generation</h3>
+            <ol>
+                <li>Navigate to Reports section</li>
+                <li>Select report type (Weekly/Monthly/Custom)</li>
+                <li>Apply filters (employee, workplace, date range)</li>
+                <li>Click "Generate Report"</li>
+                <li>Export to CSV/Excel format</li>
+            </ol>
+
+            <h3>5. System Settings</h3>
+            <ul>
+                <li>Update manual entry access code</li>
+                <li>Configure admin account settings</li>
+                <li>Manage system parameters</li>
+            </ul>
+
+            <div class="warning-box">
+                <strong>Important:</strong> All sensitive operations require admin password verification for security.
+            </div>
+        </div>
+
+        <!-- API Endpoints -->
+        <div id="api" class="content-card">
+            <h2><span class="icon">🔌</span> API Endpoints</h2>
+
+            <h3>Authentication</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>POST</td>
+                            <td>/login</td>
+                            <td>User login</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/logout</td>
+                            <td>User logout</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/password/reset</td>
+                            <td>Password reset</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Employee Dashboard</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/user-stats/{userId}</td>
+                            <td>User statistics</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/attendance-history/{userId}</td>
+                            <td>Attendance history</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/attendance-logs/{userId}</td>
+                            <td>Activity logs</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/current-status/{userId}</td>
+                            <td>Current work status</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/api/checkin</td>
+                            <td>Check in</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/api/perform-action</td>
+                            <td>Check out/break</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/manual-entry-code</td>
+                            <td>Get access code</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Admin Dashboard</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/dashboard</td>
+                            <td>Admin dashboard</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/users</td>
+                            <td>User list</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/admin/users</td>
+                            <td>Create user</td>
+                        </tr>
+                        <tr>
+                            <td>PUT</td>
+                            <td>/admin/users/{id}</td>
+                            <td>Update user</td>
+                        </tr>
+                        <tr>
+                            <td>DELETE</td>
+                            <td>/admin/users/{id}</td>
+                            <td>Delete user</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/workplaces</td>
+                            <td>Workplace list</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/attendance-stats</td>
+                            <td>Attendance statistics</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Reports</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/reports/attendance</td>
+                            <td>Attendance reports</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/reports/individual/{user}</td>
+                            <td>Individual report</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/reports/export</td>
+                            <td>Export report</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td>/admin/reports/summary-stats</td>
+                            <td>Summary statistics</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Security Features -->
+        <div id="security" class="content-card">
+            <h2><span class="icon">🔐</span> Security Features</h2>
+
+            <h3>Authentication & Authorization</h3>
+            <div class="success-box">
+                <ul>
+                    <li>✅ Role-based access control (Admin/Employee)</li>
+                    <li>✅ Middleware protection on all routes</li>
+                    <li>✅ CSRF token validation</li>
+                    <li>✅ SQL injection prevention via Eloquent ORM</li>
+                </ul>
+            </div>
+
+            <h3>Session Security</h3>
+            <div class="success-box">
+                <ul>
+                    <li>✅ Single device login enforcement</li>
+                    <li>✅ Automatic session invalidation</li>
+                    <li>✅ Session ID regeneration on login</li>
+                    <li>✅ Secure session storage in database</li>
+                </ul>
+            </div>
+
+            <h3>Data Protection</h3>
+            <div class="success-box">
+                <ul>
+                    <li>✅ Password hashing with bcrypt</li>
+                    <li>✅ Secure password reset flow</li>
+                    <li>✅ Admin password verification for sensitive actions</li>
+                    <li>✅ Input validation and sanitization</li>
+                </ul>
+            </div>
+
+            <h3>Activity Auditing</h3>
+            <div class="success-box">
+                <ul>
+                    <li>✅ Complete admin action logging</li>
+                    <li>✅ User activity tracking</li>
+                    <li>✅ Login/logout event recording</li>
+                    <li>✅ System change audit trail</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Support -->
+        <div id="support" class="content-card">
+            <h2><span class="icon">📞</span> Support & Contact</h2>
+
+            <h3>Get Help</h3>
+            <ul>
+                <li><strong>Email:</strong> curriculum.implementation@deped-cavite.gov.ph</li>
+                <li><strong>Office:</strong> DepEd Cavite - Curriculum Implementation Division</li>
+                <li><strong>GitHub Issues:</strong> <a href="https://github.com/raidenahnie/CIS-AM/issues" target="_blank">Report a Bug</a></li>
+                <li><strong>Documentation:</strong> <a href="https://github.com/raidenahnie/CIS-AM/wiki" target="_blank">GitHub Wiki</a></li>
+            </ul>
+
+            <h3>Feature Documentation</h3>
+            <p>Detailed documentation for specific features can be found in the repository:</p>
+            <ul>
+                <li>Attendance Monitoring Feature</li>
+                <li>Reports System</li>
+                <li>Session Management</li>
+                <li>Manual Entry Code</li>
+                <li>Workplace Management</li>
+                <li>Bulk Operations</li>
+                <li>System Settings</li>
+            </ul>
+
+            <h3>System Information</h3>
+            <div class="info-box">
+                <ul>
+                    <li><strong>System Name:</strong> CIS-AM</strong></li>
+                    <li><strong>Full Name:</strong> Curriculum Implementation System - Attendance Monitoring</li>
+                    <li><strong>Version:</strong> 1.0</li>
+                    <li><strong>Framework:</strong> Laravel 11.x</li>
+                    <li><strong>Last Updated:</strong> October 2025</li>
+                    <li><strong>Developer:</strong> raidenahnie</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="agency-name">Department of Education - Cavite Province</p>
+            <p><em>Curriculum Implementation Division</em></p>
+            <p style="margin-top: 20px;">Made with ❤️ for DepEd Cavite personnel attendance management</p>
+            <p style="font-size: 0.9rem; color: #9ca3af; margin-top: 10px;">© 2025 DepEd Cavite. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
