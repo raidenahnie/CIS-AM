@@ -1,66 +1,465 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏢 CIS-AM - Comprehensive Attendance Monitoring System
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <strong>A modern, GPS-enabled attendance tracking and management system built with Laravel 11</strong>
 </p>
 
-## About Laravel
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-11.x-red?style=flat-square&logo=laravel" alt="Laravel">
+  <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php" alt="PHP">
+  <img src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat-square&logo=tailwind-css" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Table of Contents
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [About](#-about)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [System Requirements](#-system-requirements)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+- [Features Documentation](#-features-documentation)
+- [API Endpoints](#-api-endpoints)
+- [Security Features](#-security-features)
+- [Testing](#-testing)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🎯 About
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+**CIS-AM (Comprehensive Information System - Attendance Monitoring)** is a full-featured web-based attendance management system designed for organizations that need accurate, GPS-verified employee time tracking. The system provides real-time monitoring, comprehensive reporting, and administrative controls for efficient workforce management.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 🌟 Perfect For:
+- Educational institutions (schools, universities)
+- Corporate offices with multiple locations
+- Government agencies
+- Remote workforce management
+- Organizations requiring GPS-verified attendance
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Key Features
 
-### Premium Partners
+### 👤 **Employee Features**
+- ✅ **GPS-Based Check-In/Out** - Location-verified attendance with radius checking
+- ✅ **Manual Location Entry** - Secure backup option with access code protection
+- ✅ **Break Time Tracking** - Start/end break with automatic duration calculation
+- ✅ **Real-Time Dashboard** - View current status, work hours, and attendance history
+- ✅ **Multiple Workplace Support** - Manage assignments across different locations
+- ✅ **Attendance History** - Complete activity logs and historical records
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 👨‍💼 **Administrative Features**
+- 📊 **Comprehensive Dashboard** - Real-time statistics and monitoring
+- 📈 **Advanced Reporting** - Weekly, monthly, and custom date range reports
+- 👥 **User Management** - Full CRUD operations with role-based access
+- 🏢 **Workplace Management** - Manage multiple locations with GPS coordinates
+- 📥 **Data Export** - CSV/Excel export for reports and records
+- 🔐 **System Settings** - Configurable parameters and access codes
+- 📝 **Activity Logging** - Complete audit trail of all administrative actions
+- 🔄 **Bulk Operations** - Efficient management of multiple records
 
-## Contributing
+### 🔒 **Security Features**
+- 🛡️ **Single Device Login** - Automatic session invalidation on new device login
+- 🔑 **Password Reset** - Secure email-based password recovery
+- 🔐 **Admin Verification** - Password confirmation for sensitive operations
+- 📋 **Activity Auditing** - Complete tracking of all system changes
+- 🚫 **Session Management** - Automatic logout on concurrent login detection
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 📊 **Reporting & Analytics**
+- 📅 **Flexible Date Ranges** - Weekly, monthly, or custom period reports
+- 🎯 **Late Arrival Tracking** - Automatic detection and calculation
+- ⏱️ **Work Hours Calculation** - Accurate time tracking with break deduction
+- 📈 **Attendance Statistics** - Present/absent rates, average hours, trends
+- 🔍 **Advanced Filtering** - By employee, workplace, date range, and status
+- 💾 **Export Capabilities** - Download reports in CSV/Excel format
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🛠 Technology Stack
 
-## Security Vulnerabilities
+### Backend
+- **Framework:** Laravel 11.x
+- **PHP Version:** 8.2+
+- **Database:** SQLite (configurable for MySQL/PostgreSQL)
+- **Authentication:** Laravel built-in authentication
+- **Session Management:** Database-driven sessions
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Frontend
+- **CSS Framework:** Tailwind CSS 3.4+
+- **JavaScript:** Vanilla JS with modern ES6+
+- **Build Tool:** Vite 5.x
+- **Icons:** SVG-based custom icons
+- **UI Pattern:** Responsive, mobile-first design
 
-## License
+### Key Packages
+- **maatwebsite/excel:** Excel import/export functionality
+- **phpoffice/phpspreadsheet:** Spreadsheet manipulation
+- **laravel/tinker:** Powerful REPL for Laravel
+- **spatie/laravel-ignition:** Beautiful error pages
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 💻 System Requirements
+
+- **PHP:** 8.2 or higher
+- **Composer:** 2.x
+- **Node.js:** 18.x or higher
+- **NPM/Yarn:** Latest version
+- **Web Server:** Apache/Nginx (XAMPP/WAMP/MAMP for local development)
+- **Database:** SQLite/MySQL 5.7+/PostgreSQL 9.6+
+- **Browser:** Modern browser with GPS/geolocation support
+
+---
+
+## 📦 Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/raidenahnie/CIS-AM.git
+cd cis-am
+```
+
+### 2. Install PHP Dependencies
+```bash
+composer install
+```
+
+### 3. Install Node Dependencies
+```bash
+npm install
+```
+
+### 4. Environment Configuration
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+### 5. Database Setup
+```bash
+# Run migrations
+php artisan migrate
+
+# (Optional) Seed database with sample data
+php artisan db:seed
+```
+
+### 6. Build Frontend Assets
+```bash
+# Development build
+npm run dev
+
+# Production build
+npm run build
+```
+
+### 7. Start Development Server
+```bash
+php artisan serve
+```
+
+The application will be available at `http://localhost:8000`
+
+---
+
+## ⚙️ Configuration
+
+### Database Configuration
+
+#### SQLite (Default)
+```env
+DB_CONNECTION=sqlite
+# Database file created automatically at database/database.sqlite
+```
+
+#### MySQL
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=cis_am
+DB_USERNAME=root
+DB_PASSWORD=your_password
+```
+
+### Application Settings
+```env
+APP_NAME="CIS-AM"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+APP_TIMEZONE=UTC
+```
+
+### Session Configuration
+```env
+SESSION_DRIVER=database
+SESSION_LIFETIME=120  # Minutes
+```
+
+### Mail Configuration
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_username
+MAIL_PASSWORD=your_password
+MAIL_FROM_ADDRESS=noreply@cis-am.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+---
+
+## 📖 Usage
+
+### For Employees
+
+#### 1. **Login**
+- Navigate to the login page
+- Enter your email and password
+- Click "Sign In"
+
+#### 2. **Check In**
+- Select your workplace from the dashboard
+- Click "Check In" button
+- Allow location access when prompted
+- System verifies you're within the workplace radius
+
+#### 3. **Break Management**
+- Click "Start Break" when taking a break
+- Click "End Break" when returning to work
+- Break duration is automatically calculated
+
+#### 4. **Check Out**
+- Click "Check Out" when ending your work day
+- System calculates total hours worked (minus break time)
+
+#### 5. **View History**
+- Navigate to "Attendance History" section
+- View detailed logs of all activities
+- Filter by date range
+
+### For Administrators
+
+#### 1. **Dashboard Overview**
+- View real-time statistics (check-ins, late arrivals, etc.)
+- Monitor current employee status
+- Quick access to all management functions
+
+#### 2. **User Management**
+- Add new employees with role assignment
+- Edit user information and permissions
+- Deactivate/activate user accounts
+- Bulk operations for efficiency
+
+#### 3. **Workplace Management**
+- Create new workplace locations
+- Set GPS coordinates and check-in radius
+- Assign users to workplaces
+- View workplace statistics
+
+#### 4. **Reports**
+- Generate weekly/monthly attendance reports
+- Filter by employee, workplace, or date range
+- Export to CSV/Excel format
+- View attendance statistics and trends
+
+#### 5. **System Settings**
+- Update manual entry access code
+- Configure admin account settings
+- Manage system parameters
+
+---
+
+## 📚 Features Documentation
+
+Detailed documentation for specific features:
+
+- [Attendance Monitoring Feature](ATTENDANCE_MONITORING_FEATURE.md)
+- [Reports System](REPORTS_FEATURE.md)
+- [Session Management](SESSION_MANAGEMENT_FEATURE.md)
+- [Manual Entry Code](MANUAL_ENTRY_CODE_FEATURE.md)
+- [Workplace Management](WORKPLACE_IMPROVEMENTS.md)
+- [Bulk Operations](BULK_OPERATIONS_SUMMARY.md)
+- [System Settings](SYSTEM_SETTINGS_UPDATES.md)
+
+---
+
+## 🔌 API Endpoints
+
+### Authentication
+```
+POST   /login              # User login
+POST   /logout             # User logout
+POST   /password/reset     # Password reset
+```
+
+### Employee Dashboard
+```
+GET    /api/user-stats/{userId}              # User statistics
+GET    /api/attendance-history/{userId}      # Attendance history
+GET    /api/attendance-logs/{userId}         # Activity logs
+GET    /api/user-workplace/{userId}          # Primary workplace
+GET    /api/user-workplaces/{userId}         # All assigned workplaces
+GET    /api/current-status/{userId}          # Current work status
+POST   /api/checkin                          # Check in
+POST   /api/perform-action                   # Check out/break
+POST   /api/save-workplace                   # Save workplace
+POST   /api/set-primary-workplace            # Set primary location
+GET    /api/manual-entry-code                # Get access code
+```
+
+### Admin Dashboard
+```
+GET    /admin/dashboard                      # Admin dashboard
+GET    /admin/users                          # User list
+POST   /admin/users                          # Create user
+PUT    /admin/users/{id}                     # Update user
+DELETE /admin/users/{id}                     # Delete user
+GET    /admin/workplaces                     # Workplace list
+POST   /admin/workplaces                     # Create workplace
+GET    /admin/attendance-stats               # Attendance statistics
+```
+
+### Reports
+```
+GET    /admin/reports/attendance             # Attendance reports
+GET    /admin/reports/individual/{user}      # Individual report
+GET    /admin/reports/export                 # Export report
+GET    /admin/reports/summary-stats          # Summary statistics
+```
+
+---
+
+## 🔐 Security Features
+
+### Authentication & Authorization
+- ✅ Role-based access control (Admin/Employee)
+- ✅ Middleware protection on all routes
+- ✅ CSRF token validation
+- ✅ SQL injection prevention via Eloquent ORM
+
+### Session Security
+- ✅ Single device login enforcement
+- ✅ Automatic session invalidation
+- ✅ Session ID regeneration on login
+- ✅ Secure session storage in database
+
+### Data Protection
+- ✅ Password hashing with bcrypt
+- ✅ Secure password reset flow
+- ✅ Admin password verification for sensitive actions
+- ✅ Input validation and sanitization
+
+### Activity Auditing
+- ✅ Complete admin action logging
+- ✅ User activity tracking
+- ✅ Login/logout event recording
+- ✅ System change audit trail
+
+---
+
+## 🧪 Testing
+
+### Run PHPUnit Tests
+```bash
+php artisan test
+```
+
+### Feature Testing
+The system includes comprehensive test coverage for:
+- Authentication flows
+- Attendance operations
+- Administrative functions
+- Report generation
+- User management
+
+### Manual Testing Guides
+- [System Settings Testing](TESTING_GUIDE_SYSTEM_SETTINGS.md)
+- [Session Management Testing](TESTING_SESSION_MANAGEMENT.md)
+
+---
+
+## 🗺️ Roadmap
+
+### Upcoming Features
+- [ ] Mobile application (iOS/Android)
+- [ ] Biometric authentication support
+- [ ] Advanced analytics dashboard
+- [ ] Notifications system (email/SMS)
+- [ ] Multi-language support
+- [ ] Dark mode theme
+- [ ] Calendar view for attendance
+- [ ] Department/team management
+- [ ] Shift scheduling
+- [ ] Overtime calculation
+- [ ] Leave management integration
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Coding Standards
+- Follow PSR-12 coding standards
+- Write meaningful commit messages
+- Add tests for new features
+- Update documentation as needed
+
+---
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](LICENSE).
+
+---
+
+## 👨‍💻 Development Team
+
+- **Developer:** raidenahnie
+- **Repository:** [github.com/raidenahnie/CIS-AM](https://github.com/raidenahnie/CIS-AM)
+
+---
+
+## 📞 Support
+
+For support, feature requests, or bug reports:
+- 🐛 [Open an Issue](https://github.com/raidenahnie/CIS-AM/issues)
+- 📧 Email: support@cis-am.com
+- 📖 [Documentation](https://github.com/raidenahnie/CIS-AM/wiki)
+
+---
+
+## 🙏 Acknowledgments
+
+Built with:
+- [Laravel](https://laravel.com) - The PHP Framework for Web Artisans
+- [Tailwind CSS](https://tailwindcss.com) - A utility-first CSS framework
+- [Vite](https://vitejs.dev) - Next Generation Frontend Tooling
+- [PHPSpreadsheet](https://phpspreadsheet.readthedocs.io) - Excel library for PHP
+
+---
+
+<p align="center">
+  Made with ❤️ for efficient attendance management
+</p>
+
+<p align="center">
+  <sub>Last Updated: October 2025</sub>
+</p>
