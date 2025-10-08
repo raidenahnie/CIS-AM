@@ -1,13 +1,15 @@
-# 🏢 CIS-AM - Comprehensive Attendance Monitoring System
+# � CIS-AM - Curriculum Implementation System: Attendance Monitoring
 
 <p align="center">
-  <strong>A modern, GPS-enabled attendance tracking and management system built with Laravel 11</strong>
+  <strong>Official Attendance Tracking System for the Department of Education - Cavite Province</strong><br>
+  <em>Curriculum Implementation Division</em>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-11.x-red?style=flat-square&logo=laravel" alt="Laravel">
   <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php" alt="PHP">
   <img src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat-square&logo=tailwind-css" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/DepEd-Cavite-blue?style=flat-square" alt="DepEd Cavite">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
 
@@ -33,14 +35,22 @@
 
 ## 🎯 About
 
-**CIS-AM (Comprehensive Information System - Attendance Monitoring)** is a full-featured web-based attendance management system designed for organizations that need accurate, GPS-verified employee time tracking. The system provides real-time monitoring, comprehensive reporting, and administrative controls for efficient workforce management.
+**CIS-AM (Curriculum Implementation System - Attendance Monitoring)** is a specialized web-based attendance management system developed for the **Department of Education - Cavite Province**, specifically designed for use by the **Curriculum Implementation Division**.
 
-### 🌟 Perfect For:
-- Educational institutions (schools, universities)
-- Corporate offices with multiple locations
-- Government agencies
-- Remote workforce management
-- Organizations requiring GPS-verified attendance
+This system provides accurate, GPS-verified attendance tracking for DepEd Cavite personnel, ensuring accountability and efficient workforce management across multiple school locations and division offices throughout Cavite Province.
+
+### 🏛️ Government Agency Information
+- **Agency:** Department of Education (DepEd)
+- **Location:** Cavite Province, Philippines
+- **Division:** Curriculum Implementation Division
+- **Purpose:** Personnel attendance monitoring and management
+
+### 🌟 Designed For:
+- DepEd Cavite Curriculum Implementation Division staff
+- Multi-location school site monitoring
+- Division office personnel tracking
+- Field work and school visit verification
+- GPS-verified attendance for accountability
 
 ---
 
@@ -193,11 +203,11 @@ DB_PASSWORD=your_password
 
 ### Application Settings
 ```env
-APP_NAME="CIS-AM"
+APP_NAME="CIS-AM - DepEd Cavite"
 APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://localhost:8000
-APP_TIMEZONE=UTC
+APP_TIMEZONE=Asia/Manila  # Philippine Standard Time
 ```
 
 ### Session Configuration
@@ -213,8 +223,8 @@ MAIL_HOST=smtp.mailtrap.io
 MAIL_PORT=2525
 MAIL_USERNAME=your_username
 MAIL_PASSWORD=your_password
-MAIL_FROM_ADDRESS=noreply@cis-am.com
-MAIL_FROM_NAME="${APP_NAME}"
+MAIL_FROM_ADDRESS=noreply@deped-cavite.gov.ph
+MAIL_FROM_NAME="DepEd Cavite - CIS-AM"
 ```
 
 ---
@@ -432,6 +442,8 @@ This project is open-sourced software licensed under the [MIT license](LICENSE).
 
 ## 👨‍💻 Development Team
 
+- **Developed For:** Department of Education - Cavite Province
+- **Division:** Curriculum Implementation Division
 - **Developer:** raidenahnie
 - **Repository:** [github.com/raidenahnie/CIS-AM](https://github.com/raidenahnie/CIS-AM)
 
@@ -441,8 +453,9 @@ This project is open-sourced software licensed under the [MIT license](LICENSE).
 
 For support, feature requests, or bug reports:
 - 🐛 [Open an Issue](https://github.com/raidenahnie/CIS-AM/issues)
-- 📧 Email: support@cis-am.com
+- 📧 Email: curriculum.implementation@deped-cavite.gov.ph
 - 📖 [Documentation](https://github.com/raidenahnie/CIS-AM/wiki)
+- 🏛️ Office: DepEd Cavite - Curriculum Implementation Division
 
 ---
 
@@ -457,7 +470,8 @@ Built with:
 ---
 
 <p align="center">
-  Made with ❤️ for efficient attendance management
+  <strong>Department of Education - Cavite Province</strong><br>
+  <em>Curriculum Implementation Division</em>
 </p>
 
 <p align="center">
