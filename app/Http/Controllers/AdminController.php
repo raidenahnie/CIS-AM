@@ -1112,6 +1112,51 @@ class AdminController extends Controller
     }
 
     /**
+     * Update manual entry code
+     */
+    public function updateManualEntryCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'admin_password' => 'required|string',
+            'key' => 'required|string|in:manual_entry_code',
+            'value' => 'required|string|min:4|max:20'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Verify admin password
+        if (!Hash::check($request->admin_password, Auth::user()->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid admin password'
+            ], 401);
+        }
+
+        // Update the setting
+        SystemSetting::set($request->key, $request->value);
+
+        // Log activity
+        $this->logActivity(
+            'update_manual_entry_code',
+            "Updated manual entry access code",
+            'SystemSetting',
+            null,
+            ['key' => $request->key, 'new_code' => $request->value]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Manual entry code updated successfully'
+        ]);
+    }
+
+    /**
      * Get attendance statistics for admin dashboard
      */
     public function getAttendanceStats()

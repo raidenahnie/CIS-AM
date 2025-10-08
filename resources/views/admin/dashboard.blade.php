@@ -1573,6 +1573,39 @@
                             </button>
                         </div>
                     </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-key text-blue-500 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Manual Entry Access Code</h3>
+                            <span class="ml-2 px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded">SECURITY</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Manage the access code for manual location entry feature</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                                <div class="text-xs text-blue-700">
+                                    This code is required to access manual GPS location entry. Only share with authorized personnel.
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start mt-2">
+                                <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 mr-2"></i>
+                                <div class="text-xs text-red-700">
+                                    Update the code after giving it to authorized personnel to prevent multiple unauthorized access.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Current Code:</span>
+                                <span id="currentManualEntryCode" class="font-mono font-bold text-gray-900">••••••••</span>
+                            </div>
+                        </div>
+                        <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold" onclick="openManualEntryCodeModal()">
+                            <i class="fas fa-edit mr-2"></i>Update Access Code
+                        </button>
+                    </div>
             </div>
 
         </div>
@@ -1918,6 +1951,70 @@
                     </button>
                 </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Entry Code Modal -->
+    <div id="manualEntryCodeModal" class="fixed inset-0 bg-black/80 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-0 border-0 w-96 shadow-lg rounded-2xl">
+            <div class="relative bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
+                <div class="px-6 py-4 border-b border-white border-opacity-20 bg-blue-50 bg-opacity-50">
+                    <h3 class="text-lg font-semibold text-black mb-0 flex items-center">
+                        <i class="fas fa-key text-blue-600 mr-2"></i>
+                        Update Manual Entry Code
+                    </h3>
+                    <p class="text-xs text-blue-700 mt-1">Configure access code for manual location entry</p>
+                </div>
+                <div class="px-6 py-4">
+                    <form id="manualEntryCodeForm">
+                        <div class="bg-blue-100 border border-blue-300 rounded-lg p-3 mb-4">
+                            <p class="text-xs text-blue-800">
+                                <strong>Security Note:</strong> This code will be required for users to access manual GPS location entry. Only share with authorized administrators.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-black mb-2">
+                                <i class="fas fa-lock mr-1"></i>Your Admin Password *
+                            </label>
+                            <input type="password" id="codeAdminPassword" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black" required placeholder="Enter your password to confirm">
+                            <p class="text-xs text-gray-600 mt-1">Confirmation required for security</p>
+                        </div>
+                        
+                        <hr class="my-4 border-gray-400">
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-black mb-2">
+                                <i class="fas fa-key mr-1"></i>New Access Code *
+                            </label>
+                            <input type="text" id="newManualEntryCode" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black font-mono text-lg tracking-wide" required placeholder="e.g., DEPED2025" maxlength="20">
+                            <p class="text-xs text-gray-600 mt-1">Use a memorable but secure code (4-20 characters)</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-black mb-2">
+                                <i class="fas fa-check-double mr-1"></i>Confirm Access Code *
+                            </label>
+                            <input type="text" id="confirmManualEntryCode" class="w-full px-3 py-2 bg-white bg-opacity-50 backdrop-filter backdrop-blur-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black font-mono text-lg tracking-wide" required placeholder="Re-enter the code" maxlength="20">
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-lightbulb text-yellow-600 mt-0.5 mr-2"></i>
+                                <div class="text-xs text-yellow-800">
+                                    <strong>Tip:</strong> Use a code that's easy to share verbally with administrators but hard for others to guess. Avoid common words or sequential numbers.
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="px-6 py-4 border-t border-white border-opacity-20 flex justify-end space-x-3">
+                    <button type="button" onclick="closeManualEntryCodeModal()" class="px-4 py-2 bg-gray-300 bg-opacity-20 backdrop-filter backdrop-blur-sm text-black rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">Cancel</button>
+                    <button type="button" onclick="submitManualEntryCode()" class="px-4 py-2 bg-blue-600 bg-opacity-70 backdrop-filter backdrop-blur-sm text-white rounded-lg hover:bg-opacity-80 transition-all duration-200 border border-white border-opacity-30 font-semibold">
+                        <i class="fas fa-save mr-1"></i>Update Access Code
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -4287,6 +4384,112 @@
             document.getElementById('adminAccountModal').classList.add('hidden');
             document.getElementById('adminAccountForm').reset();
         }
+
+        // Manual Entry Code Modal Functions
+        function openManualEntryCodeModal() {
+            document.getElementById('manualEntryCodeForm').reset();
+            document.getElementById('manualEntryCodeModal').classList.remove('hidden');
+            
+            // Fetch and display current code
+            fetchCurrentManualEntryCode();
+        }
+
+        function closeManualEntryCodeModal() {
+            document.getElementById('manualEntryCodeModal').classList.add('hidden');
+            document.getElementById('manualEntryCodeForm').reset();
+        }
+
+        function fetchCurrentManualEntryCode() {
+            fetch('/admin/settings', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.settings && data.settings.manual_entry_code) {
+                    // Display masked version
+                    const code = data.settings.manual_entry_code;
+                    document.getElementById('currentManualEntryCode').textContent = code;
+                } else {
+                    // Default code
+                    document.getElementById('currentManualEntryCode').textContent = 'DEPED2025';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching manual entry code:', error);
+                document.getElementById('currentManualEntryCode').textContent = 'DEPED2025';
+            });
+        }
+
+        function submitManualEntryCode() {
+            const adminPassword = document.getElementById('codeAdminPassword').value;
+            const newCode = document.getElementById('newManualEntryCode').value.trim();
+            const confirmCode = document.getElementById('confirmManualEntryCode').value.trim();
+
+            // Validation
+            if (!adminPassword) {
+                showNotification('Please enter your admin password', 'error');
+                return;
+            }
+
+            if (!newCode || newCode.length < 4) {
+                showNotification('Access code must be at least 4 characters', 'error');
+                return;
+            }
+
+            if (newCode.length > 20) {
+                showNotification('Access code must be 20 characters or less', 'error');
+                return;
+            }
+
+            if (newCode !== confirmCode) {
+                showNotification('Access codes do not match', 'error');
+                return;
+            }
+
+            // Confirm action
+            if (!confirm(`Are you sure you want to update the manual entry code to "${newCode}"? This will be logged.`)) {
+                return;
+            }
+
+            const requestData = {
+                admin_password: adminPassword,
+                key: 'manual_entry_code',
+                value: newCode
+            };
+
+            fetch('/admin/update-manual-entry-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Manual entry code updated successfully!', 'success');
+                    closeManualEntryCodeModal();
+                    // Update displayed code
+                    document.getElementById('currentManualEntryCode').textContent = newCode;
+                } else {
+                    showNotification(data.message || 'Failed to update access code', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while updating the access code', 'error');
+            });
+        }
+
+        // Load current code on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCurrentManualEntryCode();
+        });
 
         document.getElementById('adminAccountForm').addEventListener('submit', function(e) {
             e.preventDefault();

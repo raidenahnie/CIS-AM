@@ -36,6 +36,10 @@ Route::prefix('api')->group(function () {
     Route::post('/perform-action', [DashboardController::class, 'performAction']);
     Route::post('/save-workplace', [DashboardController::class, 'saveWorkplace']);
     Route::post('/set-primary-workplace', [DashboardController::class, 'setPrimaryWorkplace']);
+    Route::get('/manual-entry-code', function() {
+        $code = \App\Models\SystemSetting::get('manual_entry_code', 'DEPED2025');
+        return response()->json(['code' => $code]);
+    });
 });
 
 // Protected
@@ -90,6 +94,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/update-admin-account', [App\Http\Controllers\AdminController::class, 'updateAdminAccount']);
     Route::get('/settings', [App\Http\Controllers\AdminController::class, 'getSettings']);
     Route::post('/settings', [App\Http\Controllers\AdminController::class, 'updateSetting']);
+    Route::post('/update-manual-entry-code', [App\Http\Controllers\AdminController::class, 'updateManualEntryCode']);
     
     // Attendance monitoring
     Route::get('/attendance-stats', [App\Http\Controllers\AdminController::class, 'getAttendanceStats']);

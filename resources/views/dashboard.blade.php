@@ -29,6 +29,13 @@
                 background-color: rgba(0, 0, 0, 0.95) !important;
             }
         }
+
+        /* Shake animation for invalid code */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
     </style>
 </head>
 
@@ -524,13 +531,6 @@
                                 <i class="fas fa-location-crosshairs mr-2"></i>
                                 Waiting for Location...
                             </button>
-
-                            <!-- Manual Override (Admin only) -->
-                            <div class="mt-4 text-center">
-                                <button class="text-sm text-gray-500 hover:text-gray-700 underline">
-                                    Request manual check-in override
-                                </button>
-                            </div>
                         </div>
 
                         <!-- Today's Check-in History -->
@@ -3650,12 +3650,114 @@
         }
 
         function showManualLocationEntry() {
+            // Show code verification modal first
+            const verifyModal = document.createElement('div');
+            verifyModal.className = 'fixed inset-0 flex items-center justify-center px-4 modal-blur';
+            verifyModal.style.zIndex = '9999';
+            verifyModal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-red-100 rounded-full p-3 mr-3">
+                            <i class="fas fa-shield-alt text-red-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Admin Verification Required</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Manual location entry is restricted to administrators only. Please enter the admin access code to continue.
+                    </p>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Access Code</label>
+                        <input type="password" id="admin-access-code" 
+                               placeholder="Enter admin code"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        <p id="code-error" class="text-xs text-red-600 mt-1 hidden">Invalid access code. Please try again.</p>
+                    </div>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4">
+                        <div class="flex">
+                            <i class="fas fa-info-circle text-yellow-600 mr-2 mt-0.5"></i>
+                            <p class="text-xs text-yellow-700">
+                                If you don't have the admin code, please contact your system administrator or use the GPS retry option instead.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="verifyAdminCode(this.closest('.fixed'))" 
+                                class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium">
+                            <i class="fas fa-check mr-2"></i>Verify Code
+                        </button>
+                        <button onclick="document.body.removeChild(this.closest('.fixed'))" 
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(verifyModal);
+            
+            // Focus on the code input
+            setTimeout(() => {
+                document.getElementById('admin-access-code')?.focus();
+            }, 100);
+        }
+
+        function verifyAdminCode(modal) {
+            const codeInput = document.getElementById('admin-access-code');
+            const errorMsg = document.getElementById('code-error');
+            const enteredCode = codeInput.value.trim();
+            
+            // Fetch the current code from backend
+            fetch('/api/manual-entry-code')
+                .then(response => response.json())
+                .then(data => {
+                    const correctCode = data.code || 'DEPED2025';
+                    
+                    if (enteredCode === correctCode) {
+                        // Code is correct, close verification modal and show location entry
+                        document.body.removeChild(modal);
+                        showLocationEntryForm();
+                    } else {
+                        // Show error message
+                        errorMsg.classList.remove('hidden');
+                        codeInput.value = '';
+                        codeInput.focus();
+                        codeInput.classList.add('border-red-500');
+                        
+                        // Shake animation
+                        codeInput.style.animation = 'shake 0.5s';
+                        setTimeout(() => {
+                            codeInput.style.animation = '';
+                        }, 500);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching manual entry code:', error);
+                    // Fallback to default code
+                    const defaultCode = 'DEPED2025';
+                    if (enteredCode === defaultCode) {
+                        document.body.removeChild(modal);
+                        showLocationEntryForm();
+                    } else {
+                        errorMsg.classList.remove('hidden');
+                        codeInput.value = '';
+                        codeInput.focus();
+                        codeInput.classList.add('border-red-500');
+                    }
+                });
+        }
+
+        function showLocationEntryForm() {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 flex items-center justify-center px-4 modal-blur';
             modal.style.zIndex = '9999';
             modal.innerHTML = `
                 <div class="bg-white rounded-lg p-6 max-w-md w-full">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Manual Location Entry</h3>
+                    <div class="flex items-center mb-4">
+                        <div class="bg-green-100 rounded-full p-2 mr-3">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Manual Location Entry</h3>
+                    </div>
                     <p class="text-sm text-gray-600 mb-4">
                         Enter coordinates manually for testing purposes. Contact your administrator for proper workplace coordinates.
                     </p>
