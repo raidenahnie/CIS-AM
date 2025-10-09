@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Allowed Origins (CORS)
+    |--------------------------------------------------------------------------
+    |
+    | This setting defines which origins are allowed to access your API.
+    | In production, this should be set to your specific domain(s).
+    | In development, you can use '*' or specify localhost URLs.
+    |
+    */
+
+    'allowed_origins' => env('ALLOWED_ORIGINS', '*'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

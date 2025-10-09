@@ -24,8 +24,8 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
 Route::get('/password/reset/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
 Route::post('/password/reset', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
-// API routes for dashboard
-Route::prefix('api')->group(function () {
+// API routes for dashboard - Protected by authentication and user authorization
+Route::prefix('api')->middleware(['auth', 'authorize.user'])->group(function () {
     Route::get('/user-stats/{userId}', [DashboardController::class, 'getUserStats']);
     Route::get('/attendance-history/{userId}', [DashboardController::class, 'getAttendanceHistory']);
     Route::get('/attendance-logs/{userId}', [DashboardController::class, 'getAttendanceLogs']);

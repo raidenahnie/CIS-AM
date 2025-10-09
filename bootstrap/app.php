@@ -14,10 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'authorize.user' => \App\Http\Middleware\AuthorizeUserAccess::class,
         ]);
         
-        // Apply user activity tracking and session validation to authenticated routes
+        // Apply security headers, user activity tracking and session validation to all web routes
         $middleware->web([
+            \App\Http\Middleware\CorsMiddleware::class,
             \App\Http\Middleware\UpdateUserActivity::class,
             \App\Http\Middleware\ValidateSession::class,
         ]);
