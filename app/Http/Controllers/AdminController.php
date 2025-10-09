@@ -686,7 +686,8 @@ class AdminController extends Controller
                                                          'longitude' => (float) $log->longitude,
                                                          'address' => $log->address ?: 'Location not available',
                                                          'timestamp' => $log->timestamp,
-                                                         'workplace_name' => $log->workplace ? $log->workplace->name : null
+                                                         'workplace_name' => $log->workplace ? $log->workplace->name : null,
+                                                         'workplace_address' => $log->workplace ? $log->workplace->address : null
                                                      ];
                                                  });
 

@@ -3902,6 +3902,14 @@
                     const actionColor = getStatusColor(location.action);
                     const actionText = location.action.replace('_', ' ').toUpperCase();
                     
+                    // Use workplace address if available, otherwise fall back to coordinates
+                    let addressDisplay = 'Location not available';
+                    if (location.workplace_address) {
+                        addressDisplay = location.workplace_address;
+                    } else if (location.latitude && location.longitude) {
+                        addressDisplay = `Coordinates: ${parseFloat(location.latitude).toFixed(6)}, ${parseFloat(location.longitude).toFixed(6)}`;
+                    }
+                    
                     return `
                         <div class="bg-white bg-opacity-10 backdrop-filter backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
                             <div class="flex items-start justify-between mb-2">
@@ -3914,7 +3922,7 @@
                             <div class="ml-6 space-y-1 text-sm">
                                 <div class="text-gray-800">
                                     <i class="fas fa-map-marker-alt mr-2"></i>
-                                    ${location.address}
+                                    ${addressDisplay}
                                 </div>
                                 ${location.workplace_name ? `
                                 <div class="text-gray-800">
@@ -3922,9 +3930,11 @@
                                     ${location.workplace_name}
                                 </div>
                                 ` : ''}
+                                ${location.latitude && location.longitude ? `
                                 <div class="text-gray-800 text-xs">
-                                    Coordinates: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}
+                                    Lat: ${location.latitude.toFixed(6)}, Lng: ${location.longitude.toFixed(6)}
                                 </div>
+                                ` : ''}
                             </div>
                         </div>
                     `;
