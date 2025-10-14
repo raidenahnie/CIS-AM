@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="user-id" content="{{ Auth::user()->id ?? '' }}">
+    <meta http-equiv="Permissions-Policy" content="geolocation=(self)">
     <title>CISAM | Dashboard</title>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashboard.js'])
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -5906,6 +5907,24 @@
 
             // Fetch updated data
             fetchUserWorkplaces();
+        }
+    </script>
+    
+    <script>
+        // Simple script to get user's current location and log it
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    console.log("Latitude:", position.coords.latitude);
+                    console.log("Longitude:", position.coords.longitude);
+                    // You can send these values to your server if needed
+                },
+                function(error) {
+                    console.error("Geolocation error:", error.message);
+                }
+            );
+        } else {
+            console.error("Geolocation not supported by this browser.");
         }
     </script>
 
