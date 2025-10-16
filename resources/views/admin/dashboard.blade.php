@@ -645,20 +645,10 @@
                     
                     <!-- Pagination -->
                     <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-gray-600">
-                                Showing <span class="font-semibold">{{ $workplaces->count() }}</span> of <span class="font-semibold">{{ $workplaces->count() }}</span> workplaces
-                            </div>
-                            <div class="flex space-x-2">
-                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <i class="fas fa-chevron-left mr-1"></i>
-                                    Previous
-                                </button>
-                                <button class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    Next
-                                    <i class="fas fa-chevron-right ml-1"></i>
-                                </button>
-                            </div>
+                        <div class="flex flex-col sm:flex-row items-center justify-between">
+                            <div id="workplace-pagination-info" class="text-sm text-gray-600 mb-2 sm:mb-0"></div>
+                            
+                            <div id="workplace-pagination-controls" class="flex items-center space-x-1"></div>
                         </div>
                     </div>
                 </div>
@@ -2603,6 +2593,79 @@
         function closeAssignmentModal() {
             document.getElementById('assignmentModal').classList.add('hidden');
         }
+        
+
+        // Pagination for All Workplaces table
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemsPerPage = 5;
+            let currentPage = 1;
+        
+            const tableBody = document.getElementById('workplacesTableBodyMain');
+            const allRows = Array.from(tableBody.querySelectorAll('tr.workplace-row-main'));
+            const paginationInfo = document.getElementById('workplace-pagination-info');
+            const paginationControls = document.getElementById('workplace-pagination-controls');
+            const totalPages = Math.ceil(allRows.length / itemsPerPage);
+        
+            function displayPage(page) {
+                currentPage = page;
+                
+                // Calculate the start and end index for the current page
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                
+                // Hide all rows first
+                allRows.forEach(row => row.style.display = 'none');
+                
+                // Show only the rows for the current page
+                const pageRows = allRows.slice(startIndex, endIndex);
+                pageRows.forEach(row => row.style.display = '');
+        
+                updatePaginationUI();
+            }
+        
+            function updatePaginationUI() {
+                // Clear existing controls
+                paginationControls.innerHTML = '';
+        
+                // Update "Showing X to Y of Z" text
+                const startItem = (currentPage - 1) * itemsPerPage + 1;
+                const endItem = Math.min(startItem + itemsPerPage - 1, allRows.length);
+                paginationInfo.textContent = `Showing ${startItem} to ${endItem} of ${allRows.length} workplaces`;
+        
+                // Add "Previous" button
+                const prevButton = createButton('<i class="fas fa-chevron-left"></i>', () => displayPage(currentPage - 1), currentPage === 1);
+                paginationControls.appendChild(prevButton);
+        
+                // Add page number buttons
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageButton = createButton(i, () => displayPage(i));
+                    if (i === currentPage) {
+                        pageButton.className = 'px-3 py-1 text-sm bg-indigo-600 text-white rounded-lg font-semibold cursor-default';
+                    }
+                    paginationControls.appendChild(pageButton);
+                }
+        
+                // Add "Next" button
+                const nextButton = createButton('<i class="fas fa-chevron-right"></i>', () => displayPage(currentPage + 1), currentPage === totalPages);
+                paginationControls.appendChild(nextButton);
+            }
+        
+            function createButton(content, onClick, disabled = false) {
+                const button = document.createElement('button');
+                button.innerHTML = content;
+                button.className = 'px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+                button.disabled = disabled;
+                button.addEventListener('click', onClick);
+                return button;
+            }
+        
+            // Initial setup
+            if (allRows.length > 0) {
+                displayPage(1);
+            } else {
+                paginationInfo.textContent = 'No workplaces found';
+            }
+        });
 
         // User Modal Functions
         function openUserModal() {

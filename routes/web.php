@@ -46,6 +46,8 @@ Route::prefix('api')->middleware(['auth', 'authorize.user'])->group(function () 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
+        // to enable maintenance mode view, replace above line with below line
+        // return view('error.maintenance');
     })->name('dashboard');
 });
 
