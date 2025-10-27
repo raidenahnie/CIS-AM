@@ -1208,10 +1208,23 @@
                 }, 100); // Small delay to ensure DOM is ready
             }
 
-            // Removed special check-in/out logic
-            // if (sectionName === 'special-checkin') {
-            //     // Special Check In/Out section logic
-            // }
+            if (sectionName === 'special-checkin') {
+                console.log('Initializing special check-in section...');
+                setTimeout(() => {
+                    initializeSpecialCheckinMap();
+                    fetchSpecialLocations();
+                    fetchSpecialCheckinLogs();
+
+                    // Update location status if we have it
+                    if (userLocation && hasLocationPermission) {
+                        console.log('Refreshing location status for special check-in section...');
+                        updateSpecialLocationStatus(userLocation);
+                    } else {
+                        console.log('No location available, initializing location tracking...');
+                        initializeSmartLocation();
+                    }
+                }, 100);
+            }
 
             // Refresh other sections as needed
             if (sectionName === 'dashboard') {
@@ -1221,7 +1234,9 @@
                 fetchCurrentStatus();
             }
         }
-        
+
+
+
 
         // API Functions to fetch real data
         async function fetchUserStats(userId = null) {
@@ -1395,6 +1410,498 @@
                             </td>
                         </tr>
                     `;
+                }
+            }
+        }
+
+        // Add this after the regular GPS check-in functions (around line 1500)
+
+        // Special Check-in Variables
+        let specialCheckinMap = null;
+        let specialUserMarker = null;
+        let specialWorkplaceMarkers = [];
+        let specialWorkplaceCircles = [];
+        let selectedSpecialLocationId = null;
+
+        // Initialize Special Check-in Map
+        function initializeSpecialCheckinMap() {
+            const mapContainer = document.getElementById('special-checkin-map');
+            if (!mapContainer) {
+                console.warn('Special check-in map container not found');
+                return;
+            }
+
+            // If map already exists, just refresh data
+            if (specialCheckinMap) {
+                console.log('Special check-in map already initialized, refreshing data...');
+                refreshSpecialCheckinMapData();
+                return;
+            }
+
+            // Show loading state
+            showMapLoadingState('special-checkin-map');
+
+            // Initialize with user location or fallback
+            let lat = 14.5995;
+            let lng = 120.9842;
+            let hasUserLocation = false;
+
+            if (userLocation && userLocation.coords) {
+                lat = userLocation.coords.latitude;
+                lng = userLocation.coords.longitude;
+                hasUserLocation = true;
+            }
+
+            try {
+                // Remove existing map if present
+                if (specialCheckinMap) {
+                    specialCheckinMap.remove();
+                    specialCheckinMap = null;
+                }
+
+                // Initialize Leaflet map
+                specialCheckinMap = L.map('special-checkin-map', {
+                    zoomControl: true,
+                    attributionControl: false,
+                    maxZoom: 18,
+                    minZoom: 10,
+                    preferCanvas: true
+                }).setView([lat, lng], hasUserLocation ? 16 : 12);
+
+                // Add tile layer
+                const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 18,
+                    tileSize: 256,
+                    crossOrigin: true
+                });
+
+                tileLayer.on('load', () => {
+                    console.log('Special check-in map tiles loaded');
+                    hideMapLoadingState('special-checkin-map');
+                });
+
+                tileLayer.addTo(specialCheckinMap);
+
+                // Add markers and data
+                addSpecialCheckinMapMarkers(lat, lng, hasUserLocation);
+
+                // Set timeout fallback
+                setTimeout(() => {
+                    hideMapLoadingState('special-checkin-map');
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error initializing special check-in map:', error);
+                showMapError('special-checkin-map', 'Failed to load map. Please try refreshing.');
+            }
+        }
+
+        // Add markers to special check-in map
+        function addSpecialCheckinMapMarkers(lat, lng, hasUserLocation) {
+            if (!specialCheckinMap) return;
+
+            // Add user location marker if available
+            if (hasUserLocation && userLocation) {
+                specialUserMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'user-location-marker',
+                        html: '<div style="background: #f59e0b; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                }).addTo(specialCheckinMap);
+
+                specialUserMarker.bindPopup('Your Current Location');
+            }
+
+            // Fetch and add all assigned special locations
+            fetchSpecialLocations();
+        }
+
+        // Refresh special check-in map data
+        function refreshSpecialCheckinMapData() {
+            if (!specialCheckinMap) return;
+
+            console.log('Refreshing special check-in map data...');
+
+            // Remove existing markers and circles
+            specialWorkplaceMarkers.forEach(marker => specialCheckinMap.removeLayer(marker));
+            specialWorkplaceCircles.forEach(circle => specialCheckinMap.removeLayer(circle));
+            specialWorkplaceMarkers = [];
+            specialWorkplaceCircles = [];
+
+            if (specialUserMarker) {
+                specialCheckinMap.removeLayer(specialUserMarker);
+            }
+
+            // Re-add markers with current data
+            const lat = userLocation ? userLocation.coords.latitude : 14.5995;
+            const lng = userLocation ? userLocation.coords.longitude : 120.9842;
+            const hasUserLocation = userLocation && userLocation.coords;
+
+            addSpecialCheckinMapMarkers(lat, lng, hasUserLocation);
+        }
+
+        // Fetch assigned special locations
+        async function fetchSpecialLocations(userId = null) {
+            userId = userId || getCurrentUserId();
+
+            try {
+                const response = await fetch(`/api/user-workplaces/${userId}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Special locations fetched:', data);
+
+                const locationSelect = document.getElementById('special-location-select');
+                const locationInfo = document.getElementById('special-location-info');
+
+                if (data.workplaces && data.workplaces.length > 0) {
+                    // Populate dropdown
+                    let optionsHtml = '<option value="">Select a location...</option>';
+                    data.workplaces.forEach(workplace => {
+                        optionsHtml += `<option value="${workplace.id}" 
+                    data-lat="${workplace.latitude}" 
+                    data-lng="${workplace.longitude}" 
+                    data-radius="${workplace.radius}">
+                    ${workplace.name}
+                </option>`;
+                    });
+
+                    if (locationSelect) {
+                        locationSelect.innerHTML = optionsHtml;
+                        locationSelect.disabled = false;
+                    }
+
+                    if (locationInfo) {
+                        locationInfo.textContent =
+                            `${data.workplaces.length} location(s) available for special check-in`;
+                    }
+
+                    // Add workplaces to map
+                    data.workplaces.forEach(workplace => {
+                        if (specialCheckinMap && workplace.latitude && workplace.longitude) {
+                            // Add marker
+                            const marker = L.marker([workplace.latitude, workplace.longitude], {
+                                icon: L.divIcon({
+                                    className: 'special-location-marker',
+                                    html: '<div style="background: #f59e0b; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                                    iconSize: [16, 16],
+                                    iconAnchor: [8, 8]
+                                })
+                            }).addTo(specialCheckinMap);
+
+                            marker.bindPopup(
+                                `<b>${workplace.name}</b><br>${workplace.address || 'Special Location'}`);
+                            specialWorkplaceMarkers.push(marker);
+
+                            // Add geofence circle
+                            const circle = L.circle([workplace.latitude, workplace.longitude], {
+                                color: '#f59e0b',
+                                fillColor: '#f59e0b',
+                                fillOpacity: 0.1,
+                                radius: workplace.radius || 100,
+                                weight: 2,
+                                dashArray: '5, 5',
+                                className: 'special-geofence-circle'
+                            }).addTo(specialCheckinMap);
+
+                            specialWorkplaceCircles.push(circle);
+                        }
+                    });
+
+                    // Fit bounds to show all locations if multiple
+                    if (data.workplaces.length > 1 && specialCheckinMap) {
+                        const group = L.featureGroup(specialWorkplaceMarkers);
+                        specialCheckinMap.fitBounds(group.getBounds().pad(0.1));
+                    }
+
+                } else {
+                    if (locationSelect) {
+                        locationSelect.innerHTML = '<option value="">No special locations assigned</option>';
+                        locationSelect.disabled = true;
+                    }
+                    if (locationInfo) {
+                        locationInfo.textContent = 'No locations available. Contact your administrator.';
+                    }
+                }
+
+            } catch (error) {
+                console.error('Failed to fetch special locations:', error);
+                const locationSelect = document.getElementById('special-location-select');
+                const locationInfo = document.getElementById('special-location-info');
+
+                if (locationSelect) {
+                    locationSelect.innerHTML = '<option value="">Error loading locations</option>';
+                    locationSelect.disabled = true;
+                }
+                if (locationInfo) {
+                    locationInfo.textContent = 'Failed to load locations. Please refresh the page.';
+                }
+            }
+        }
+
+        // Update special location status
+        function updateSpecialLocationStatus(position) {
+            if (!position) return;
+
+            const locationBadge = document.getElementById('special-location-badge');
+            const currentLocation = document.getElementById('special-current-location');
+            const checkinBtn = document.getElementById('special-checkin-btn');
+
+            if (!locationBadge || !currentLocation || !checkinBtn) return;
+
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            const accuracy = Math.round(position.coords.accuracy);
+
+            // Update location display
+            currentLocation.innerHTML = `<i class="fas fa-map-marker-alt text-yellow-600 mr-2"></i>` +
+                `Location: ${userLat.toFixed(6)}, ${userLng.toFixed(6)} ` +
+                `<span class="text-xs text-gray-600">(±${accuracy}m)</span>`;
+
+            // Check if location select has a value
+            const locationSelect = document.getElementById('special-location-select');
+            if (!locationSelect || !locationSelect.value) {
+                locationBadge.className = 'px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium';
+                locationBadge.textContent = 'Select Location';
+
+                checkinBtn.className =
+                    'w-full py-4 bg-gray-400 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
+                checkinBtn.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Select a Location First';
+                checkinBtn.disabled = true;
+                return;
+            }
+
+            // Get selected location data
+            const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+            const workplaceLat = parseFloat(selectedOption.dataset.lat);
+            const workplaceLng = parseFloat(selectedOption.dataset.lng);
+            const workplaceRadius = parseInt(selectedOption.dataset.radius);
+
+            // Calculate distance
+            const distance = calculateDistance(userLat, userLng, workplaceLat, workplaceLng);
+            const inRange = distance <= workplaceRadius;
+
+            // Update badge and button
+            if (inRange) {
+                locationBadge.className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
+                locationBadge.textContent = 'In Range';
+
+                checkinBtn.className =
+                    'w-full py-4 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold text-lg transition-colors';
+                checkinBtn.innerHTML = '<i class="fas fa-star mr-2"></i>Special Check In/Out';
+                checkinBtn.disabled = false;
+                checkinBtn.onclick = performSpecialCheckin;
+            } else {
+                locationBadge.className = 'px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium';
+                locationBadge.textContent = `${Math.round(distance)}m away`;
+
+                checkinBtn.className =
+                    'w-full py-4 bg-red-500 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
+                checkinBtn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Outside Location Range';
+                checkinBtn.disabled = true;
+            }
+        }
+
+        // Handle location selection change
+        document.addEventListener('DOMContentLoaded', function() {
+            const locationSelect = document.getElementById('special-location-select');
+            if (locationSelect) {
+                locationSelect.addEventListener('change', function() {
+                    selectedSpecialLocationId = this.value;
+
+                    if (userLocation) {
+                        updateSpecialLocationStatus(userLocation);
+                    }
+
+                    // Zoom to selected location on map
+                    if (this.value && specialCheckinMap) {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const lat = parseFloat(selectedOption.dataset.lat);
+                        const lng = parseFloat(selectedOption.dataset.lng);
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            specialCheckinMap.setView([lat, lng], 16);
+                        }
+                    }
+                });
+            }
+
+            // Refresh button for special locations
+            const refreshBtn = document.getElementById('refresh-special-locations');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    fetchSpecialLocations();
+                    showSimpleNotification('Refreshing special locations...', 'info');
+                });
+            }
+        });
+
+        // Perform special check-in
+        async function performSpecialCheckin() {
+            if (!userLocation || !selectedSpecialLocationId) {
+                showNotification('Location or workplace not selected', 'error');
+                return;
+            }
+
+            const checkinBtn = document.getElementById('special-checkin-btn');
+            const originalContent = checkinBtn.innerHTML;
+
+            checkinBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+            checkinBtn.disabled = true;
+
+            try {
+                // Get today's special check-ins count first
+                const statusResponse = await fetch(`/api/special-checkin-logs/${getCurrentUserId()}`);
+                const statusData = await statusResponse.json();
+
+                const currentCount = statusData.count || 0;
+
+                if (currentCount >= 4) {
+                    showNotification('Maximum 4 special check-ins/outs reached for today', 'error');
+                    checkinBtn.innerHTML = originalContent;
+                    checkinBtn.disabled = false;
+                    return;
+                }
+
+                // Determine action (alternate between check_in and check_out)
+                const action = (currentCount % 2 === 0) ? 'check_in' : 'check_out';
+
+                const response = await fetch('/api/special-checkin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content') || ''
+                    },
+                    body: JSON.stringify({
+                        user_id: getCurrentUserId(),
+                        workplace_id: selectedSpecialLocationId,
+                        action: action,
+                        latitude: userLocation.coords.latitude,
+                        longitude: userLocation.coords.longitude,
+                        address: `Special ${action === 'check_in' ? 'Check-in' : 'Check-out'}`
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification(result.message, 'success');
+
+                    // Refresh special check-in data
+                    fetchSpecialCheckinLogs();
+                    updateSpecialWorkflowStatus();
+
+                    // Reset button
+                    checkinBtn.innerHTML = originalContent;
+                    updateSpecialLocationStatus(userLocation);
+                } else {
+                    showNotification(result.error || 'Special check-in failed', 'error');
+                    checkinBtn.innerHTML = originalContent;
+                    checkinBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Special check-in error:', error);
+                showNotification('Special check-in failed: ' + error.message, 'error');
+                checkinBtn.innerHTML = originalContent;
+                checkinBtn.disabled = false;
+            }
+        }
+
+        // Fetch today's special check-in logs
+        async function fetchSpecialCheckinLogs(userId = null) {
+            userId = userId || getCurrentUserId();
+
+            try {
+                const response = await fetch(`/api/special-checkin-logs/${userId}`);
+                const data = await response.json();
+
+                const activityContainer = document.getElementById('special-todays-activity');
+                const emptyMessage = document.getElementById('special-activity-empty');
+
+                if (data.logs && data.logs.length > 0) {
+                    if (emptyMessage) emptyMessage.classList.add('hidden');
+
+                    let html = '';
+                    data.logs.forEach((log, index) => {
+                        const isCheckIn = log.action === 'check_in';
+                        const color = isCheckIn ? 'yellow' : 'orange';
+                        const icon = isCheckIn ? 'fa-star' : 'fa-sign-out-alt';
+
+                        html += `
+                    <div class="flex items-center p-3 bg-${color}-50 rounded-lg border border-${color}-200">
+                        <div class="w-10 h-10 bg-${color}-500 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas ${icon} text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-${color}-800">${isCheckIn ? 'Special Check-in' : 'Special Check-out'} #${index + 1}</p>
+                            <p class="text-sm text-${color}-600">${log.location} • ${log.timestamp}</p>
+                        </div>
+                        <div class="text-${color}-600">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                `;
+                    });
+
+                    if (activityContainer) {
+                        activityContainer.innerHTML = html;
+                    }
+                } else {
+                    if (emptyMessage) emptyMessage.classList.remove('hidden');
+                    if (activityContainer) activityContainer.innerHTML = '';
+                }
+
+                // Update workflow status
+                updateSpecialWorkflowStatus(data.count || 0, data.logs);
+
+            } catch (error) {
+                console.error('Failed to fetch special check-in logs:', error);
+            }
+        }
+
+        // Update special workflow status
+        function updateSpecialWorkflowStatus(count = null, logs = null) {
+            const checkinsCount = document.getElementById('special-checkins-count');
+            const lastAction = document.getElementById('special-last-action');
+            const workflowStatus = document.getElementById('special-workflow-status');
+
+            if (count === null) {
+                // Fetch current status
+                fetch(`/api/special-checkin-logs/${getCurrentUserId()}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateSpecialWorkflowStatus(data.count || 0, data.logs);
+                    });
+                return;
+            }
+
+            if (checkinsCount) {
+                checkinsCount.textContent = `${count}/4`;
+            }
+
+            if (lastAction && logs && logs.length > 0) {
+                const latest = logs[logs.length - 1];
+                lastAction.textContent =
+                    `${latest.action === 'check_in' ? 'Check-in' : 'Check-out'} at ${latest.timestamp}`;
+            } else if (lastAction) {
+                lastAction.textContent = 'None';
+            }
+
+            if (workflowStatus) {
+                if (count >= 4) {
+                    workflowStatus.textContent = 'Daily limit reached';
+                } else if (count > 0) {
+                    const nextAction = (count % 2 === 0) ? 'Check-in' : 'Check-out';
+                    workflowStatus.textContent = `Ready for ${nextAction}`;
+                } else {
+                    workflowStatus.textContent = 'Ready';
                 }
             }
         }
@@ -1716,13 +2223,13 @@
                                 const label = actionLabels[log.action] || log.action.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                                 
                                 return `
-                                            <div class="flex items-center space-x-3 py-1">
-                                                <i class="fas ${icon} ${color} w-4"></i>
-                                                <span class="text-sm font-medium ${color}">${label}</span>
-                                                <span class="text-sm text-gray-500">${log.timestamp}</span>
-                                                <span class="text-xs text-gray-400">${log.shift_type ? log.shift_type.toUpperCase() + ' Shift' : 'Regular'}</span>
-                                            </div>
-                                        `;
+                                                    <div class="flex items-center space-x-3 py-1">
+                                                        <i class="fas ${icon} ${color} w-4"></i>
+                                                        <span class="text-sm font-medium ${color}">${label}</span>
+                                                        <span class="text-sm text-gray-500">${log.timestamp}</span>
+                                                        <span class="text-xs text-gray-400">${log.shift_type ? log.shift_type.toUpperCase() + ' Shift' : 'Regular'}</span>
+                                                    </div>
+                                                `;
                             }).join('')}
                         </div>
                     </td>
@@ -5859,8 +6366,8 @@
                         <div class="pt-4 border-t border-gray-200">
                             <div class="flex space-x-3">
                                 ${!isPrimary ? `<button onclick="setPrimaryWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                                                <i class="fas fa-star mr-2"></i>Set as Primary
-                                            </button>` : ''}
+                                                        <i class="fas fa-star mr-2"></i>Set as Primary
+                                                    </button>` : ''}
                                 <button onclick="checkInAtWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                                     <i class="fas fa-map-pin mr-2"></i>Check In Here
                                 </button>
