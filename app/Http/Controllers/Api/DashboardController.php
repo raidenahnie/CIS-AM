@@ -709,4 +709,77 @@ class DashboardController extends Controller
             'workplace_id' => $workplaceId
         ]);
     }
+
+    /**
+     * Get today's special check-in/out logs for a user (up to 4)
+     */
+    public function getSpecialCheckinLogs($userId = null)
+    {
+        if (!$userId) {
+            return response()->json(['error' => 'User ID is required'], 400);
+        }
+        $today = now()->format('Y-m-d');
+        $logs = AttendanceLog::where('user_id', $userId)
+            ->special()
+            ->whereDate('timestamp', $today)
+            ->orderBy('timestamp')
+            ->limit(4)
+            ->get();
+        return response()->json([
+            'logs' => $logs->map(function($log) {
+                return [
+                    'id' => $log->id,
+                    'action' => $log->action,
+                    'timestamp' => $log->timestamp->format('g:i A'),
+                    'location' => $log->address ?? 'Location',
+                ];
+            }),
+            'count' => $logs->count()
+        ]);
+    }
+
+    /**
+     * Perform a special check-in or check-out (up to 4 per day)
+     */
+    public function specialCheckin(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'workplace_id' => 'required|exists:workplaces,id',
+            'action' => 'required|in:check_in,check_out',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'address' => 'nullable|string',
+        ]);
+        $userId = $request->user_id;
+        $workplaceId = $request->workplace_id;
+        $action = $request->action;
+        $today = now()->format('Y-m-d');
+        $count = AttendanceLog::where('user_id', $userId)
+            ->special()
+            ->whereDate('timestamp', $today)
+            ->count();
+        if ($count >= 4) {
+            return response()->json(['error' => 'Maximum of 4 special check-ins/outs reached for today'], 400);
+        }
+        $log = AttendanceLog::create([
+            'user_id' => $userId,
+            'workplace_id' => $workplaceId,
+            'action' => $action,
+            'timestamp' => now(),
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'address' => $request->address,
+            'type' => 'special',
+        ]);
+        return response()->json([
+            'message' => 'Special check-in/out recorded',
+            'log' => [
+                'id' => $log->id,
+                'action' => $log->action,
+                'timestamp' => $log->timestamp->format('g:i A'),
+                'location' => $log->address ?? 'Location',
+            ]
+        ]);
+    }
 }

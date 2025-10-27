@@ -40,6 +40,8 @@ Route::prefix('api')->middleware(['auth', 'authorize.user'])->group(function () 
         $code = \App\Models\SystemSetting::get('manual_entry_code', 'DEPED2025');
         return response()->json(['code' => $code]);
     });
+    Route::get('/special-checkin-logs/{userId}', [DashboardController::class, 'getSpecialCheckinLogs']);
+    Route::post('/special-checkin', [DashboardController::class, 'specialCheckin']);
 });
 
 // Protected

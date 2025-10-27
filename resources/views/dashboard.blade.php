@@ -33,9 +33,26 @@
 
         /* Shake animation for invalid code */
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-            20%, 40%, 60%, 80% { transform: translateX(10px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-10px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(10px);
+            }
         }
     </style>
 </head>
@@ -43,13 +60,16 @@
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 min-h-screen flex">
 
     <!-- Enhanced Sidebar -->
-    <aside class="w-64 lg:w-72 bg-white shadow-xl h-screen fixed border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[60]" id="sidebar">
+    <aside
+        class="w-64 lg:w-72 bg-white shadow-xl h-screen fixed border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[60]"
+        id="sidebar">
         <div class="p-4 lg:p-6 border-b border-gray-100">
             <div class="text-indigo-600 text-2xl lg:text-3xl font-bold flex items-center">
                 <i class="fas fa-map-marker-alt mr-2 lg:mr-3"></i>
                 CISAM
             </div>
-            <p class="text-gray-500 text-xs lg:text-sm mt-1">Curriculum Implementation System - Attendance Monitoring</p>
+            <p class="text-gray-500 text-xs lg:text-sm mt-1">Curriculum Implementation System - Attendance Monitoring
+            </p>
         </div>
         <nav class="mt-6 lg:mt-8 space-y-1 px-3 lg:px-4">
             <a href="javascript:void(0)" class="sidebar-link active" data-section="dashboard">
@@ -64,6 +84,10 @@
                 <i class="fas fa-map-pin w-5"></i>
                 <span>Check In/Out</span>
             </a>
+            <a href="javascript:void(0)" class="sidebar-link" data-section="special-checkin">
+                <i class="fas fa-star w-5"></i>
+                <span>Special Check In/Out</span>
+            </a>
             <a href="javascript:void(0)" class="sidebar-link" data-section="attendance-history">
                 <i class="fas fa-history w-5"></i>
                 <span>My Attendance History</span>
@@ -75,7 +99,8 @@
             <div class="bg-green-50 border border-green-200 rounded-lg p-2 lg:p-3">
                 <div class="flex items-center">
                     <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                    <span class="text-green-700 text-xs lg:text-sm font-medium" id="location-status">Location Active</span>
+                    <span class="text-green-700 text-xs lg:text-sm font-medium" id="location-status">Location
+                        Active</span>
                 </div>
             </div>
         </div>
@@ -92,12 +117,14 @@
                 </button>
                 <div class="flex-1">
                     <h1 class="text-xl lg:text-3xl font-bold text-gray-800" id="page-title">My Dashboard</h1>
-                    <p class="text-xs lg:text-base text-gray-600 mt-1 hidden sm:block" id="page-subtitle">Welcome to your attendance management portal</p>
+                    <p class="text-xs lg:text-base text-gray-600 mt-1 hidden sm:block" id="page-subtitle">Welcome to
+                        your attendance management portal</p>
                 </div>
                 <div class="flex items-center space-x-2 lg:space-x-4">
                     <div class="text-right hidden md:block">
                         <p class="text-xs lg:text-sm text-gray-500">Welcome back,</p>
-                        <p class="text-sm lg:text-base font-semibold text-gray-800">{{ Auth::user()->name ?? 'User' }}</p>
+                        <p class="text-sm lg:text-base font-semibold text-gray-800">{{ Auth::user()->name ?? 'User' }}
+                        </p>
                     </div>
                     <div
                         class="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm lg:text-base">
@@ -136,7 +163,8 @@
                                 <p class="text-sm lg:text-base text-gray-600 font-medium">Days Present This Month</p>
                                 <p class="text-xs lg:text-sm text-green-600 mt-1" id="attendance-rate">Loading...</p>
                             </div>
-                            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <div
+                                class="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-calendar-check text-green-600 text-lg lg:text-xl"></i>
                             </div>
                         </div>
@@ -152,7 +180,8 @@
                                 <p class="text-sm lg:text-base text-gray-600 font-medium">Average Check-in Time</p>
                                 <p class="text-xs lg:text-sm text-blue-600 mt-1" id="checkin-trend">Loading...</p>
                             </div>
-                            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <div
+                                class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-clock text-blue-600 text-lg lg:text-xl"></i>
                             </div>
                         </div>
@@ -168,7 +197,8 @@
                                 <p class="text-sm lg:text-base text-gray-600 font-medium">Today's Work Hours</p>
                                 <p class="text-xs lg:text-sm text-indigo-600 mt-1" id="work-status">Loading...</p>
                             </div>
-                            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <div
+                                class="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-full flex items-center justify-center">
                                 <i class="fas fa-hourglass-half text-indigo-600 text-lg lg:text-xl"></i>
                             </div>
                         </div>
@@ -188,6 +218,21 @@
                             class="w-full px-6 py-3 bg-white text-green-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
                             onclick="switchToSection('gps-checkin')">
                             Go to Check In/Out
+                        </button>
+                    </div>
+
+                    <div
+                        class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-star text-3xl mr-4"></i>
+                            <h2 class="text-xl font-bold">Special Check In/Out</h2>
+                        </div>
+                        <p class="mb-6 opacity-90">Up to 4 check-ins/outs per day at your assigned locations. No lunch
+                            break required.</p>
+                        <button
+                            class="w-full px-6 py-3 bg-white text-yellow-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
+                            onclick="switchToSection('special-checkin')">
+                            Go to Special Check In/Out
                         </button>
                     </div>
 
@@ -218,6 +263,166 @@
                             <div class="text-center">
                                 <i class="fas fa-spinner fa-spin text-2xl mb-3 text-gray-300"></i>
                                 <p>Loading schedule...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Special Check-in Section -->
+            <div id="special-checkin-section" class="section-content hidden">
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- Special Check-in Interface -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl shadow-lg p-8">
+                            <div class="text-center mb-6">
+                                <div
+                                    class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-star text-3xl text-yellow-600"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Special Check In/Out</h2>
+                                <p class="text-gray-600">Check in/out up to 4 times per day at your assigned locations.
+                                    No lunch break required.</p>
+                            </div>
+
+                            <!-- Location Status -->
+                            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Location Status:</span>
+                                    <div class="flex items-center space-x-2">
+                                        <span
+                                            class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium"
+                                            id="special-location-badge">
+                                            Checking...
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-600 mb-2" id="special-current-location">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Getting your location...
+                                </div>
+                            </div>
+
+                            <!-- Special Location Selection -->
+                            <div class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Assigned Special Locations:</span>
+                                    <button id="refresh-special-locations"
+                                        class="text-xs text-yellow-600 hover:text-yellow-800">
+                                        <i class="fas fa-sync-alt mr-1"></i>Refresh
+                                    </button>
+                                </div>
+                                <select id="special-location-select" class="w-full mt-2 p-2 border rounded text-sm">
+                                    <option value="">Loading special locations...</option>
+                                </select>
+                                <div class="mt-2 text-xs text-yellow-700" id="special-location-info">
+                                    Select a location to check in/out
+                                </div>
+                            </div>
+
+                            <!-- Special Check-in Button -->
+                            <button id="special-checkin-btn"
+                                class="w-full py-4 bg-gray-400 text-white rounded-lg font-semibold text-lg cursor-not-allowed"
+                                disabled>
+                                <i class="fas fa-location-crosshairs mr-2"></i>
+                                Waiting for Location...
+                            </button>
+
+                            <!-- Special Check-in Info -->
+                            <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <h4 class="text-sm font-medium text-blue-800 mb-2 flex items-center">
+                                    <i class="fas fa-info-circle mr-2"></i>About Special Check-in
+                                </h4>
+                                <ul class="text-xs text-blue-700 space-y-1">
+                                    <li>• Up to 4 check-ins/outs per day</li>
+                                    <li>• No lunch break required</li>
+                                    <li>• Must be within assigned location area</li>
+                                    <li>• Perfect for field work or multiple locations</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Today's Special Activity -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                <i class="fas fa-history text-yellow-600 mr-2"></i>
+                                Today's Special Activity
+                            </h3>
+                            <div class="space-y-3" id="special-todays-activity">
+                                <div class="flex items-center justify-center p-8 text-gray-500"
+                                    id="special-activity-empty">
+                                    <div class="text-center">
+                                        <i class="fas fa-calendar-day text-3xl mb-3 text-gray-300"></i>
+                                        <p>No special activity recorded today</p>
+                                        <p class="text-sm text-gray-400 mt-1">Check in to start tracking</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Location Map -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold flex items-center">
+                                <i class="fas fa-map text-yellow-600 mr-2"></i>
+                                Special Location Verification
+                            </h3>
+                            <button onclick="initializeSpecialCheckinMap()"
+                                class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded text-sm hover:bg-yellow-200 transition-colors">
+                                <i class="fas fa-redo mr-1"></i>Reload Map
+                            </button>
+                        </div>
+                        <div id="special-checkin-map"
+                            class="w-full h-96 bg-gray-200 rounded-lg relative overflow-hidden">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-map text-3xl text-gray-400 mb-3"></i>
+                                    <p class="text-gray-500 mb-2">Map will load when you visit this section</p>
+                                    <button onclick="initializeSpecialCheckinMap()"
+                                        class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm">
+                                        <i class="fas fa-play mr-2"></i>Load Map Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <h4 class="text-sm font-medium text-gray-700 mb-2">Map Legend:</h4>
+                            <div class="flex flex-wrap gap-4 text-xs">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+                                    <span>Your Location</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+                                    <span>Special Location</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 border-2 border-dashed border-yellow-500 rounded-full mr-1">
+                                    </div>
+                                    <span>Geofence Boundary</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Special Workflow Status -->
+                        <div class="mt-6 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                            <h4 class="text-sm font-medium text-yellow-800 mb-3 flex items-center">
+                                <i class="fas fa-tasks mr-2"></i>Special Workflow Status
+                            </h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-700">Today's Check-ins:</span>
+                                    <span class="font-medium text-yellow-800" id="special-checkins-count">0/4</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-700">Last Action:</span>
+                                    <span class="font-medium text-yellow-800" id="special-last-action">None</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-700">Status:</span>
+                                    <span class="font-medium text-yellow-800"
+                                        id="special-workflow-status">Ready</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -422,91 +627,93 @@
 
                                 <!-- Testing Mode Panel (Admin Only) -->
                                 @if (Auth::user()->isAdmin())
-                                <div id="testing-mode-panel"
-                                    class="mt-3 p-4 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-lg shadow-sm">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <h4 class="text-sm font-semibold text-orange-900 flex items-center">
-                                            <i class="fas fa-flask mr-2"></i>Testing Mode (Admin Only)
-                                        </h4>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" id="testing-mode-toggle" class="sr-only peer"
-                                                onchange="toggleTestingMode()">
-                                            <div
-                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500">
+                                    <div id="testing-mode-panel"
+                                        class="mt-3 p-4 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-lg shadow-sm">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h4 class="text-sm font-semibold text-orange-900 flex items-center">
+                                                <i class="fas fa-flask mr-2"></i>Testing Mode (Admin Only)
+                                            </h4>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" id="testing-mode-toggle" class="sr-only peer"
+                                                    onchange="toggleTestingMode()">
+                                                <div
+                                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500">
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        <div id="testing-mode-content" class="hidden">
+                                            <p class="text-xs text-orange-800 mb-3">
+                                                Testing mode allows simulated GPS locations for office demonstrations
+                                                and
+                                                testing.
+                                            </p>
+
+                                            <!-- Preset Locations -->
+                                            <div class="mb-4">
+                                                <h5 class="text-xs font-medium text-orange-800 mb-2">Quick Preset
+                                                    Locations:</h5>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <button
+                                                        onclick="setPresetLocation(14.2784642, 120.8676613, 'DepEd Cavite')"
+                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                                        DepEd Cavite
+                                                    </button>
+                                                    <button
+                                                        onclick="setPresetLocation(14.3971478, 120.8530243, 'Tanza National Comprehensive HS')"
+                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                                        Tanza National Comprehensive HS
+                                                    </button>
+                                                    <button
+                                                        onclick="setPresetLocation(14.3186223, 120.8591034, 'Tanza National Trade School')"
+                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                                        Tanza National Trade School
+                                                    </button>
+                                                    <button
+                                                        onclick="setPresetLocation(14.287075, 120.8687556, 'Trece Martires City Elementary')"
+                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
+                                                        Trece Martires City Elementary
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </label>
+
+                                            <!-- Custom Location Input -->
+                                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                                <div>
+                                                    <label
+                                                        class="block text-xs font-medium text-orange-800 mb-1">Latitude</label>
+                                                    <input type="number" id="admin-test-lat" step="any"
+                                                        placeholder="14.2785"
+                                                        class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-xs font-medium text-orange-800 mb-1">Longitude</label>
+                                                    <input type="number" id="admin-test-lng" step="any"
+                                                        placeholder="120.8677"
+                                                        class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
+                                                </div>
+                                            </div>
+
+                                            <div class="flex gap-2">
+                                                <button onclick="setCustomTestLocation()"
+                                                    class="flex-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
+                                                    Set Custom Location
+                                                </button>
+                                                <button onclick="clearTestLocation()"
+                                                    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
+                                                    Clear Test
+                                                </button>
+                                            </div>
+
+                                            <div class="mt-2 text-xs text-orange-700 bg-orange-100 p-2 rounded">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                <strong>Status:</strong> <span id="testing-mode-status">Ready to set
+                                                    test
+                                                    location</span>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <div id="testing-mode-content" class="hidden">
-                                        <p class="text-xs text-orange-800 mb-3">
-                                            Testing mode allows simulated GPS locations for office demonstrations and
-                                            testing.
-                                        </p>
-
-                                        <!-- Preset Locations -->
-                                        <div class="mb-4">
-                                            <h5 class="text-xs font-medium text-orange-800 mb-2">Quick Preset
-                                                Locations:</h5>
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                <button
-                                                    onclick="setPresetLocation(14.2784642, 120.8676613, 'DepEd Cavite')"
-                                                    class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                    DepEd Cavite
-                                                </button>
-                                                <button
-                                                    onclick="setPresetLocation(14.3971478, 120.8530243, 'Tanza National Comprehensive HS')"
-                                                    class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                    Tanza National Comprehensive HS
-                                                </button>
-                                                <button
-                                                    onclick="setPresetLocation(14.3186223, 120.8591034, 'Tanza National Trade School')"
-                                                    class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                    Tanza National Trade School
-                                                </button>
-                                                <button
-                                                    onclick="setPresetLocation(14.287075, 120.8687556, 'Trece Martires City Elementary')"
-                                                    class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                    Trece Martires City Elementary
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Custom Location Input -->
-                                        <div class="grid grid-cols-2 gap-2 mb-3">
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-medium text-orange-800 mb-1">Latitude</label>
-                                                <input type="number" id="admin-test-lat" step="any"
-                                                    placeholder="14.2785"
-                                                    class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-medium text-orange-800 mb-1">Longitude</label>
-                                                <input type="number" id="admin-test-lng" step="any"
-                                                    placeholder="120.8677"
-                                                    class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
-                                            </div>
-                                        </div>
-
-                                        <div class="flex gap-2">
-                                            <button onclick="setCustomTestLocation()"
-                                                class="flex-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
-                                                Set Custom Location
-                                            </button>
-                                            <button onclick="clearTestLocation()"
-                                                class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
-                                                Clear Test
-                                            </button>
-                                        </div>
-
-                                        <div class="mt-2 text-xs text-orange-700 bg-orange-100 p-2 rounded">
-                                            <i class="fas fa-info-circle mr-1"></i>
-                                            <strong>Status:</strong> <span id="testing-mode-status">Ready to set test
-                                                location</span>
-                                        </div>
-                                    </div>
-                                </div>
                                 @endif
 
                             </div> <!-- Geofence Status -->
@@ -605,7 +812,7 @@
                             <i class="fas fa-history text-indigo-600 mr-2 sm:mr-3"></i>
                             My Attendance History
                         </h2>
-                        
+
                         <!-- Controls - Stack on mobile -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <!-- View Toggle -->
@@ -624,11 +831,12 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <!-- Records per page and filter - responsive -->
                             <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                                 <div class="flex items-center space-x-2">
-                                    <label for="records-per-page" class="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Per page:</label>
+                                    <label for="records-per-page"
+                                        class="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Per page:</label>
                                     <select id="records-per-page"
                                         class="px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500"
                                         onchange="changeRecordsPerPage(this.value)">
@@ -697,25 +905,33 @@
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Date</th>
-                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Action</th>
-                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Time</th>
-                                            <th class="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Shift Type</th>
-                                            <th class="hidden lg:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="hidden lg:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Location</th>
-                                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th
+                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Status</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200" id="attendance-history-tbody">
                                         <tr>
-                                            <td colspan="6" class="px-3 sm:px-6 py-8 sm:py-12 text-center text-gray-500">
+                                            <td colspan="6"
+                                                class="px-3 sm:px-6 py-8 sm:py-12 text-center text-gray-500">
                                                 <div class="flex flex-col items-center">
-                                                    <i class="fas fa-spinner fa-spin text-xl sm:text-2xl mb-2 sm:mb-3"></i>
+                                                    <i
+                                                        class="fas fa-spinner fa-spin text-xl sm:text-2xl mb-2 sm:mb-3"></i>
                                                     <p class="text-xs sm:text-sm">Loading attendance history...</p>
                                                 </div>
                                             </td>
@@ -727,7 +943,8 @@
                     </div>
 
                     <!-- Pagination - Responsive -->
-                    <div class="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3" id="attendance-pagination">
+                    <div class="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3"
+                        id="attendance-pagination">
                         <div class="text-xs sm:text-sm text-gray-500 text-center sm:text-left" id="pagination-info">
                             No records to show
                         </div>
@@ -867,6 +1084,39 @@
                 opacity: 0;
             }
         }
+
+        /* Special Check-in Styles */
+        .special-location-marker {
+            z-index: 1000;
+        }
+
+        .special-geofence-circle {
+            stroke-dasharray: 5, 5;
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -100;
+            }
+        }
+
+        /* Yellow theme for special check-in */
+        .bg-special-gradient {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .text-special {
+            color: #d97706;
+        }
+
+        .bg-special-light {
+            background-color: #fef3c7;
+        }
+
+        .border-special {
+            border-color: #f59e0b;
+        }
     </style>
 
     <script>
@@ -886,11 +1136,15 @@
             });
 
             // Show selected section
-            const targetSection = document.getElementById(sectionName + '-section');
+            const sectionId = sectionName + '-section';
+            const targetSection = document.getElementById(sectionId);
             if (targetSection) {
                 targetSection.classList.remove('hidden');
+                console.log('Switched to section:', sectionId);
+            } else {
+                console.warn('Section not found:', sectionId);
             }
-            
+
             // Close sidebar on mobile ONLY if it's currently open
             if (window.innerWidth < 1024) {
                 const sidebar = document.getElementById('sidebar');
@@ -914,6 +1168,7 @@
                 'dashboard': ['My Dashboard', 'Welcome to your attendance management portal'],
                 'my-workplace': ['My Workplace', 'View and select your assigned workplace locations'],
                 'gps-checkin': ['Check In/Out', 'GPS location verification for attendance tracking'],
+                'special-checkin': ['Special Check In/Out', 'Up to 4 check-ins/outs per day at assigned locations'],
                 'attendance-history': ['My Attendance History', 'View your detailed attendance records and summaries']
             };
 
@@ -953,6 +1208,11 @@
                 }, 100); // Small delay to ensure DOM is ready
             }
 
+            // Removed special check-in/out logic
+            // if (sectionName === 'special-checkin') {
+            //     // Special Check In/Out section logic
+            // }
+
             // Refresh other sections as needed
             if (sectionName === 'dashboard') {
                 fetchUserStats();
@@ -961,6 +1221,7 @@
                 fetchCurrentStatus();
             }
         }
+        
 
         // API Functions to fetch real data
         async function fetchUserStats(userId = null) {
@@ -983,7 +1244,7 @@
                 if (attendanceRateEl) {
                     const daysPresent = data.days_present_this_month || 0;
                     const totalWorkDays = data.total_work_days_this_month || 0;
-                    
+
                     if (totalWorkDays > 0) {
                         const percentage = Math.round((daysPresent / totalWorkDays) * 100);
                         attendanceRateEl.textContent = `${percentage}% (${daysPresent} of ${totalWorkDays} work days)`;
@@ -1042,11 +1303,11 @@
                     if (logsResponse.ok) {
                         logsData = await logsResponse.json();
                         console.log('Raw logs fetched from API:', logsData);
-                        
+
                         // Remove any potential duplicates by creating a unique key
                         const uniqueLogs = [];
                         const seenKeys = new Set();
-                        
+
                         logsData.forEach(log => {
                             // Create unique key based on date, time, and action
                             const uniqueKey = `${log.date_raw}-${log.timestamp}-${log.action}`;
@@ -1057,10 +1318,10 @@
                                 console.warn('Duplicate log detected and removed:', log);
                             }
                         });
-                        
+
                         logsData = uniqueLogs;
                         console.log('Deduplicated logs:', logsData);
-                        
+
                         // Debug: Check for check-out logs
                         const checkOutLogs = logsData.filter(log => log.action === 'check_out');
                         console.log('Check-out logs found:', checkOutLogs);
@@ -1312,11 +1573,11 @@
             let dailyRows = [];
             sortedDates.forEach(dateKey => {
                 let dateLogs = logsByDate[dateKey];
-                
+
                 // Remove duplicates within the same date
                 const uniqueLogs = [];
                 const seenKeys = new Set();
-                
+
                 dateLogs.forEach(log => {
                     const uniqueKey = `${log.action}-${log.timestamp}`;
                     if (!seenKeys.has(uniqueKey)) {
@@ -1326,10 +1587,10 @@
                         console.warn('Duplicate log in display detected and removed:', log);
                     }
                 });
-                
+
                 dateLogs = uniqueLogs;
                 console.log(`Date ${dateKey} has ${dateLogs.length} unique logs:`, dateLogs);
-                
+
                 // Sort logs by timestamp within each date
                 dateLogs.sort((a, b) => {
                     const timeA = new Date('1970/01/01 ' + (a.timestamp || '00:00')).getTime();
@@ -1337,13 +1598,18 @@
                     return timeA - timeB;
                 });
 
-                const displayDate = dateKey === new Date().toISOString().split('T')[0] ? 'Today' : 
-                    new Date(dateKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const displayDate = dateKey === new Date().toISOString().split('T')[0] ? 'Today' :
+                    new Date(dateKey).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
 
                 // Create summary for this date
                 const checkIn = dateLogs.find(log => log.action === 'check_in');
                 const checkOut = dateLogs.find(log => log.action === 'check_out');
-                const breakStart = dateLogs.find(log => log.action === 'break_start' || log.action === 'start_lunch');
+                const breakStart = dateLogs.find(log => log.action === 'break_start' || log.action ===
+                    'start_lunch');
                 const breakEnd = dateLogs.find(log => log.action === 'break_end' || log.action === 'end_lunch');
 
                 // Calculate total hours for this date
@@ -1401,13 +1667,13 @@
             paginatedDays.forEach((dayData, index) => {
                 const rowId = `day-row-${dayData.dateKey}`;
                 const detailsId = `day-details-${dayData.dateKey}`;
-                
+
                 // Main day summary row
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50 cursor-pointer border-b border-gray-100';
                 row.id = rowId;
                 row.onclick = () => toggleDayDetails(detailsId, rowId);
-                
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         <div class="flex items-center">
@@ -1450,13 +1716,13 @@
                                 const label = actionLabels[log.action] || log.action.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                                 
                                 return `
-                                    <div class="flex items-center space-x-3 py-1">
-                                        <i class="fas ${icon} ${color} w-4"></i>
-                                        <span class="text-sm font-medium ${color}">${label}</span>
-                                        <span class="text-sm text-gray-500">${log.timestamp}</span>
-                                        <span class="text-xs text-gray-400">${log.shift_type ? log.shift_type.toUpperCase() + ' Shift' : 'Regular'}</span>
-                                    </div>
-                                `;
+                                            <div class="flex items-center space-x-3 py-1">
+                                                <i class="fas ${icon} ${color} w-4"></i>
+                                                <span class="text-sm font-medium ${color}">${label}</span>
+                                                <span class="text-sm text-gray-500">${log.timestamp}</span>
+                                                <span class="text-xs text-gray-400">${log.shift_type ? log.shift_type.toUpperCase() + ' Shift' : 'Regular'}</span>
+                                            </div>
+                                        `;
                             }).join('')}
                         </div>
                     </td>
@@ -1488,7 +1754,7 @@
         function toggleDayDetails(detailsId, rowId) {
             const detailsRow = document.getElementById(detailsId);
             const chevron = document.getElementById(`${rowId}-chevron`);
-            
+
             if (detailsRow.classList.contains('hidden')) {
                 detailsRow.classList.remove('hidden');
                 chevron.classList.add('rotate-90');
@@ -1507,10 +1773,10 @@
             paginatedData.forEach(attendance => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
-                
+
                 // Calculate proper work hours from logs
                 const workHours = calculateWorkHours(attendance);
-                
+
                 // Get actual check-out time from logs if available
                 let checkOutDisplay = attendance.check_out || '--';
                 if (attendance.logs && attendance.logs.length > 0) {
@@ -1524,7 +1790,7 @@
                 } else if (attendance.check_out === 'Still working') {
                     checkOutDisplay = '<span class="text-blue-600 font-medium">Still working</span>';
                 }
-                
+
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         ${attendance.date_raw === new Date().toISOString().split('T')[0] ? 'Today' : attendance.date}
@@ -1629,7 +1895,8 @@
             } else if (checkIn && !checkOut) {
                 // Still working
                 const now = new Date();
-                const currentTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+                const currentTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now
+                    .getMinutes());
 
                 if (breakStart && !breakEnd) {
                     // On lunch break
@@ -1781,21 +2048,21 @@
 
             // Get current week boundaries (Monday to Sunday) in local timezone
             const today = new Date();
-            
+
             // Get local day of week (0 = Sunday, 1 = Monday, etc.)
             const currentDay = today.getDay();
-            
+
             // Calculate Monday of this week in local time
             const monday = new Date(today);
             const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // Sunday = 6 days from Monday
             monday.setDate(today.getDate() - daysFromMonday);
             monday.setHours(0, 0, 0, 0);
-            
+
             // Calculate Friday of this week (work week end)
             const friday = new Date(monday);
             friday.setDate(monday.getDate() + 4); // Monday + 4 days = Friday
             friday.setHours(23, 59, 59, 999);
-            
+
             // Calculate Sunday for data filtering purposes
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
@@ -1806,7 +2073,7 @@
             const mondayStr = `${monthNames[monday.getMonth()]} ${monday.getDate()}`;
             const fridayStr = `${monthNames[friday.getMonth()]} ${friday.getDate()}`;
             const dateRangeText = `${mondayStr} - ${fridayStr}`;
-            
+
             // Update date range display
             if (weeklyDateRange) weeklyDateRange.textContent = dateRangeText;
 
@@ -1831,8 +2098,10 @@
                     if (record.logs && record.logs.length > 0) {
                         const checkIn = record.logs.find(log => log.action === 'check_in');
                         const checkOut = record.logs.find(log => log.action === 'check_out');
-                        const breakStart = record.logs.find(log => log.action === 'break_start' || log.action === 'start_lunch');
-                        const breakEnd = record.logs.find(log => log.action === 'break_end' || log.action === 'end_lunch');
+                        const breakStart = record.logs.find(log => log.action === 'break_start' || log.action ===
+                            'start_lunch');
+                        const breakEnd = record.logs.find(log => log.action === 'break_end' || log.action ===
+                            'end_lunch');
 
                         if (checkIn) {
                             workDays++;
@@ -1890,10 +2159,14 @@
                 // Calculate how many work days have passed this week (Monday to today) - GMT+8 timezone
                 const today_calc = new Date();
                 const currentDayOfWeek_calc = today_calc.getDay(); // 0 = Sunday, 1 = Monday, etc.
-                
-                console.log('Today is:', today_calc.toString(), 'Local date:', today_calc.toDateString(), 'Day of week:', currentDayOfWeek_calc);
-                console.log('GMT+8 time:', new Intl.DateTimeFormat('en-US', {timeZone: 'Asia/Manila', dateStyle: 'full'}).format(today_calc));
-                
+
+                console.log('Today is:', today_calc.toString(), 'Local date:', today_calc.toDateString(), 'Day of week:',
+                    currentDayOfWeek_calc);
+                console.log('GMT+8 time:', new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Asia/Manila',
+                    dateStyle: 'full'
+                }).format(today_calc));
+
                 // Calculate work days elapsed (Mon-Fri only)
                 let workDaysElapsed;
                 if (currentDayOfWeek_calc === 0) { // Sunday
@@ -1904,7 +2177,7 @@
                     // Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5
                     workDaysElapsed = currentDayOfWeek_calc; // This correctly counts weekdays from Monday
                 }
-                
+
                 console.log('Work days elapsed this week (Mon-Fri):', workDaysElapsed);
                 console.log('Current week range:', dateRangeText);
                 console.log('Days present in database:', workDays, 'out of', workDaysElapsed, 'work days');
@@ -1918,8 +2191,10 @@
                 if (weeklyAttendance) weeklyAttendance.textContent = attendanceRate + '%';
                 if (weeklyAvgCheckin) weeklyAvgCheckin.textContent = avgCheckinDisplay;
                 if (weeklyDaysTotal) weeklyDaysTotal.textContent = `Out of ${totalWorkDays}`;
-                if (weeklyCheckinTrend) weeklyCheckinTrend.textContent = totalWeeklyHours >= 32 ? 'Good hours' : 'Needs improvement';
-                if (weeklyPerformance) weeklyPerformance.textContent = totalWeeklyHours > 0 ? 'Active week!' : 'Start tracking!';
+                if (weeklyCheckinTrend) weeklyCheckinTrend.textContent = totalWeeklyHours >= 32 ? 'Good hours' :
+                    'Needs improvement';
+                if (weeklyPerformance) weeklyPerformance.textContent = totalWeeklyHours > 0 ? 'Active week!' :
+                    'Start tracking!';
             } else {
                 // Calculate work days elapsed even when no data
                 const today = new Date();
@@ -1938,15 +2213,15 @@
                 const currentDay_empty = today_date.getDay();
                 const monday_empty = new Date(today_date);
                 monday_empty.setDate(today_date.getDate() - (currentDay_empty === 0 ? 6 : currentDay_empty - 1));
-                
+
                 const sunday_empty = new Date(monday_empty);
                 sunday_empty.setDate(monday_empty.getDate() + 6);
-                
+
                 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                 const mondayStr_empty = `${monthNames[monday_empty.getMonth()]} ${monday_empty.getDate()}`;
                 const sundayStr_empty = `${monthNames[sunday_empty.getMonth()]} ${sunday_empty.getDate()}`;
                 const dateRangeText_empty = `${mondayStr_empty} - ${sundayStr_empty}`;
-                
+
                 if (weeklyDateRange) weeklyDateRange.textContent = dateRangeText_empty;
 
                 // Empty states
@@ -2057,12 +2332,12 @@
 
         async function fetchUserWorkplace(userId = null) {
             userId = userId || getCurrentUserId();
-            
+
             if (!userId) {
                 console.error('No valid user ID available for workplace fetch');
                 return null;
             }
-            
+
             try {
                 const response = await fetch(`/api/user-workplace/${userId}`);
                 if (response.ok) {
@@ -2094,17 +2369,17 @@
                     console.log('No workplace configured in database, clearing any cached data');
                     // Clear workplace data when user has no workplace configured
                     workLocations.mainOffice = null;
-                    
+
                     // Clear user-specific localStorage
                     const currentUserId = getCurrentUserId();
                     if (currentUserId) {
                         const userSpecificKey = `${STORAGE_KEYS.workplace}_user_${currentUserId}`;
                         localStorage.removeItem(userSpecificKey);
                     }
-                    
+
                     // Also clear old non-user-specific key for cleanup
                     localStorage.removeItem(STORAGE_KEYS.workplace);
-                    
+
                     updateWorkplaceDisplay();
                 }
             } catch (error) {
@@ -2684,7 +2959,7 @@
                     steps.forEach((step, index) => {
                         const isCompleted = index < statusData.current_logs_count;
                         const isCurrent = index === statusData.current_logs_count && !statusData
-                        .completed_today;
+                            .completed_today;
                         const isPending = index > statusData.current_logs_count;
 
                         let statusText = '';
@@ -3098,7 +3373,7 @@
                             addRecommendation('Enable location permission in your browser settings');
                             showErrorDetails(
                                 'Location permission was denied. Please enable it in your browser settings.'
-                                );
+                            );
                         } else {
                             updateDiagnosticResult('permission-status', 'warning',
                                 'Location permission not yet requested');
@@ -3695,7 +3970,7 @@
             `;
 
             document.body.appendChild(verifyModal);
-            
+
             // Focus on the code input
             setTimeout(() => {
                 document.getElementById('admin-access-code')?.focus();
@@ -3706,13 +3981,13 @@
             const codeInput = document.getElementById('admin-access-code');
             const errorMsg = document.getElementById('code-error');
             const enteredCode = codeInput.value.trim();
-            
+
             // Fetch the current code from backend
             fetch('/api/manual-entry-code')
                 .then(response => response.json())
                 .then(data => {
                     const correctCode = data.code || 'DEPED2025';
-                    
+
                     if (enteredCode === correctCode) {
                         // Code is correct, close verification modal and show location entry
                         document.body.removeChild(modal);
@@ -3723,7 +3998,7 @@
                         codeInput.value = '';
                         codeInput.focus();
                         codeInput.classList.add('border-red-500');
-                        
+
                         // Shake animation
                         codeInput.style.animation = 'shake 0.5s';
                         setTimeout(() => {
@@ -4282,7 +4557,7 @@
                 console.log('No valid user ID, skipping localStorage workplace load');
                 return false;
             }
-            
+
             const userSpecificKey = `${STORAGE_KEYS.workplace}_user_${currentUserId}`;
             const saved = localStorage.getItem(userSpecificKey);
             if (saved) {
@@ -4306,7 +4581,7 @@
                 console.log('No valid user ID, skipping workplace save to localStorage');
                 return false;
             }
-            
+
             try {
                 const userSpecificKey = `${STORAGE_KEYS.workplace}_user_${currentUserId}`;
                 localStorage.setItem(userSpecificKey, JSON.stringify(workplace));
@@ -5584,8 +5859,8 @@
                         <div class="pt-4 border-t border-gray-200">
                             <div class="flex space-x-3">
                                 ${!isPrimary ? `<button onclick="setPrimaryWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                                        <i class="fas fa-star mr-2"></i>Set as Primary
-                                    </button>` : ''}
+                                                <i class="fas fa-star mr-2"></i>Set as Primary
+                                            </button>` : ''}
                                 <button onclick="checkInAtWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                                     <i class="fas fa-map-pin mr-2"></i>Check In Here
                                 </button>
@@ -5909,7 +6184,7 @@
             fetchUserWorkplaces();
         }
     </script>
-    
+
     <script>
         // Simple script to get user's current location and log it
         if ("geolocation" in navigator) {

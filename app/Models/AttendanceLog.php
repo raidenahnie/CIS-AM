@@ -26,8 +26,16 @@ class AttendanceLog extends Model
         'ip_address',
         'user_agent',
         'notes',
-        'metadata'
+        'metadata',
+        'type' // 'regular' or 'special'
     ];
+    /**
+     * Scope for special check-in/out logs
+     */
+    public function scopeSpecial($query)
+    {
+        return $query->where('type', 'special');
+    }
 
     protected $casts = [
         'timestamp' => 'datetime',

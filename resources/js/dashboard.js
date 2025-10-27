@@ -393,3 +393,4 @@ window.focusOnEmployee = function(employeeId) {
 document.addEventListener('DOMContentLoaded', function() {
     window.dashboardManager = new DashboardManager();
 });
+
