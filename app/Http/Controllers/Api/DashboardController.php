@@ -723,8 +723,12 @@ class DashboardController extends Controller
             ->special()
             ->whereDate('timestamp', $today)
             ->orderBy('timestamp')
-            ->limit(4)
+            ->limit(8) // Changed from 4 to 8 to allow 4 pairs
             ->get();
+        
+        // Count unique locations (check-in/out pairs)
+        $uniqueLocations = $logs->pluck('workplace_id')->unique()->count();
+        
         return response()->json([
             'logs' => $logs->map(function($log) {
                 return [
@@ -732,15 +736,18 @@ class DashboardController extends Controller
                     'action' => $log->action,
                     'timestamp' => $log->timestamp->format('g:i A'),
                     'location' => $log->address ?? 'Location',
+                    'workplace_id' => $log->workplace_id,
                 ];
             }),
-            'count' => $logs->count()
+            'count' => $logs->count(),
+            'pairs_count' => floor($logs->count() / 2), // Number of complete pairs
+            'unique_locations' => $uniqueLocations
         ]);
     }
 
     /**
-     * Perform a special check-in or check-out (up to 4 per day)
-     */
+    * Perform a special check-in or check-out (up to 4 pairs = 8 actions)
+    */
     public function specialCheckin(Request $request)
     {
         $request->validate([
@@ -751,35 +758,107 @@ class DashboardController extends Controller
             'longitude' => 'required|numeric',
             'address' => 'nullable|string',
         ]);
+        
         $userId = $request->user_id;
         $workplaceId = $request->workplace_id;
         $action = $request->action;
         $today = now()->format('Y-m-d');
-        $count = AttendanceLog::where('user_id', $userId)
+        
+        // Get today's special logs
+        $todayLogs = AttendanceLog::where('user_id', $userId)
             ->special()
             ->whereDate('timestamp', $today)
-            ->count();
-        if ($count >= 4) {
-            return response()->json(['error' => 'Maximum of 4 special check-ins/outs reached for today'], 400);
+            ->orderBy('timestamp')
+            ->get();
+        
+        $totalActions = $todayLogs->count();
+        
+        // Check if we've reached the limit (8 actions = 4 pairs)
+        if ($totalActions >= 8) {
+            return response()->json([
+                'error' => 'Maximum of 4 check-in/out pairs (8 actions) reached for today'
+            ], 400);
         }
+        
+        // Get logs for this specific workplace today
+        $workplaceLogs = $todayLogs->where('workplace_id', $workplaceId);
+        $lastWorkplaceAction = $workplaceLogs->last();
+        
+        // Validate action sequence for this workplace
+        if ($action === 'check_in') {
+            // Can check in if: no previous action OR last action was check_out
+            if ($lastWorkplaceAction && $lastWorkplaceAction->action === 'check_in') {
+                return response()->json([
+                    'error' => 'You must check out before checking in again at this location'
+                ], 400);
+            }
+        } else { // check_out
+            // Can check out if: last action was check_in
+            if (!$lastWorkplaceAction || $lastWorkplaceAction->action !== 'check_in') {
+                return response()->json([
+                    'error' => 'You must check in before checking out at this location'
+                ], 400);
+            }
+        }
+        
+        // Create or get today's attendance record
+        $attendance = Attendance::firstOrCreate(
+            ['user_id' => $userId, 'date' => $today],
+            [
+                'workplace_id' => $workplaceId,
+                'status' => 'present'
+            ]
+        );
+        
+        // Create attendance log entry with shift_type 'special'
         $log = AttendanceLog::create([
             'user_id' => $userId,
             'workplace_id' => $workplaceId,
+            'attendance_id' => $attendance->id,
             'action' => $action,
+            'shift_type' => 'special', // Set to 'special' instead of regular shift types
+            'sequence' => $totalActions + 1,
             'timestamp' => now(),
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'address' => $request->address,
-            'type' => 'special',
+            'is_valid_location' => true,
+            'method' => 'gps',
+            'ip_address' => $request->ip(),
+            'type' => 'special'
         ]);
+        
+        // Update attendance summary if it's a check-out
+        if ($action === 'check_out') {
+            // Find the corresponding check-in for this location
+            $checkInLog = $todayLogs->where('workplace_id', $workplaceId)
+                                    ->where('action', 'check_in')
+                                    ->last();
+            
+            if ($checkInLog) {
+                // Calculate hours for this pair
+                $minutes = $checkInLog->timestamp->diffInMinutes($log->timestamp);
+                
+                // Update or add to attendance total_hours
+                if ($attendance->total_hours) {
+                    $attendance->total_hours += $minutes;
+                } else {
+                    $attendance->total_hours = $minutes;
+                }
+                $attendance->save();
+            }
+        }
+        
         return response()->json([
-            'message' => 'Special check-in/out recorded',
+            'message' => 'Special ' . ($action === 'check_in' ? 'check-in' : 'check-out') . ' recorded',
             'log' => [
                 'id' => $log->id,
                 'action' => $log->action,
                 'timestamp' => $log->timestamp->format('g:i A'),
                 'location' => $log->address ?? 'Location',
-            ]
+            ],
+            'total_actions' => $totalActions + 1,
+            'remaining_actions' => 8 - ($totalActions + 1)
         ]);
     }
 }

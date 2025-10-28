@@ -333,7 +333,8 @@
                                     <i class="fas fa-info-circle mr-2"></i>About Special Check-in
                                 </h4>
                                 <ul class="text-xs text-blue-700 space-y-1">
-                                    <li>• Up to 4 check-ins/outs per day</li>
+                                    <li>• Up to 4 check-in/out pairs per day (8 total actions)</li>
+                                    <li>• Can check in/out at up to 4 different locations</li>
                                     <li>• No lunch break required</li>
                                     <li>• Must be within assigned location area</li>
                                     <li>• Perfect for field work or multiple locations</li>
@@ -357,7 +358,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div>              
                     </div>
 
                     <!-- Special Location Map -->
@@ -411,8 +412,8 @@
                             </h4>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-yellow-700">Today's Check-ins:</span>
-                                    <span class="font-medium text-yellow-800" id="special-checkins-count">0/4</span>
+                                    <span class="text-yellow-700">Today's Activity:</span>
+                                    <span class="font-medium text-yellow-800" id="special-checkins-count">0/4 pairs (0/8 actions)</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-yellow-700">Last Action:</span>
@@ -420,8 +421,7 @@
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-yellow-700">Status:</span>
-                                    <span class="font-medium text-yellow-800"
-                                        id="special-workflow-status">Ready</span>
+                                    <span class="font-medium text-yellow-800" id="special-workflow-status">Ready</span>
                                 </div>
                             </div>
                         </div>
@@ -1762,22 +1762,29 @@
 
                 const currentCount = statusData.count || 0;
 
-                if (currentCount >= 4) {
-                    showNotification('Maximum 4 special check-ins/outs reached for today', 'error');
+                if (currentCount >= 8) {
+                    showNotification('Maximum 4 check-in/out pairs (8 actions) reached for today', 'error');
                     checkinBtn.innerHTML = originalContent;
                     checkinBtn.disabled = false;
                     return;
                 }
 
-                // Determine action (alternate between check_in and check_out)
-                const action = (currentCount % 2 === 0) ? 'check_in' : 'check_out';
+                // Determine action based on logs for THIS specific workplace
+                const workplaceLogs = statusData.logs.filter(log => log.workplace_id == selectedSpecialLocationId);
+                const lastWorkplaceLog = workplaceLogs[workplaceLogs.length - 1];
+                
+                let action;
+                if (!lastWorkplaceLog || lastWorkplaceLog.action === 'check_out') {
+                    action = 'check_in';
+                } else {
+                    action = 'check_out';
+                }
 
                 const response = await fetch('/api/special-checkin', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                            'content') || ''
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                     },
                     body: JSON.stringify({
                         user_id: getCurrentUserId(),
@@ -1792,7 +1799,7 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    showNotification(result.message, 'success');
+                    showNotification(result.message + ` (${result.remaining_actions} actions remaining)`, 'success');
 
                     // Refresh special check-in data
                     fetchSpecialCheckinLogs();
@@ -1883,23 +1890,24 @@
             }
 
             if (checkinsCount) {
-                checkinsCount.textContent = `${count}/4`;
+                const pairsCount = Math.floor(count / 2);
+                checkinsCount.textContent = `${pairsCount}/4 pairs (${count}/8 actions)`;
             }
 
             if (lastAction && logs && logs.length > 0) {
                 const latest = logs[logs.length - 1];
-                lastAction.textContent =
-                    `${latest.action === 'check_in' ? 'Check-in' : 'Check-out'} at ${latest.timestamp}`;
+                lastAction.textContent = `${latest.action === 'check_in' ? 'Check-in' : 'Check-out'} at ${latest.timestamp}`;
             } else if (lastAction) {
                 lastAction.textContent = 'None';
             }
 
             if (workflowStatus) {
-                if (count >= 4) {
-                    workflowStatus.textContent = 'Daily limit reached';
+                if (count >= 8) {
+                    workflowStatus.textContent = 'Daily limit reached (4 pairs)';
                 } else if (count > 0) {
+                    const pairsComplete = Math.floor(count / 2);
                     const nextAction = (count % 2 === 0) ? 'Check-in' : 'Check-out';
-                    workflowStatus.textContent = `Ready for ${nextAction}`;
+                    workflowStatus.textContent = `${pairsComplete} pair(s) complete, ready for ${nextAction}`;
                 } else {
                     workflowStatus.textContent = 'Ready';
                 }
