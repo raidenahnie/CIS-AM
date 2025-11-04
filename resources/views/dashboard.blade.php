@@ -2289,20 +2289,36 @@
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
 
-                // Calculate proper work hours from logs
-                const workHours = calculateWorkHours(attendance);
+                // If this summary row represents a special pair (pair_index > 0),
+                // prefer the row-level fields produced by the API (check_in/check_out/total_hours).
+                // Otherwise fall back to calculating from attached logs.
+                let workHours;
+                if (attendance.pair_index && attendance.pair_index > 0) {
+                    workHours = {
+                        total: attendance.total_hours || '0.0 hrs',
+                        breakdown: null
+                    };
+                } else {
+                    workHours = calculateWorkHours(attendance);
+                }
 
-                // Get actual check-out time from logs if available
-                let checkOutDisplay = attendance.check_out || '--';
-                if (attendance.logs && attendance.logs.length > 0) {
+                // Prefer row-level check_in/check_out values (set by API for special pairs).
+                // Fall back to attendance_check_in / attendance_check_out for compatibility,
+                // then to attached logs if necessary.
+                let checkInDisplay = attendance.check_in || attendance.attendance_check_in || attendance.check_in || '--';
+                let checkOutDisplay = attendance.check_out || attendance.attendance_check_out || '--';
+
+                // If we still don't have a check_out and logs exist, try to find one in logs
+                if ((checkOutDisplay === '--' || checkOutDisplay === null) && attendance.logs && attendance.logs.length > 0) {
                     const checkOutLog = attendance.logs.find(log => log.action === 'check_out');
                     if (checkOutLog) {
                         checkOutDisplay = checkOutLog.timestamp;
                         console.log(`Found check-out log for ${attendance.date}: ${checkOutLog.timestamp}`);
-                    } else if (attendance.check_out === 'Still working') {
-                        checkOutDisplay = '<span class="text-blue-600 font-medium">Still working</span>';
                     }
-                } else if (attendance.check_out === 'Still working') {
+                }
+
+                // If still marked as 'Still working', render a styled label
+                if (attendance.check_out === 'Still working' || attendance.attendance_check_out === 'Still working') {
                     checkOutDisplay = '<span class="text-blue-600 font-medium">Still working</span>';
                 }
 

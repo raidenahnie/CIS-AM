@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -1172,6 +1173,21 @@ class AdminController extends Controller
                 ->orderBy('timestamp', 'asc')
                 ->get();
 
+            // Also load Attendance rows (with logs) for today so we can expand per-pair rows
+            $attendancesToday = \App\Models\Attendance::with(['user','workplace','logs'])
+                ->where('date', $today->format('Y-m-d'))
+                ->get();
+
+            // Use report controller helper to expand attendances into per-pair rows (prefer per-log workplace)
+            $reportController = new \App\Http\Controllers\AdminReportController();
+            $expandedRows = [];
+            try {
+                $expandedRows = $reportController->expandAttendancesToRows($attendancesToday);
+            } catch (\Exception $e) {
+                // Fallback: empty rows on error
+                $expandedRows = collect([]);
+            }
+
             // Group logs by user
             $userLogs = $todayLogs->groupBy('user_id');
             
@@ -1288,10 +1304,83 @@ class AdminController extends Controller
                     'late_by' => $lateByText,
                     'status' => $status,
                     'workplace' => $checkIn && $checkIn->workplace ? $checkIn->workplace->name : 'N/A',
-                    'location' => $checkIn ? $checkIn->address : null
+                    'location' => $checkIn ? $checkIn->address : null,
+                    'workplace' => $checkIn && $checkIn->workplace ? $checkIn->workplace->name : 'N/A',
                 ];
             }
 
+            // If we were able to expand per-pair rows, prefer those for the overview table so
+            // special attendances (multiple pairs) are shown individually.
+            if (isset($expandedRows) && $expandedRows->count() > 0) {
+                $mapped = [];
+                foreach ($expandedRows as $r) {
+                    // $r is an object with: user (model), workplace (model or null), check_in_time, check_out_time, status
+                    $user = $r->user ?? null;
+                    $wp = $r->workplace ?? null;
+
+                    $checkInRaw = $r->check_in_time ? (string)$r->check_in_time : null;
+                    $checkOutRaw = $r->check_out_time ? (string)$r->check_out_time : null;
+
+                    // Calculate work minutes
+                    $workMinutes = 0;
+                    if ($checkInRaw && $checkOutRaw) {
+                        try {
+                            $ci = Carbon::parse($checkInRaw);
+                            $co = Carbon::parse($checkOutRaw);
+                            $workMinutes = $ci->diffInMinutes($co);
+                            if (!empty($r->break_duration)) {
+                                $workMinutes -= (int)$r->break_duration;
+                            }
+                        } catch (\Exception $e) {
+                            $workMinutes = 0;
+                        }
+                    }
+
+                    // Late calculation (after 9:00)
+                    $isLate = false;
+                    $lateByText = null;
+                    if ($checkInRaw) {
+                        try {
+                            $ci = Carbon::parse($checkInRaw);
+                            $threshold = Carbon::parse($r->date)->setTime(9,0,0);
+                            if ($ci->gt($threshold)) {
+                                $isLate = true;
+                                $lateMinutes = $ci->diffInMinutes($threshold);
+                                if ($lateMinutes >= 60) {
+                                    $lateByText = floor($lateMinutes/60) . ' hr ' . ($lateMinutes%60) . ' min';
+                                } else {
+                                    $lateByText = $lateMinutes . ' min';
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            // ignore
+                        }
+                    }
+
+                    $mapped[] = [
+                        'user_id' => $user ? $user->id : null,
+                        'user_name' => $user ? $user->name : 'Unknown',
+                        'user_email' => $user ? $user->email : '',
+                        'check_in' => $checkInRaw ? Carbon::parse($checkInRaw)->format('g:i A') : null,
+                        'check_in_raw' => $checkInRaw ? Carbon::parse($checkInRaw) : null,
+                        'check_out' => $checkOutRaw ? Carbon::parse($checkOutRaw)->format('g:i A') : null,
+                        'check_out_raw' => $checkOutRaw ? Carbon::parse($checkOutRaw) : null,
+                        'break_start' => null,
+                        'break_end' => null,
+                        'break_duration' => !empty($r->break_duration) ? $r->break_duration : 'N/A',
+                        'work_hours' => $workMinutes > 0 ? round($workMinutes/60,2) . ' hrs' : '0 hrs',
+                        'work_hours_raw' => $workMinutes > 0 ? round($workMinutes/60,2) : 0,
+                        'is_late' => $isLate,
+                        'late_by' => $lateByText,
+                        'status' => $r->status ?? 'N/A',
+                        'workplace' => $wp ? ($wp->name ?? $wp) : ($r->workplace ?? 'N/A'),
+                        'location' => null,
+                    ];
+                }
+
+                // Replace attendance data with mapped per-pair rows
+                $attendanceData = $mapped;
+            }
             // Calculate average hours
             $avgHours = $usersWithHours > 0 ? round($totalWorkHours / $usersWithHours, 1) : 0;
 
@@ -1302,7 +1391,9 @@ class AdminController extends Controller
                     'late_arrivals' => $lateArrivals,
                     'average_hours' => $avgHours
                 ],
-                'attendance' => $attendanceData
+                'attendance' => $attendanceData,
+                // flattened per-pair rows for UI (each row contains user/workplace/check_in_time/check_out_time)
+                'rows' => $expandedRows
             ]);
 
         } catch (\Exception $e) {

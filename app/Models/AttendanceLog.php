@@ -34,7 +34,14 @@ class AttendanceLog extends Model
      */
     public function scopeSpecial($query)
     {
-        return $query->where('type', 'special');
+        // Include logs marked as special either by the explicit `type` column
+        // or by the `shift_type` column for older records that didn't set
+        // the `type` field. This ensures existing `special` entries are
+        // returned by queries that expect special check-in/out logs.
+        return $query->where(function($q) {
+            $q->where('type', 'special')
+              ->orWhere('shift_type', 'special');
+        });
     }
 
     protected $casts = [

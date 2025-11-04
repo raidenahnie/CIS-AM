@@ -3366,73 +3366,109 @@
                 return;
             }
 
-            attendanceData.forEach(emp => {
+
+            // Normalize each item so the template can accept either a flattened row (from reports/exports)
+            // or the legacy attendance object shape used elsewhere. Prefer API-provided row-level
+            // check_in_time / check_out_time values when available.
+            attendanceData.forEach(item => {
+                const empObj = {};
+
+                // User info
+                if (item.user) {
+                    empObj.user_name = item.user.name ?? (item.user_name ?? 'Unknown');
+                    empObj.user_email = item.user.email ?? (item.user_email ?? '');
+                } else {
+                    empObj.user_name = item.user_name ?? (item.name ?? 'Unknown');
+                    empObj.user_email = item.user_email ?? item.email ?? '';
+                }
+
+                // Workplace
+                empObj.workplace = item.workplace && item.workplace.name ? item.workplace.name : (item.workplace ?? 'N/A');
+
+                // Determine check-in and check-out times (prefer pair-level fields)
+                const rawCheckIn = item.check_in_time ?? item.check_in ?? item.attendance_check_in ?? null;
+                const rawCheckOut = item.check_out_time ?? item.check_out ?? item.attendance_check_out ?? null;
+
+                // Format display times using formatTime if we have full datetime strings
+                empObj.check_in = rawCheckIn ? (typeof rawCheckIn === 'string' && rawCheckIn.length > 5 ? formatTime(rawCheckIn) : rawCheckIn) : null;
+                empObj.check_out = rawCheckOut ? (typeof rawCheckOut === 'string' && rawCheckOut.length > 5 ? formatTime(rawCheckOut) : rawCheckOut) : null;
+
+                // Break fields (keep legacy names)
+                empObj.break_start = item.break_start ?? item.break_started_at ?? null;
+                empObj.break_end = item.break_end ?? item.break_ended_at ?? null;
+                empObj.break_duration = item.break_duration ?? item.break_minutes ?? null;
+
+                // Work hours and status (preserve what caller provided)
+                empObj.work_hours = item.total_hours ?? item.work_hours ?? item.hours ?? '0 hrs';
+                empObj.status = item.status ?? (item.state ?? 'N/A');
+
+                // Simple late detection data if present
+                empObj.is_late = !!item.is_late;
+                empObj.late_by = item.late_by ?? '';
+
+                // Render row
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50 transition-colors attendance-row';
 
-                // Employee info with late badge
                 const employeeCell = `
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 h-10 w-10">
                                 <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                                    <span class="text-white font-semibold text-sm">${emp.user_name.charAt(0).toUpperCase()}</span>
+                                    <span class="text-white font-semibold text-sm">${empObj.user_name.charAt(0).toUpperCase()}</span>
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <div class="text-sm font-semibold text-gray-900">${emp.user_name}</div>
-                                <div class="text-sm text-gray-600">${emp.user_email}</div>
+                                <div class="text-sm font-semibold text-gray-900">${empObj.user_name}</div>
+                                <div class="text-sm text-gray-600">${empObj.user_email}</div>
                             </div>
-                            ${emp.is_late ? `
+                            ${empObj.is_late ? `
                                 <span class="ml-2 inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                                     <i class="fas fa-clock mr-1"></i>
-                                    Late ${emp.late_by}
+                                    Late ${empObj.late_by}
                                 </span>
                             ` : ''}
                         </div>
                     </td>
                 `;
 
-                // Check in time
                 const checkInCell = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        ${emp.check_in ? `
+                        ${empObj.check_in ? `
                             <div class="flex items-center">
                                 <i class="fas fa-sign-in-alt text-green-600 mr-2"></i>
-                                <span class="font-medium ${emp.is_late ? 'text-red-600' : 'text-green-600'}">${emp.check_in}</span>
+                                <span class="font-medium ${empObj.is_late ? 'text-red-600' : 'text-green-600'}">${empObj.check_in}</span>
                             </div>
                         ` : '<span class="text-gray-400">--</span>'}
                     </td>
                 `;
 
-                // Check out time
                 const checkOutCell = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        ${emp.check_out ? `
+                        ${empObj.check_out ? `
                             <div class="flex items-center">
                                 <i class="fas fa-sign-out-alt text-red-600 mr-2"></i>
-                                <span class="font-medium text-red-600">${emp.check_out}</span>
+                                <span class="font-medium text-red-600">${empObj.check_out}</span>
                             </div>
                         ` : '<span class="text-gray-400">--</span>'}
                     </td>
                 `;
 
-                // Break time
                 const breakCell = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        ${emp.break_start ? `
+                        ${empObj.break_start ? `
                             <div class="text-xs">
                                 <div class="flex items-center mb-1">
                                     <i class="fas fa-pause text-yellow-600 mr-1"></i>
-                                    <span>Start: ${emp.break_start}</span>
+                                    <span>Start: ${empObj.break_start}</span>
                                 </div>
-                                ${emp.break_end ? `
+                                ${empObj.break_end ? `
                                     <div class="flex items-center">
                                         <i class="fas fa-play text-green-600 mr-1"></i>
-                                        <span>End: ${emp.break_end}</span>
+                                        <span>End: ${empObj.break_end}</span>
                                     </div>
                                     <div class="mt-1 font-medium text-gray-700">
-                                        Duration: ${emp.break_duration}
+                                        Duration: ${empObj.break_duration}
                                     </div>
                                 ` : '<span class="text-yellow-600 italic">On break</span>'}
                             </div>
@@ -3440,23 +3476,21 @@
                     </td>
                 `;
 
-                // Work hours
                 const hoursCell = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span class="font-bold text-indigo-600">${emp.work_hours}</span>
+                        <span class="font-bold text-indigo-600">${empObj.work_hours}</span>
                     </td>
                 `;
 
-                // Status badge
                 let statusClass = 'bg-gray-100 text-gray-800';
                 let statusIcon = 'fa-minus';
-                if (emp.status === 'Working') {
+                if (empObj.status === 'Working') {
                     statusClass = 'bg-green-100 text-green-800';
                     statusIcon = 'fa-circle';
-                } else if (emp.status === 'On Break') {
+                } else if (empObj.status === 'On Break') {
                     statusClass = 'bg-yellow-100 text-yellow-800';
                     statusIcon = 'fa-coffee';
-                } else if (emp.status === 'Completed') {
+                } else if (empObj.status === 'Completed') {
                     statusClass = 'bg-blue-100 text-blue-800';
                     statusIcon = 'fa-check-circle';
                 }
@@ -3465,17 +3499,16 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
                             <i class="fas ${statusIcon} mr-1"></i>
-                            ${emp.status}
+                            ${empObj.status}
                         </span>
                     </td>
                 `;
 
-                // Workplace
                 const workplaceCell = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         <div class="flex items-center">
                             <i class="fas fa-building text-gray-400 mr-2"></i>
-                            <span>${emp.workplace}</span>
+                            <span>${empObj.workplace}</span>
                         </div>
                     </td>
                 `;
@@ -5317,7 +5350,8 @@
         // Display report data in table
         function displayReportData(reportData) {
             const tbody = document.getElementById('reportTableBody');
-            const attendances = reportData.data;
+            // Prefer server-provided flattened rows (per-pair) when available
+            const attendances = (reportData.rows && reportData.rows.length) ? reportData.rows : reportData.data;
 
             if (attendances.length === 0) {
                 tbody.innerHTML = `
@@ -5384,7 +5418,7 @@
                 `;
             }).join('');
 
-            // Update record count
+            // Update record count (use number of rows shown)
             document.getElementById('report-showing-count').textContent = attendances.length;
             document.getElementById('report-date-range').textContent = 
                 `${reportData.filters.start_date} to ${reportData.filters.end_date}`;
@@ -5527,21 +5561,18 @@
         // Helper: Format time
         function formatTime(timeString) {
             if (!timeString) return '-';
-            
-            // Handle timestamp format (YYYY-MM-DD HH:MM:SS)
-            let timePart = timeString;
-            if (timeString.includes(' ')) {
-                timePart = timeString.split(' ')[1]; // Extract time part from timestamp
+
+            // Try parsing with Date first (handles ISO strings and many datetime formats)
+            const parsed = new Date(timeString);
+            if (!isNaN(parsed)) {
+                // Use user's locale time format with hour:minute
+                return parsed.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
             }
-            
-            const parts = timePart.split(':');
-            if (parts.length >= 2) {
-                let hours = parseInt(parts[0]);
-                const minutes = parts[1];
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-                return `${hours}:${minutes} ${ampm}`;
-            }
+
+            // Fallback: extract HH:MM using regex
+            const m = ('' + timeString).match(/(\d{1,2}:\d{2})/);
+            if (m) return m[1];
+
             return timeString;
         }
 

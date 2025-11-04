@@ -45,8 +45,13 @@ class DashboardController extends Controller
             ->whereRaw('DAYOFWEEK(date) BETWEEN 2 AND 6') // Monday=2, Friday=6 in MySQL
             ->get();
 
-        $presentDays = $attendances->where('status', '!=', 'absent')->count();
+        // Count unique dates where user was present (not absent)
+        // Special check-ins with multiple pairs should only count as 1 day present
+        $presentDays = $attendances->where('status', '!=', 'absent')->pluck('date')->unique()->count();
         $attendanceRate = $totalWorkDaysInMonth > 0 ? round(($presentDays / $totalWorkDaysInMonth) * 100, 1) : 0;
+        
+        // Cap attendance rate at 100%
+        $attendanceRate = min($attendanceRate, 100);
 
         // Calculate average check-in time
         $checkInTimes = $attendances->whereNotNull('check_in_time');
@@ -103,22 +108,144 @@ class DashboardController extends Controller
         }
         
         $attendances = Attendance::where('user_id', $userId)
-            ->with('workplace')
+            ->with([
+                'workplace',
+                // Eager load logs so we can derive check-in/check-out when the
+                // attendance summary fields are missing or inconsistent.
+                'logs' => function($q) {
+                    $q->orderBy('timestamp', 'asc');
+                }
+            ])
             ->orderBy('date', 'desc')
             ->limit(10)
             ->get()
-            ->map(function ($attendance) {
-                return [
-                    'id' => $attendance->id,
-                    'date' => $attendance->date->format('M j, Y'),
-                    'date_raw' => $attendance->date->format('Y-m-d'),
-                    'check_in' => $attendance->check_in_time ? $attendance->check_in_time->format('g:i A') : null,
-                    'check_out' => $attendance->check_out_time ? $attendance->check_out_time->format('g:i A') : 'Still working',
-                    'total_hours' => $attendance->total_hours ? round($attendance->total_hours / 60, 1) . ' hrs' : '0 hrs',
-                    'location' => $attendance->workplace ? $attendance->workplace->name : 'Unknown',
-                    'status' => ucfirst($attendance->status),
-                    'status_class' => $this->getStatusClass($attendance->status)
-                ];
+            ->flatMap(function ($attendance) {
+                // If this is a special attendance, expand it into multiple rows
+                // based on its special attendance logs (paired check_in/check_out).
+                if ($attendance->status === 'special') {
+                    $rows = [];
+
+                    // Eager load workplace on logs to avoid N+1 and ensure
+                    // we can read workplace names directly.
+                    $logs = $attendance->logs()->special()->with('workplace')->orderBy('timestamp', 'asc')->get();
+
+                    // Track open check-ins per workplace to pair with check-outs
+                    $open = [];
+
+                    $pairIndex = 0;
+                    foreach ($logs as $log) {
+                        if ($log->action === 'check_in') {
+                            $open[$log->workplace_id][] = $log;
+                        } elseif ($log->action === 'check_out') {
+                            if (!empty($open[$log->workplace_id])) {
+                                $checkInLog = array_pop($open[$log->workplace_id]);
+                                $minutes = $checkInLog->timestamp->diffInMinutes($log->timestamp);
+                                $hoursText = $minutes > 0 ? round($minutes / 60, 1) . ' hrs' : '0 hrs';
+
+                                $pairIndex++;
+
+                                $rows[] = [
+                                    // Unique row id helps frontend avoid using the parent attendance fields
+                                    'row_id' => $attendance->id . '-' . $pairIndex,
+                                    'attendance_id' => $attendance->id,
+                                    'pair_index' => $pairIndex,
+                                    'date' => $attendance->date->format('M j, Y'),
+                                    'date_raw' => $attendance->date->format('Y-m-d'),
+                                    'check_in' => $checkInLog->timestamp->format('g:i A'),
+                                    'check_out' => $log->timestamp ? $log->timestamp->format('g:i A') : 'Still working',
+                                    'total_hours' => $hoursText,
+                                    'location' => $log->workplace ? $log->workplace->name : ($attendance->workplace ? $attendance->workplace->name : 'Unknown'),
+                                    'status' => 'Special',
+                                    'status_class' => $this->getStatusClass('special'),
+                                    // Provide the overarching attendance-level check_in/out too (for compatibility)
+                                    'attendance_check_in' => $attendance->check_in_time ? $attendance->check_in_time->format('g:i A') : null,
+                                    'attendance_check_out' => $attendance->check_out_time ? $attendance->check_out_time->format('g:i A') : null,
+                                ];
+                            } else {
+                                // Unpaired check_out, show it with unknown check-in
+                                $pairIndex++;
+                                $rows[] = [
+                                    'row_id' => $attendance->id . '-' . $pairIndex,
+                                    'attendance_id' => $attendance->id,
+                                    'pair_index' => $pairIndex,
+                                    'date' => $attendance->date->format('M j, Y'),
+                                    'date_raw' => $attendance->date->format('Y-m-d'),
+                                    'check_in' => '--',
+                                    'check_out' => $log->timestamp ? $log->timestamp->format('g:i A') : 'Still working',
+                                    'total_hours' => '0 hrs',
+                                    'location' => $log->workplace ? $log->workplace->name : ($attendance->workplace ? $attendance->workplace->name : 'Unknown'),
+                                    'status' => 'Special',
+                                    'status_class' => $this->getStatusClass('special'),
+                                    'attendance_check_in' => $attendance->check_in_time ? $attendance->check_in_time->format('g:i A') : null,
+                                    'attendance_check_out' => $attendance->check_out_time ? $attendance->check_out_time->format('g:i A') : null,
+                                ];
+                            }
+                        }
+                    }
+
+                    // Any remaining open check-ins (no check-out yet)
+                    foreach ($open as $workplaceLogs) {
+                        foreach ($workplaceLogs as $checkInLog) {
+                            $pairIndex++;
+                            $rows[] = [
+                                'row_id' => $attendance->id . '-' . $pairIndex,
+                                'attendance_id' => $attendance->id,
+                                'pair_index' => $pairIndex,
+                                'date' => $attendance->date->format('M j, Y'),
+                                'date_raw' => $attendance->date->format('Y-m-d'),
+                                'check_in' => $checkInLog->timestamp->format('g:i A'),
+                                'check_out' => 'Still working',
+                                'total_hours' => '0 hrs',
+                                'location' => $checkInLog->workplace ? $checkInLog->workplace->name : ($attendance->workplace ? $attendance->workplace->name : 'Unknown'),
+                                'status' => 'Special',
+                                'status_class' => $this->getStatusClass('special'),
+                                'attendance_check_in' => $attendance->check_in_time ? $attendance->check_in_time->format('g:i A') : null,
+                                'attendance_check_out' => $attendance->check_out_time ? $attendance->check_out_time->format('g:i A') : null,
+                            ];
+                        }
+                    }
+
+                    return collect($rows);
+                }
+
+                // Regular attendance (non-special) - single row
+                // If attendance-level check_in/check_out are missing, try to derive
+                // them from the eager-loaded logs for that attendance.
+                $derivedCheckIn = null;
+                $derivedCheckOut = null;
+
+                if ($attendance->logs && $attendance->logs->isNotEmpty()) {
+                    $firstCheckInLog = $attendance->logs->firstWhere('action', 'check_in');
+                    $lastCheckOutLog = $attendance->logs->where('action', 'check_out')->last();
+
+                    if ($firstCheckInLog) {
+                        $derivedCheckIn = $firstCheckInLog->timestamp->format('g:i A');
+                    }
+                    if ($lastCheckOutLog) {
+                        $derivedCheckOut = $lastCheckOutLog->timestamp->format('g:i A');
+                    }
+                }
+
+                $checkInValue = $attendance->check_in_time ? $attendance->check_in_time->format('g:i A') : ($derivedCheckIn ?? '--');
+                $checkOutValue = $attendance->check_out_time ? $attendance->check_out_time->format('g:i A') : ($derivedCheckOut ?? 'Still working');
+
+                return collect([
+                    [
+                        'row_id' => $attendance->id . '-0',
+                        'attendance_id' => $attendance->id,
+                        'pair_index' => 0,
+                        'date' => $attendance->date->format('M j, Y'),
+                        'date_raw' => $attendance->date->format('Y-m-d'),
+                        'check_in' => $checkInValue,
+                        'check_out' => $checkOutValue,
+                        'total_hours' => $attendance->total_hours ? round($attendance->total_hours / 60, 1) . ' hrs' : '0 hrs',
+                        'location' => $attendance->workplace ? $attendance->workplace->name : 'Unknown',
+                        'status' => ucfirst($attendance->status),
+                        'status_class' => $this->getStatusClass($attendance->status),
+                        'attendance_check_in' => $attendance->check_in_time ? $attendance->check_in_time->format('g:i A') : null,
+                        'attendance_check_out' => $attendance->check_out_time ? $attendance->check_out_time->format('g:i A') : ($derivedCheckOut ?? null),
+                    ]
+                ]);
             });
 
         return response()->json($attendances);
@@ -288,10 +415,11 @@ class DashboardController extends Controller
 
     private function getStatusClass($status)
     {
-        return match($status) {
+        return match(strtolower($status)) {
             'present' => 'bg-green-100 text-green-800',
             'late' => 'bg-yellow-100 text-yellow-800', 
             'absent' => 'bg-red-100 text-red-800',
+            'special' => 'bg-blue-100 text-blue-800',
             default => 'bg-gray-100 text-gray-800'
         };
     }
@@ -687,14 +815,12 @@ class DashboardController extends Controller
         }
 
         // Use transaction to safely update primary workplace
-        // The unique constraint prevents duplicate (user_id, is_primary) combinations
-        // So we must remove the old primary BEFORE setting the new one
         DB::transaction(function () use ($userId, $workplaceId) {
             // Step 1: Remove primary status from all OTHER workplaces for this user FIRST
             DB::table('user_workplaces')
                 ->where('user_id', $userId)
                 ->where('workplace_id', '!=', $workplaceId)
-                ->where('is_primary', true)  // Only update those that are currently primary
+                ->where('is_primary', true)
                 ->update(['is_primary' => false, 'updated_at' => now()]);
 
             // Step 2: Now safely set the selected workplace as primary
@@ -711,7 +837,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get today's special check-in/out logs for a user (up to 4)
+     * Get today's special check-in/out logs for a user
      */
     public function getSpecialCheckinLogs($userId = null)
     {
@@ -723,10 +849,9 @@ class DashboardController extends Controller
             ->special()
             ->whereDate('timestamp', $today)
             ->orderBy('timestamp')
-            ->limit(8) // Changed from 4 to 8 to allow 4 pairs
+            ->limit(8)
             ->get();
         
-        // Count unique locations (check-in/out pairs)
         $uniqueLocations = $logs->pluck('workplace_id')->unique()->count();
         
         return response()->json([
@@ -740,13 +865,13 @@ class DashboardController extends Controller
                 ];
             }),
             'count' => $logs->count(),
-            'pairs_count' => floor($logs->count() / 2), // Number of complete pairs
+            'pairs_count' => floor($logs->count() / 2),
             'unique_locations' => $uniqueLocations
         ]);
     }
 
     /**
-    * Perform a special check-in or check-out (up to 4 pairs = 8 actions)
+    * Perform a special check-in or check-out
     */
     public function specialCheckin(Request $request)
     {
@@ -764,7 +889,6 @@ class DashboardController extends Controller
         $action = $request->action;
         $today = now()->format('Y-m-d');
         
-        // Get today's special logs
         $todayLogs = AttendanceLog::where('user_id', $userId)
             ->special()
             ->whereDate('timestamp', $today)
@@ -773,50 +897,34 @@ class DashboardController extends Controller
         
         $totalActions = $todayLogs->count();
         
-        // Check if we've reached the limit (8 actions = 4 pairs)
         if ($totalActions >= 8) {
-            return response()->json([
-                'error' => 'Maximum of 4 check-in/out pairs (8 actions) reached for today'
-            ], 400);
+            return response()->json(['error' => 'Maximum of 4 check-in/out pairs (8 actions) reached for today'], 400);
         }
         
-        // Get logs for this specific workplace today
         $workplaceLogs = $todayLogs->where('workplace_id', $workplaceId);
         $lastWorkplaceAction = $workplaceLogs->last();
         
-        // Validate action sequence for this workplace
         if ($action === 'check_in') {
-            // Can check in if: no previous action OR last action was check_out
             if ($lastWorkplaceAction && $lastWorkplaceAction->action === 'check_in') {
-                return response()->json([
-                    'error' => 'You must check out before checking in again at this location'
-                ], 400);
+                return response()->json(['error' => 'You must check out before checking in again at this location'], 400);
             }
         } else { // check_out
-            // Can check out if: last action was check_in
             if (!$lastWorkplaceAction || $lastWorkplaceAction->action !== 'check_in') {
-                return response()->json([
-                    'error' => 'You must check in before checking out at this location'
-                ], 400);
+                return response()->json(['error' => 'You must check in before checking out at this location'], 400);
             }
         }
         
-        // Create or get today's attendance record
         $attendance = Attendance::firstOrCreate(
             ['user_id' => $userId, 'date' => $today],
-            [
-                'workplace_id' => $workplaceId,
-                'status' => 'present'
-            ]
+            ['workplace_id' => $workplaceId, 'status' => 'special']
         );
         
-        // Create attendance log entry with shift_type 'special'
         $log = AttendanceLog::create([
             'user_id' => $userId,
             'workplace_id' => $workplaceId,
             'attendance_id' => $attendance->id,
             'action' => $action,
-            'shift_type' => 'special', // Set to 'special' instead of regular shift types
+            'shift_type' => 'special',
             'sequence' => $totalActions + 1,
             'timestamp' => now(),
             'latitude' => $request->latitude,
@@ -828,37 +936,76 @@ class DashboardController extends Controller
             'type' => 'special'
         ]);
         
-        // Update attendance summary if it's a check-out
-        if ($action === 'check_out') {
-            // Find the corresponding check-in for this location
-            $checkInLog = $todayLogs->where('workplace_id', $workplaceId)
-                                    ->where('action', 'check_in')
-                                    ->last();
-            
-            if ($checkInLog) {
-                // Calculate hours for this pair
-                $minutes = $checkInLog->timestamp->diffInMinutes($log->timestamp);
-                
-                // Update or add to attendance total_hours
-                if ($attendance->total_hours) {
-                    $attendance->total_hours += $minutes;
-                } else {
-                    $attendance->total_hours = $minutes;
-                }
-                $attendance->save();
-            }
-        }
+        // Recalculate the summary after every action
+        $this->updateAttendanceSummary($userId, $today);
         
         return response()->json([
             'message' => 'Special ' . ($action === 'check_in' ? 'check-in' : 'check-out') . ' recorded',
-            'log' => [
-                'id' => $log->id,
-                'action' => $log->action,
-                'timestamp' => $log->timestamp->format('g:i A'),
-                'location' => $log->address ?? 'Location',
-            ],
+            'log' => $log->toArray(),
             'total_actions' => $totalActions + 1,
             'remaining_actions' => 8 - ($totalActions + 1)
         ]);
+    }
+
+    /**
+     * Recalculate and update the main attendance record from all logs of the day.
+     * This ensures the summary (check_in, check_out, total_hours, status) is always accurate.
+     */
+    private function updateAttendanceSummary($userId, $date)
+    {
+        $attendance = Attendance::where('user_id', $userId)->where('date', $date)->first();
+        if (!$attendance) {
+            return;
+        }
+
+        $allLogs = AttendanceLog::where('user_id', $userId)
+            ->whereDate('timestamp', $date)
+            ->orderBy('timestamp', 'asc')
+            ->get();
+
+        if ($allLogs->isEmpty()) {
+            // If all logs are deleted, reset the summary
+            $attendance->update([
+                'check_in_time' => null,
+                'check_out_time' => null,
+                'total_hours' => null,
+                'status' => 'absent' 
+            ]);
+            return;
+        }
+
+        // 1. Update Status
+        if ($allLogs->contains('shift_type', 'special')) {
+            $attendance->status = 'special';
+        } else {
+            // Basic status for regular shifts
+            $attendance->status = $attendance->isLate() ? 'late' : 'present';
+        }
+
+        // 2. Update first check-in and last check-out
+        $firstCheckIn = $allLogs->where('action', 'check_in')->first();
+        $lastCheckOut = $allLogs->where('action', 'check_out')->last();
+
+        $attendance->check_in_time = $firstCheckIn ? $firstCheckIn->timestamp : null;
+        $attendance->check_out_time = $lastCheckOut ? $lastCheckOut->timestamp : null;
+
+        // 3. Recalculate total_hours from all pairs
+        $totalMinutes = 0;
+        $openCheckIns = [];
+
+        foreach ($allLogs as $log) {
+            if ($log->action === 'check_in') {
+                // Push the check-in log onto a stack for its workplace
+                $openCheckIns[$log->workplace_id][] = $log;
+            } elseif ($log->action === 'check_out' && !empty($openCheckIns[$log->workplace_id])) {
+                // Pop the last check-in for that workplace and calculate duration
+                $checkInLog = array_pop($openCheckIns[$log->workplace_id]);
+                $totalMinutes += $checkInLog->timestamp->diffInMinutes($log->timestamp);
+            }
+        }
+
+        $attendance->total_hours = $totalMinutes > 0 ? $totalMinutes : null;
+
+        $attendance->save();
     }
 }

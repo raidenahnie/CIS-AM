@@ -56,6 +56,9 @@ class AdminReportController extends Controller
             ->orderBy('check_in_time', 'desc')
             ->get();
 
+        // Expand attendances into per-pair rows for special days and derive missing times from logs
+        $expandedRows = $this->expandAttendancesToRows($attendances);
+
         // Get unique user count for attendance rate calculation
         $uniqueUserCount = $userId ? 1 : $attendances->pluck('user_id')->unique()->count();
 
@@ -65,6 +68,8 @@ class AdminReportController extends Controller
         return response()->json([
             'success' => true,
             'data' => $attendances,
+            // flattened rows for frontend display / exports where callers prefer pair-level rows
+            'rows' => $expandedRows,
             'stats' => $stats,
             'filters' => [
                 'report_type' => $reportType,
@@ -225,10 +230,14 @@ class AdminReportController extends Controller
             ->limit(50)
             ->get();
 
+        // Also provide expanded rows for per-pair representation
+        $expandedRows = $this->expandAttendancesToRows($attendances);
+
         return response()->json([
             'success' => true,
             'user' => $user,
             'attendances' => $attendances,
+            'rows' => $expandedRows,
             'logs' => $logs,
             'stats' => $stats
         ]);
@@ -258,8 +267,10 @@ class AdminReportController extends Controller
             $query->where('workplace_id', $workplaceId);
         }
 
-        $attendances = $query->orderBy('date', 'desc')->get();
-        $recordCount = $attendances->count();
+    $attendances = $query->orderBy('date', 'desc')->get();
+    // Expand to per-pair rows for exporting
+    $rows = $this->expandAttendancesToRows($attendances);
+    $recordCount = $rows->count();
 
         // Build log description
         $filters = [];
@@ -289,10 +300,10 @@ class AdminReportController extends Controller
         $filename = 'attendance_report_' . $reportType . '_' . Carbon::now()->format('Y-m-d_His');
 
         if ($format === 'csv') {
-            return $this->exportToCsv($attendances, $filename);
+            return $this->exportToCsv($rows, $filename);
         } else {
             // Use modern PhpSpreadsheet for .xlsx export
-            return $this->exportToExcel($attendances, $filename, $reportType, $startDate, $endDate);
+            return $this->exportToExcel($rows, $filename, $reportType, $startDate, $endDate);
         }
     }
 
@@ -338,7 +349,7 @@ class AdminReportController extends Controller
 
         $callback = function() use ($attendances) {
             $file = fopen('php://output', 'w');
-            
+
             // Add CSV headers
             fputcsv($file, [
                 'Date',
@@ -353,63 +364,53 @@ class AdminReportController extends Controller
                 'Notes'
             ]);
 
-            // Add data rows
+            // Add data rows (attendances here may already be expanded per-pair)
             foreach ($attendances as $attendance) {
-                // Get check-in and check-out from logs if available
-                $checkInLog = null;
-                $checkOutLog = null;
-                
-                if ($attendance->logs && $attendance->logs->count() > 0) {
+                // Use provided check_in_time / check_out_time if present
+                $checkInTime = $attendance->check_in_time ?? ($attendance->check_in ?? null);
+                $checkOutTime = $attendance->check_out_time ?? ($attendance->check_out ?? null);
+
+                // If still null, try to derive from logs if present
+                if (!$checkInTime && isset($attendance->logs) && $attendance->logs && $attendance->logs->count() > 0) {
                     $checkInLog = $attendance->logs->firstWhere('action', 'check_in');
-                    $checkOutLog = $attendance->logs->firstWhere('action', 'check_out');
+                    $checkInTime = $checkInLog->timestamp ?? null;
                 }
-                
-                // Use log timestamps or fall back to attendance table fields
-                $checkInTime = null;
-                $checkOutTime = null;
-                
-                if ($checkInLog && $checkInLog->timestamp) {
-                    $checkInTime = $checkInLog->timestamp;
-                } elseif ($attendance->check_in_time) {
-                    $checkInTime = $attendance->check_in_time;
+                if (!$checkOutTime && isset($attendance->logs) && $attendance->logs && $attendance->logs->count() > 0) {
+                    // Use last check_out if exists
+                    $checkOutLog = $attendance->logs->where('action', 'check_out')->last();
+                    if ($checkOutLog) $checkOutTime = $checkOutLog->timestamp ?? null;
                 }
-                
-                if ($checkOutLog && $checkOutLog->timestamp) {
-                    $checkOutTime = $checkOutLog->timestamp;
-                } elseif ($attendance->check_out_time) {
-                    $checkOutTime = $attendance->check_out_time;
-                }
-                
+
                 // Calculate hours worked
                 $hoursWorked = 0;
                 $lateMinutes = 0;
-                
+
                 if ($checkInTime && $checkOutTime) {
                     $checkIn = new \DateTime($checkInTime);
                     $checkOut = new \DateTime($checkOutTime);
-                    
+
                     $workMinutes = ($checkOut->getTimestamp() - $checkIn->getTimestamp()) / 60;
-                    
-                    if ($attendance->break_duration) {
+
+                    if (!empty($attendance->break_duration)) {
                         $workMinutes -= $attendance->break_duration;
                     }
-                    
+
                     $hoursWorked = round(max(0, $workMinutes) / 60, 2);
-                    
+
                     // Check if late
                     $checkInHour = (int)$checkIn->format('H');
                     $checkInMinute = (int)$checkIn->format('i');
                     $checkInTotalMinutes = ($checkInHour * 60) + $checkInMinute;
-                    
+
                     if ($checkInTotalMinutes > 540) { // 9:00 AM
                         $lateMinutes = $checkInTotalMinutes - 540;
                     }
                 }
-                
+
                 // Format check-in and check-out times
                 $checkInDisplay = $checkInTime ? date('H:i', strtotime($checkInTime)) : 'N/A';
                 $checkOutDisplay = $checkOutTime ? date('H:i', strtotime($checkOutTime)) : 'N/A';
-                
+
                 fputcsv($file, [
                     $attendance->date,
                     $attendance->user->name ?? 'N/A',
@@ -417,7 +418,7 @@ class AdminReportController extends Controller
                     $attendance->workplace->name ?? 'N/A',
                     $checkInDisplay,
                     $checkOutDisplay,
-                    ucfirst($attendance->status),
+                    ucfirst($attendance->status ?? 'N/A'),
                     $this->formatHoursMinutes($hoursWorked * 60), // Convert hours to minutes
                     $this->formatHoursMinutes($lateMinutes),
                     $attendance->notes ?? ''
@@ -433,6 +434,143 @@ class AdminReportController extends Controller
     /**
      * Get summary statistics for dashboard
      */
+    /**
+     * Expand attendances into per-pair rows and derive missing check in/out from logs
+     * Returns a collection of row-like objects with properties used by exports and frontend
+     */
+    public function expandAttendancesToRows($attendances)
+    {
+        $rows = [];
+
+        foreach ($attendances as $attendance) {
+            $logs = $attendance->logs ?? collect();
+
+            // Normalize and sort logs by timestamp / action_time
+            $sorted = $logs->sortBy(function ($l) {
+                return $l->timestamp ?? ($l->action_time ?? null);
+            })->values();
+
+            $isSpecial = ($attendance->status === 'special');
+            if (!$isSpecial) {
+                // Also consider legacy logs flagged by shift_type/type
+                foreach ($sorted as $l) {
+                    if (isset($l->type) && $l->type === 'special') { $isSpecial = true; break; }
+                    if (isset($l->shift_type) && $l->shift_type === 'special') { $isSpecial = true; break; }
+                }
+            }
+
+            if ($isSpecial) {
+                // Pair check_in / check_out per workplace using a stack
+                $open = [];
+                foreach ($sorted as $log) {
+                    $action = $log->action ?? null;
+                    $wpId = $log->workplace_id ?? ($attendance->workplace_id ?? null);
+                    $time = $log->timestamp ?? ($log->action_time ?? null);
+
+                    if ($action === 'check_in') {
+                        if (!isset($open[$wpId])) $open[$wpId] = [];
+                        $open[$wpId][] = $log;
+                    } elseif ($action === 'check_out') {
+                        $in = null;
+                        if (isset($open[$wpId]) && count($open[$wpId]) > 0) {
+                            $in = array_pop($open[$wpId]);
+                        }
+
+                        $checkInTime = $in ? ($in->timestamp ?? ($in->action_time ?? null)) : null;
+                        $checkOutTime = $time;
+
+                        // prefer workplace from check-in log, then check-out log, then attendance
+                        $wp = null;
+                        if ($in && isset($in->workplace) && $in->workplace) {
+                            $wp = $in->workplace;
+                        } elseif (isset($log->workplace) && $log->workplace) {
+                            $wp = $log->workplace;
+                        } else {
+                            $wp = $attendance->workplace ?? null;
+                        }
+
+                        $rows[] = (object) [
+                            'attendance_id' => $attendance->id,
+                            'date' => $attendance->date,
+                            'user' => $attendance->user ?? null,
+                            'workplace' => $wp,
+                            'status' => $attendance->status,
+                            'check_in_time' => $checkInTime,
+                            'check_out_time' => $checkOutTime,
+                            'break_duration' => $attendance->break_duration ?? null,
+                            'notes' => $attendance->notes ?? null,
+                            'logs' => null,
+                        ];
+                    }
+                }
+
+                // Close any open check-ins (still working)
+                foreach ($open as $wpId => $stack) {
+                    while (count($stack) > 0) {
+                        $in = array_pop($stack);
+                        $checkInTime = $in ? ($in->timestamp ?? ($in->action_time ?? null)) : null;
+                        $wp = $in && isset($in->workplace) ? $in->workplace : ($attendance->workplace ?? null);
+
+                        $rows[] = (object) [
+                            'attendance_id' => $attendance->id,
+                            'date' => $attendance->date,
+                            'user' => $attendance->user ?? null,
+                            'workplace' => $wp,
+                            'status' => $attendance->status,
+                            'check_in_time' => $checkInTime,
+                            'check_out_time' => null,
+                            'break_duration' => $attendance->break_duration ?? null,
+                            'notes' => $attendance->notes ?? null,
+                            'logs' => null,
+                        ];
+                    }
+                }
+            } else {
+                // Non-special: single row, derive missing times from logs
+                $checkIn = $attendance->check_in_time ?? null;
+                $checkOut = $attendance->check_out_time ?? null;
+
+                if (!$checkIn) {
+                    $c = $sorted->firstWhere('action', 'check_in');
+                    $checkIn = $c ? ($c->timestamp ?? ($c->action_time ?? null)) : null;
+                }
+                if (!$checkOut) {
+                    // last check_out in logs
+                    $co = null;
+                    $filtered = $sorted->where('action', 'check_out');
+                    if ($filtered->count() > 0) {
+                        $co = $filtered->last();
+                    }
+                    $checkOut = $co ? ($co->timestamp ?? ($co->action_time ?? null)) : null;
+                }
+
+                // derive workplace from logs if available
+                $wp = null;
+                $firstLog = $sorted->first();
+                if ($firstLog && isset($firstLog->workplace) && $firstLog->workplace) {
+                    $wp = $firstLog->workplace;
+                } else {
+                    $wp = $attendance->workplace ?? null;
+                }
+
+                $rows[] = (object) [
+                    'attendance_id' => $attendance->id,
+                    'date' => $attendance->date,
+                    'user' => $attendance->user ?? null,
+                    'workplace' => $wp,
+                    'status' => $attendance->status,
+                    'check_in_time' => $checkIn,
+                    'check_out_time' => $checkOut,
+                    'break_duration' => $attendance->break_duration ?? null,
+                    'notes' => $attendance->notes ?? null,
+                    'logs' => $attendance->logs ?? null,
+                ];
+            }
+        }
+
+        return collect($rows);
+    }
+
     public function getSummaryStats(Request $request)
     {
         $period = $request->input('period', 'today'); // today, week, month
