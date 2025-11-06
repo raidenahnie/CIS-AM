@@ -18,10 +18,6 @@ export default defineConfig({
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
         },
-        hmr: {
-            port: 5173,
-            host: '0.0.0.0'
-        }
     },
     build: {
         manifest: true,

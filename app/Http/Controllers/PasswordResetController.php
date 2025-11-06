@@ -30,23 +30,54 @@ class PasswordResetController extends Controller
             PasswordReset::create([
                 'user_id' => $user->id,
                 'token' => $hashedToken,
-                'expires_at' => Carbon::now()->addHours(24), // Token expires in 24 hours
+                'expires_at' => Carbon::now()->addMinutes(60), // Token expires in 60 minutes
             ]);
             
             // Send email with reset link
             $resetUrl = url('/password/reset/' . $token . '?email=' . urlencode($user->email));
             
             try {
-                Mail::raw(
-                    "Hello {$user->name},\n\n" .
-                    "You are receiving this email because your administrator has initiated a password reset for your account.\n\n" .
-                    "Please click the following link to reset your password:\n" .
-                    "$resetUrl\n\n" .
-                    "This password reset link will expire in 24 hours.\n\n" .
-                    "If you did not request this password reset, please contact your administrator immediately.\n\n" .
-                    "Best regards,\n" .
-                    "Curriculum Implementation System",
-                    function ($message) use ($user) {
+                $htmlContent = '
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #333;">Hello ' . htmlspecialchars($user->name) . ',</h2>
+                        
+                        <p style="color: #555; line-height: 1.5;">
+                            You are receiving this email because your administrator has initiated a password reset for your account.
+                        </p>
+                        
+                        <p style="color: #555; line-height: 1.5;">
+                            Please click the button below to reset your password:
+                        </p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="' . htmlspecialchars($resetUrl) . '" style="background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                                Reset Password
+                            </a>
+                        </div>
+                        
+                        <p style="color: #555; line-height: 1.5;">
+                            This password reset link will expire in 60 minutes.
+                        </p>
+                        
+                        <p style="color: #555; line-height: 1.5;">
+                            If you did not request this password reset, please contact your administrator immediately.
+                        </p>
+                        
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                            <p style="color: #777;">
+                                Best regards,<br>
+                                Curriculum Implementation System
+                            </p>
+                        </div>
+                        
+                        <div style="margin-top: 20px; font-size: 12px; color: #999;">
+                            If you are having trouble clicking the "Reset Password" button, copy and paste this URL into your web browser:<br>
+                            <a href="' . htmlspecialchars($resetUrl) . '" style="color: #4CAF50;">' . htmlspecialchars($resetUrl) . '</a>
+                        </div>
+                    </div>
+                ';
+
+                Mail::html($htmlContent, function ($message) use ($user) {
                         $message->to($user->email, $user->name)
                                 ->subject('Password Reset Request');
                     }

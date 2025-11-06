@@ -743,7 +743,7 @@ class AdminController extends Controller
                     \App\Models\PasswordReset::create([
                         'user_id' => $user->id,
                         'token' => $hashedToken,
-                        'expires_at' => \Carbon\Carbon::now()->addHours(24),
+                        'expires_at' => \Carbon\Carbon::now()->addHours(1), 
                     ]);
                     
                     // Send email with reset link
@@ -755,7 +755,7 @@ class AdminController extends Controller
                             "You are receiving this email because your administrator has initiated a password reset for your account.\n\n" .
                             "Please click the following link to reset your password:\n" .
                             "$resetUrl\n\n" .
-                            "This password reset link will expire in 24 hours.\n\n" .
+                            "This password reset link will expire in 1 hour.\n\n" .
                             "If you did not request this password reset, please contact your administrator immediately.\n\n" .
                             "Best regards,\n" .
                             "Curriculum Implementation System",
