@@ -2129,38 +2129,74 @@
 
                 // Calculate total hours for this date
                 let totalHours = '0.0';
-                if (checkIn && checkOut) {
-                    const startTime = parseTime(checkIn.timestamp);
-                    const endTime = parseTime(checkOut.timestamp);
-                    if (startTime && endTime) {
-                        let hours = (endTime - startTime) / (1000 * 60 * 60);
-                        // Subtract lunch break if present
-                        if (breakStart && breakEnd) {
-                            const lunchStart = parseTime(breakStart.timestamp);
-                            const lunchEnd = parseTime(breakEnd.timestamp);
-                            if (lunchStart && lunchEnd) {
-                                const lunchDuration = (lunchEnd - lunchStart) / (1000 * 60 * 60);
-                                hours -= lunchDuration;
+                
+                // Check if this is a special attendance (multiple check-in/out pairs)
+                const isSpecialAttendance = dateLogs.some(log => log.shift_type === 'special');
+                
+                if (isSpecialAttendance) {
+                    // For special attendance, calculate hours by pairing check-ins with check-outs
+                    let totalMinutes = 0;
+                    const openCheckIns = [];
+                    
+                    // Sort logs by timestamp to ensure proper pairing
+                    const sortedLogs = [...dateLogs].sort((a, b) => {
+                        const timeA = parseTime(a.timestamp);
+                        const timeB = parseTime(b.timestamp);
+                        return timeA - timeB;
+                    });
+                    
+                    sortedLogs.forEach(log => {
+                        if (log.action === 'check_in') {
+                            openCheckIns.push(log);
+                        } else if (log.action === 'check_out' && openCheckIns.length > 0) {
+                            const checkInLog = openCheckIns.pop();
+                            const startTime = parseTime(checkInLog.timestamp);
+                            const endTime = parseTime(log.timestamp);
+                            if (startTime && endTime) {
+                                const minutes = (endTime - startTime) / (1000 * 60);
+                                console.log(`Special pair: ${checkInLog.timestamp} to ${log.timestamp} = ${minutes.toFixed(1)} minutes`);
+                                totalMinutes += minutes;
                             }
                         }
-                        totalHours = Math.max(0, hours).toFixed(1);
-                    }
-                } else if (checkIn && !checkOut) {
-                    // Still working
-                    const startTime = parseTime(checkIn.timestamp);
-                    if (startTime) {
-                        const now = new Date();
-                        let hours = (now - startTime) / (1000 * 60 * 60);
-                        // Subtract lunch break if taken
-                        if (breakStart && breakEnd) {
-                            const lunchStart = parseTime(breakStart.timestamp);
-                            const lunchEnd = parseTime(breakEnd.timestamp);
-                            if (lunchStart && lunchEnd) {
-                                const lunchDuration = (lunchEnd - lunchStart) / (1000 * 60 * 60);
-                                hours -= lunchDuration;
+                    });
+                    
+                    console.log(`Total minutes for special attendance: ${totalMinutes}, Total hours: ${(totalMinutes / 60).toFixed(1)}`);
+                    totalHours = (totalMinutes / 60).toFixed(1);
+                } else {
+                    // Regular attendance - calculate from first check-in to last check-out
+                    if (checkIn && checkOut) {
+                        const startTime = parseTime(checkIn.timestamp);
+                        const endTime = parseTime(checkOut.timestamp);
+                        if (startTime && endTime) {
+                            let hours = (endTime - startTime) / (1000 * 60 * 60);
+                            // Subtract lunch break if present
+                            if (breakStart && breakEnd) {
+                                const lunchStart = parseTime(breakStart.timestamp);
+                                const lunchEnd = parseTime(breakEnd.timestamp);
+                                if (lunchStart && lunchEnd) {
+                                    const lunchDuration = (lunchEnd - lunchStart) / (1000 * 60 * 60);
+                                    hours -= lunchDuration;
+                                }
                             }
+                            totalHours = Math.max(0, hours).toFixed(1);
                         }
-                        totalHours = Math.max(0, hours).toFixed(1);
+                    } else if (checkIn && !checkOut) {
+                        // Still working
+                        const startTime = parseTime(checkIn.timestamp);
+                        if (startTime) {
+                            const now = new Date();
+                            let hours = (now - startTime) / (1000 * 60 * 60);
+                            // Subtract lunch break if taken
+                            if (breakStart && breakEnd) {
+                                const lunchStart = parseTime(breakStart.timestamp);
+                                const lunchEnd = parseTime(breakEnd.timestamp);
+                                if (lunchStart && lunchEnd) {
+                                    const lunchDuration = (lunchEnd - lunchStart) / (1000 * 60 * 60);
+                                    hours -= lunchDuration;
+                                }
+                            }
+                            totalHours = Math.max(0, hours).toFixed(1);
+                        }
                     }
                 }
 
@@ -2458,20 +2494,41 @@
         function parseTime(timeString) {
             if (!timeString) return null;
 
-            const today = new Date();
-            const [time, period] = timeString.split(' ');
+            // Handle both "11:04 AM" format and full datetime strings
+            let time, period;
+            
+            if (timeString.includes('T') || timeString.includes('-')) {
+                // Full datetime string - parse as Date
+                return new Date(timeString);
+            }
+            
+            // Time only format like "11:04 AM"
+            const parts = timeString.trim().split(' ');
+            time = parts[0];
+            period = parts[1];
+            
+            if (!time || !period) {
+                console.warn('Invalid time format:', timeString);
+                return null;
+            }
+            
             const [hours, minutes] = time.split(':').map(Number);
-
-            let hour24 = hours;
-            if (period) {
-                if (period.toLowerCase() === 'pm' && hours !== 12) {
-                    hour24 += 12;
-                } else if (period.toLowerCase() === 'am' && hours === 12) {
-                    hour24 = 0;
-                }
+            
+            if (isNaN(hours) || isNaN(minutes)) {
+                console.warn('Invalid time components:', timeString);
+                return null;
             }
 
-            return new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour24, minutes);
+            const today = new Date();
+            let hour24 = hours;
+            
+            if (period.toLowerCase() === 'pm' && hours !== 12) {
+                hour24 += 12;
+            } else if (period.toLowerCase() === 'am' && hours === 12) {
+                hour24 = 0;
+            }
+
+            return new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour24, minutes, 0, 0);
         }
 
         // Update the fetchAttendanceHistory function to include logs
@@ -2621,23 +2678,91 @@
 
             if (thisWeekData.length > 0) {
                 let totalWeeklyHours = 0;
-                let workDays = 0;
                 let checkinTimes = [];
-
-                // Calculate hours from actual logs
+                
+                // Group by date to avoid counting the same day multiple times (for special attendance)
+                const uniqueDates = new Set();
+                const dateGroups = {};
+                
                 thisWeekData.forEach(record => {
-                    if (record.logs && record.logs.length > 0) {
-                        const checkIn = record.logs.find(log => log.action === 'check_in');
-                        const checkOut = record.logs.find(log => log.action === 'check_out');
-                        const breakStart = record.logs.find(log => log.action === 'break_start' || log.action ===
+                    if (!dateGroups[record.date_raw]) {
+                        dateGroups[record.date_raw] = [];
+                    }
+                    dateGroups[record.date_raw].push(record);
+                });
+                
+                // Count unique work days
+                let workDays = Object.keys(dateGroups).length;
+
+                // Calculate hours from actual logs for each unique date
+                Object.keys(dateGroups).forEach(dateKey => {
+                    const records = dateGroups[dateKey];
+                    
+                    // Combine all logs from all records of this date and deduplicate
+                    let allLogsForDate = [];
+                    const seenLogIds = new Set();
+                    
+                    records.forEach(record => {
+                        if (record.logs && record.logs.length > 0) {
+                            record.logs.forEach(log => {
+                                // Create unique key for each log entry
+                                const logKey = `${log.action}-${log.timestamp}-${log.shift_type || 'regular'}`;
+                                if (!seenLogIds.has(logKey)) {
+                                    seenLogIds.add(logKey);
+                                    allLogsForDate.push(log);
+                                }
+                            });
+                        }
+                    });
+                    
+                    console.log(`Date ${dateKey} has ${allLogsForDate.length} unique logs after deduplication`);
+                    
+                    if (allLogsForDate.length > 0) {
+                        const checkIn = allLogsForDate.find(log => log.action === 'check_in');
+                        const breakStart = allLogsForDate.find(log => log.action === 'break_start' || log.action ===
                             'start_lunch');
-                        const breakEnd = record.logs.find(log => log.action === 'break_end' || log.action ===
+                        const breakEnd = allLogsForDate.find(log => log.action === 'break_end' || log.action ===
                             'end_lunch');
 
                         if (checkIn) {
-                            workDays++;
                             checkinTimes.push(checkIn.timestamp);
+                        }
 
+                        // Check if this is a special attendance
+                        const isSpecialAttendance = allLogsForDate.some(log => log.shift_type === 'special');
+                        
+                        if (isSpecialAttendance) {
+                            // For special attendance, calculate hours by pairing check-ins with check-outs
+                            let totalMinutes = 0;
+                            const openCheckIns = [];
+                            
+                            // Sort logs by timestamp to ensure proper pairing
+                            allLogsForDate.sort((a, b) => {
+                                const timeA = parseTime(a.timestamp);
+                                const timeB = parseTime(b.timestamp);
+                                return timeA - timeB;
+                            });
+                            
+                            allLogsForDate.forEach(log => {
+                                if (log.action === 'check_in') {
+                                    openCheckIns.push(log);
+                                } else if (log.action === 'check_out' && openCheckIns.length > 0) {
+                                    const checkInLog = openCheckIns.pop();
+                                    const startTime = parseTime(checkInLog.timestamp);
+                                    const endTime = parseTime(log.timestamp);
+                                    if (startTime && endTime) {
+                                        totalMinutes += (endTime - startTime) / (1000 * 60);
+                                    }
+                                }
+                            });
+                            
+                            const dayHours = totalMinutes / 60;
+                            totalWeeklyHours += Math.max(0, dayHours);
+                            console.log(`Special attendance day hours for ${dateKey}: ${dayHours.toFixed(1)}`);
+                        } else {
+                            // Regular attendance - calculate from first check-in to last check-out
+                            const checkOut = allLogsForDate.find(log => log.action === 'check_out');
+                            
                             if (checkOut) {
                                 // Calculate total hours for completed day
                                 const startTime = parseTime(checkIn.timestamp);
@@ -2654,9 +2779,9 @@
                                         }
                                     }
                                     totalWeeklyHours += Math.max(0, dayHours);
-                                    console.log(`Day hours for ${record.date}: ${dayHours.toFixed(1)}`);
+                                    console.log(`Day hours for ${dateKey}: ${dayHours.toFixed(1)}`);
                                 }
-                            } else if (record.date_raw === new Date().toISOString().split('T')[0]) {
+                            } else if (dateKey === new Date().toISOString().split('T')[0]) {
                                 // Still working today - calculate partial hours
                                 const startTime = parseTime(checkIn.timestamp);
                                 if (startTime) {
@@ -2717,7 +2842,7 @@
                 const totalWorkDays = 5;
                 const attendanceRate = Math.round((workDays / workDaysElapsed) * 100);
 
-                if (weeklyHours) weeklyHours.textContent = Math.round(totalWeeklyHours);
+                if (weeklyHours) weeklyHours.textContent = totalWeeklyHours.toFixed(1);
                 if (weeklyDays) weeklyDays.textContent = workDays;
                 if (weeklyAttendance) weeklyAttendance.textContent = attendanceRate + '%';
                 if (weeklyAvgCheckin) weeklyAvgCheckin.textContent = avgCheckinDisplay;
