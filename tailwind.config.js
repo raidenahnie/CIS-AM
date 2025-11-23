@@ -6,7 +6,12 @@ module.exports = {
     "./resources/**/*.vue",
   ],
   theme: {
-    extend: {},
+    extend: {
+      screens: {
+        'xs': '475px',
+        // Adds a custom breakpoint for extra small screens
+      },
+    },
   },
   plugins: [],
 };

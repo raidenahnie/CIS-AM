@@ -140,4 +140,12 @@ class User extends Authenticatable
     {
         return $query->where('last_activity', '>=', now()->subMinutes(5));
     }
+
+    /**
+     * Get the attendances for this user
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

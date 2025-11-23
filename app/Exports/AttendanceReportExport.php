@@ -77,6 +77,74 @@ class AttendanceReportExport
         // Add data rows
         $row = 2;
         foreach ($this->attendances as $attendance) {
+            // Check if this is an absence record (excused, absent, or calculated absence)
+            if ((isset($attendance->is_absence) && $attendance->is_absence) || 
+                (isset($attendance->status) && in_array($attendance->status, ['absent', 'excused']))) {
+                // Handle absence record
+                $date = date('m/d/Y', strtotime($attendance->date));
+                
+                // Check if it's an excused absence (new status or attendance with notes from approved request)
+                if (isset($attendance->status) && $attendance->status === 'excused') {
+                    // This is an approved absence with the new 'excused' status
+                    $absenceStatus = 'EXCUSED';
+                    $absenceReason = isset($attendance->notes) && !empty($attendance->notes) 
+                        ? $attendance->notes 
+                        : 'Approved Leave';
+                } elseif (isset($attendance->status) && $attendance->status === 'absent' && 
+                    isset($attendance->notes) && !empty($attendance->notes)) {
+                    // This is an old absence record with notes (from approved request)
+                    $absenceStatus = 'EXCUSED';
+                    $absenceReason = $attendance->notes;
+                } else {
+                    // Check for approved absence request for this date (for calculated absences)
+                    $absenceReason = 'No attendance recorded';
+                    $absenceStatus = 'ABSENT';
+                    
+                    if (isset($attendance->user_id)) {
+                        $approvedRequest = \App\Models\AbsenceRequest::where('user_id', $attendance->user_id)
+                            ->where('status', 'approved')
+                            ->where('start_date', '<=', $attendance->date)
+                            ->where('end_date', '>=', $attendance->date)
+                            ->first();
+                        
+                        if ($approvedRequest) {
+                            $absenceStatus = 'EXCUSED';
+                            $absenceReason = 'Approved Leave: ' . $approvedRequest->reason;
+                            if ($approvedRequest->admin_comment) {
+                                $absenceReason .= ' | Admin Note: ' . $approvedRequest->admin_comment;
+                            }
+                        }
+                    }
+                }
+                
+                $rowData = [
+                    $date,
+                    $attendance->user->name ?? 'N/A',
+                    $attendance->user->email ?? 'N/A',
+                    isset($attendance->workplace) ? ($attendance->workplace->name ?? 'N/A') : 'N/A',
+                    '-',
+                    '-',
+                    $absenceStatus,
+                    '-',
+                    '-',
+                    $absenceReason
+                ];
+                
+                $sheet->fromArray($rowData, null, 'A' . $row);
+                
+                // Apply background color based on status
+                $fillColor = $absenceStatus === 'EXCUSED' ? 'E6F2FF' : 'FFE6E6'; // Blue for excused, red for unexcused
+                $sheet->getStyle("A{$row}:J{$row}")->applyFromArray([
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => $fillColor],
+                    ]
+                ]);
+                
+                $row++;
+                continue;
+            }
+            
             // Calculate hours worked properly
             $hoursWorked = 0;
             $lateMinutes = 0;
@@ -230,7 +298,7 @@ class AttendanceReportExport
         $sheet->getColumnDimension('G')->setWidth(12);  // Status
         $sheet->getColumnDimension('H')->setWidth(15);  // Hours Worked
         $sheet->getColumnDimension('I')->setWidth(18);  // Late Duration
-        $sheet->getColumnDimension('J')->setWidth(30);  // Notes
+        $sheet->getColumnDimension('J')->setWidth(50);  // Notes - increased width for long reasons
 
         // Apply borders and font to all data cells
         $dataStyle = [
@@ -256,6 +324,11 @@ class AttendanceReportExport
                 ->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
+
+        // Enable text wrapping for Notes column
+        $sheet->getStyle("J2:J{$lastRow}")
+            ->getAlignment()
+            ->setWrapText(true);
 
         return $spreadsheet;
     }

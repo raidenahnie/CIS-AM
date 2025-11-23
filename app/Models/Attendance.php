@@ -14,6 +14,7 @@ class Attendance extends Model
     protected $fillable = [
         'user_id',
         'workplace_id',
+        'is_assigned_workplace',
         'date',
         'check_in_time',
         'check_in_latitude',
@@ -50,6 +51,7 @@ class Attendance extends Model
         'check_out_longitude' => 'decimal:8',
         'distance_from_workplace' => 'decimal:2',
         'is_valid_location' => 'boolean',
+        'is_assigned_workplace' => 'boolean',
         'requires_approval' => 'boolean',
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',

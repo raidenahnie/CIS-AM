@@ -10,6 +10,7 @@ use App\Models\AdminActivityLog;
 use App\Exports\AttendanceReportExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AdminReportController extends Controller
@@ -19,66 +20,87 @@ class AdminReportController extends Controller
      */
     public function getAttendanceReports(Request $request)
     {
-        $reportType = $request->input('report_type', 'weekly'); // weekly, monthly, individual
-        $userId = $request->input('user_id', null);
-        $workplaceId = $request->input('workplace_id', null);
-        $startDate = $request->input('start_date', null);
-        $endDate = $request->input('end_date', null);
+        try {
+            $reportType = $request->input('report_type', 'weekly'); // weekly, monthly, individual
+            $userId = $request->input('user_id', null);
+            $workplaceId = $request->input('workplace_id', null);
+            $startDate = $request->input('start_date', null);
+            $endDate = $request->input('end_date', null);
 
-        // Set default date ranges based on report type
-        if (!$startDate || !$endDate) {
-            if ($reportType === 'weekly') {
-                $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-                $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
-            } elseif ($reportType === 'monthly') {
-                $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-                $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = Carbon::now()->subDays(30)->format('Y-m-d');
-                $endDate = Carbon::now()->format('Y-m-d');
+            // Set default date ranges based on report type
+            if (!$startDate || !$endDate) {
+                if ($reportType === 'weekly') {
+                    $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+                    $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+                } elseif ($reportType === 'monthly') {
+                    $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+                    $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+                } else {
+                    $startDate = Carbon::now()->subDays(30)->format('Y-m-d');
+                    $endDate = Carbon::now()->format('Y-m-d');
+                }
             }
+
+            $query = Attendance::with(['user', 'workplace', 'logs'])
+                ->whereBetween('date', [$startDate, $endDate]);
+
+            // Filter by user if individual report
+            if ($userId) {
+                $query->where('user_id', $userId);
+            }
+
+            // Filter by workplace
+            if ($workplaceId) {
+                $query->where('workplace_id', $workplaceId);
+            }
+
+            $attendances = $query->orderBy('date', 'desc')
+                ->orderBy('check_in_time', 'desc')
+                ->get();
+
+            // Expand attendances into per-pair rows for special days and derive missing times from logs
+            $expandedRows = $this->expandAttendancesToRows($attendances);
+
+            // Get unique user count for attendance rate calculation
+            $uniqueUserCount = $userId ? 1 : $attendances->pluck('user_id')->unique()->count();
+
+            // Calculate statistics
+            $stats = $this->calculateAttendanceStats($attendances, $startDate, $endDate, $uniqueUserCount);
+
+            // Add absences if this is an individual employee report
+            $response = [
+                'success' => true,
+                'data' => $attendances,
+                // flattened rows for frontend display / exports where callers prefer pair-level rows
+                'rows' => $expandedRows,
+                'stats' => $stats,
+                'filters' => [
+                    'report_type' => $reportType,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'user_id' => $userId,
+                    'workplace_id' => $workplaceId,
+                ]
+            ];
+
+            // Include absences only for individual employee reports
+            if ($userId) {
+                $response['absences'] = $this->calculateIndividualAbsences($userId, $startDate, $endDate);
+            }
+
+            return response()->json($response);
+        } catch (\Exception $e) {
+            Log::error('Error generating attendance report: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while generating the report: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $query = Attendance::with(['user', 'workplace', 'logs'])
-            ->whereBetween('date', [$startDate, $endDate]);
-
-        // Filter by user if individual report
-        if ($userId) {
-            $query->where('user_id', $userId);
-        }
-
-        // Filter by workplace
-        if ($workplaceId) {
-            $query->where('workplace_id', $workplaceId);
-        }
-
-        $attendances = $query->orderBy('date', 'desc')
-            ->orderBy('check_in_time', 'desc')
-            ->get();
-
-        // Expand attendances into per-pair rows for special days and derive missing times from logs
-        $expandedRows = $this->expandAttendancesToRows($attendances);
-
-        // Get unique user count for attendance rate calculation
-        $uniqueUserCount = $userId ? 1 : $attendances->pluck('user_id')->unique()->count();
-
-        // Calculate statistics
-        $stats = $this->calculateAttendanceStats($attendances, $startDate, $endDate, $uniqueUserCount);
-
-        return response()->json([
-            'success' => true,
-            'data' => $attendances,
-            // flattened rows for frontend display / exports where callers prefer pair-level rows
-            'rows' => $expandedRows,
-            'stats' => $stats,
-            'filters' => [
-                'report_type' => $reportType,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'user_id' => $userId,
-                'workplace_id' => $workplaceId,
-            ]
-        ]);
     }
 
     /**
@@ -90,6 +112,7 @@ class AdminReportController extends Controller
         $presentCount = 0;
         $lateCount = 0;
         $absentCount = 0;
+        $nonAssignedCount = 0;
         
         // Late threshold: 9:00 AM
         $lateTimeThreshold = Carbon::today()->setTime(9, 0, 0);
@@ -99,6 +122,11 @@ class AdminReportController extends Controller
         $totalLateMinutes = 0;
         
         foreach ($attendances as $attendance) {
+            // Count non-assigned workplace check-ins
+            if (isset($attendance->is_assigned_workplace) && !$attendance->is_assigned_workplace) {
+                $nonAssignedCount++;
+            }
+            
             // Determine if present (has check-in) or absent
             $hasCheckedIn = $attendance->check_in_time !== null;
             
@@ -188,6 +216,7 @@ class AdminReportController extends Controller
             'total_records' => $totalRecords,
             'present_count' => $presentCount,
             'late_count' => $lateCount,
+            'non_assigned_count' => $nonAssignedCount,
             'absent_count' => $absentCount,
             'total_hours' => $totalHours,
             'total_late_minutes' => $totalLateMinutes,
@@ -206,7 +235,7 @@ class AdminReportController extends Controller
     }
 
     /**
-     * Get individual employee report
+     * Get individual employee report with attendance and absence data
      */
     public function getIndividualReport($userId, Request $request)
     {
@@ -233,14 +262,77 @@ class AdminReportController extends Controller
         // Also provide expanded rows for per-pair representation
         $expandedRows = $this->expandAttendancesToRows($attendances);
 
+        // Calculate absence days for individual employee
+        $absences = $this->calculateIndividualAbsences($userId, $startDate, $endDate);
+
         return response()->json([
             'success' => true,
             'user' => $user,
             'attendances' => $attendances,
             'rows' => $expandedRows,
             'logs' => $logs,
-            'stats' => $stats
+            'stats' => $stats,
+            'absences' => $absences // Include absence days
         ]);
+    }
+
+    /**
+     * Calculate absence days for an individual employee (workdays without attendance)
+     */
+    private function calculateIndividualAbsences($userId, $startDate, $endDate)
+    {
+        try {
+            $start = Carbon::parse($startDate, 'Asia/Manila');
+            $end = Carbon::parse($endDate, 'Asia/Manila');
+            $today = Carbon::now('Asia/Manila');
+
+            // Don't count future dates
+            if ($end->gt($today)) {
+                $end = $today;
+            }
+
+            // Get ALL dates where user has ANY attendance record (including excused absences)
+            // This prevents duplicates - if there's a record in DB, don't calculate it as absence
+            $attendedDates = Attendance::where('user_id', $userId)
+                ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                ->pluck('date')
+                ->map(function($date) {
+                    return Carbon::parse($date)->format('Y-m-d');
+                })
+                ->toArray();
+
+            // Find absent days (workdays without ANY attendance record)
+            $absences = [];
+            $currentDate = $start->copy();
+            
+            while ($currentDate->lte($end)) {
+                // Only count weekdays (Monday-Friday)
+                if ($currentDate->isWeekday()) {
+                    $dateStr = $currentDate->format('Y-m-d');
+                    
+                    // Only add as absence if there's NO attendance record at all for this date
+                    if (!in_array($dateStr, $attendedDates)) {
+                        $absences[] = [
+                            'date' => $dateStr,
+                            'formatted_date' => $currentDate->format('M j, Y'),
+                            'day_of_week' => $currentDate->format('l'),
+                            'status' => 'absent',
+                        ];
+                    }
+                }
+                $currentDate->addDay();
+            }
+
+            return $absences;
+        } catch (\Exception $e) {
+            Log::error('Error calculating individual absences: ' . $e->getMessage(), [
+                'userId' => $userId,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'exception' => $e
+            ]);
+            return [];
+        }
     }
 
     /**
@@ -248,62 +340,104 @@ class AdminReportController extends Controller
      */
     public function exportReport(Request $request)
     {
-        $reportType = $request->input('report_type', 'weekly');
-        $userId = $request->input('user_id', null);
-        $workplaceId = $request->input('workplace_id', null);
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $format = $request->input('format', 'excel'); // excel or csv
+        try {
+            $reportType = $request->input('report_type', 'weekly');
+            $userId = $request->input('user_id', null);
+            $workplaceId = $request->input('workplace_id', null);
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+            $format = $request->input('format', 'excel'); // excel or csv
 
-        // Get the data with logs
-        $query = Attendance::with(['user', 'workplace', 'logs'])
-            ->whereBetween('date', [$startDate, $endDate]);
+            // Get the data with logs
+            $query = Attendance::with(['user', 'workplace', 'logs'])
+                ->whereBetween('date', [$startDate, $endDate]);
 
-        if ($userId) {
-            $query->where('user_id', $userId);
-        }
+            if ($userId) {
+                $query->where('user_id', $userId);
+            }
 
-        if ($workplaceId) {
-            $query->where('workplace_id', $workplaceId);
-        }
+            if ($workplaceId) {
+                $query->where('workplace_id', $workplaceId);
+            }
 
-    $attendances = $query->orderBy('date', 'desc')->get();
-    // Expand to per-pair rows for exporting
-    $rows = $this->expandAttendancesToRows($attendances);
-    $recordCount = $rows->count();
+            $attendances = $query->orderBy('date', 'desc')->get();
+            
+            // Get absences if this is an individual employee report
+            $absences = [];
+            if ($userId) {
+                $absences = $this->calculateIndividualAbsences($userId, $startDate, $endDate);
+            }
+            
+            // Expand to per-pair rows for exporting
+            $rows = $this->expandAttendancesToRows($attendances);
+            
+            // Merge absences into rows for export
+            if (!empty($absences)) {
+                $user = User::find($userId);
+                foreach ($absences as $absence) {
+                    $rows->push((object)[
+                        'date' => $absence['date'],
+                        'user' => $user,
+                        'workplace' => null,
+                        'check_in_time' => null,
+                        'check_out_time' => null,
+                        'status' => 'absent',
+                        'logs' => collect([]),
+                        'is_absence' => true,
+                        'day_of_week' => $absence['day_of_week']
+                    ]);
+                }
+                
+                // Sort by date descending
+                $rows = $rows->sortByDesc('date')->values();
+            }
+            
+            $recordCount = $rows->count();
 
-        // Build log description
-        $filters = [];
-        if ($userId) {
-            $user = User::find($userId);
-            $filters[] = "User: {$user->name}";
-        }
-        if ($workplaceId) {
-            $workplace = Workplace::find($workplaceId);
-            $filters[] = "Workplace: {$workplace->name}";
-        }
-        $filters[] = "Date Range: {$startDate} to {$endDate}";
-        $filters[] = "Report Type: {$reportType}";
-        $filterString = implode(', ', $filters);
+            // Build log description
+            $filters = [];
+            if ($userId) {
+                $user = User::find($userId);
+                $filters[] = "User: {$user->name}";
+            }
+            if ($workplaceId) {
+                $workplace = Workplace::find($workplaceId);
+                $filters[] = "Workplace: {$workplace->name}";
+            }
+            $filters[] = "Date Range: {$startDate} to {$endDate}";
+            $filters[] = "Report Type: {$reportType}";
+            $filterString = implode(', ', $filters);
 
-        // Log the export action
-        $action = $format === 'csv' ? 'export_attendance_report_csv' : 'export_attendance_report_excel';
-        AdminActivityLog::log(
-            $action,
-            "Exported {$recordCount} attendance records as " . strtoupper($format) . " ({$filterString})",
-            'attendance_report',
-            null,
-            ['format' => $format, 'report_type' => $reportType, 'filters' => $filters, 'record_count' => $recordCount]
-        );
+            // Log the export action
+            $action = $format === 'csv' ? 'export_attendance_report_csv' : 'export_attendance_report_excel';
+            AdminActivityLog::log(
+                $action,
+                "Exported {$recordCount} attendance records as " . strtoupper($format) . " ({$filterString})",
+                'attendance_report',
+                null,
+                ['format' => $format, 'report_type' => $reportType, 'filters' => $filters, 'record_count' => $recordCount]
+            );
 
-        // Generate filename
-        $filename = 'attendance_report_' . $reportType . '_' . Carbon::now()->format('Y-m-d_His');
+            // Generate filename
+            $filename = 'attendance_report_' . $reportType . '_' . Carbon::now()->format('Y-m-d_His');
 
-        if ($format === 'csv') {
-            return $this->exportToCsv($rows, $filename);
-        } else {
-            // Use modern PhpSpreadsheet for .xlsx export
-            return $this->exportToExcel($rows, $filename, $reportType, $startDate, $endDate);
+            if ($format === 'csv') {
+                return $this->exportToCsv($rows, $filename);
+            } else {
+                // Use modern PhpSpreadsheet for .xlsx export
+                return $this->exportToExcel($rows, $filename, $reportType, $startDate, $endDate);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error exporting attendance report: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while exporting the report: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -595,4 +729,5 @@ class AdminReportController extends Controller
             'stats' => $this->calculateAttendanceStats($attendances, $startDate->format('Y-m-d'), $endDate->format('Y-m-d'), $uniqueUserCount)
         ]);
     }
+
 }

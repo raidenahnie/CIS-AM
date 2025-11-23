@@ -9,31 +9,126 @@
     <meta http-equiv="Permissions-Policy" content="geolocation=(self)">
     <title>CISAM | Dashboard</title>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashboard.js'])
+    <link rel="icon" type="image/x-icon" href="/img/favicon.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        .modal-blur {
-            background-color: rgba(0, 0, 0, 0.9) !important;
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
-            -moz-backdrop-filter: blur(8px) !important;
-            -ms-backdrop-filter: blur(8px) !important;
-            z-index: 9999 !important;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
         }
 
-        /* Fallback for browsers that don't support backdrop-filter */
-        @supports not (backdrop-filter: blur(8px)) {
-            .modal-blur {
-                background-color: rgba(0, 0, 0, 0.95) !important;
+        body {
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .card-modern {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-modern:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+            border-color: #cbd5e1;
+        }
+
+        .gradient-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .gradient-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .gradient-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .gradient-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .gradient-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1rem;
+            margin: 0.25rem 0.75rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #64748b;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .sidebar-link:hover {
+            background: #f1f5f9;
+            color: #6366f1;
+        }
+
+        .sidebar-link.active {
+            background: #eef2ff;
+            color: #6366f1;
+            font-weight: 600;
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
             }
         }
 
-        /* Shake animation for invalid code */
-        @keyframes shake {
+        .modal-blur {
+            background-color: rgba(0, 0, 0, 0.75) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+        }
 
+        @keyframes shake {
             0%,
             100% {
                 transform: translateX(0);
@@ -54,93 +149,297 @@
                 transform: translateX(10px);
             }
         }
+
+        .action-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-modern {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-modern:hover {
+            transform: scale(1.02);
+        }
+
+        .section-content {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #checkin-map,
+        #setup-map,
+        #workplace-map,
+        #special-checkin-map {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .leaflet-container {
+            border-radius: 16px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+        }
+
+        .icon-wrapper {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+        }
+
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .location-status-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 1px solid #bbf7d0;
+        }
+
+        .workflow-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .workflow-item:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .section-header {
+            position: relative;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 4px;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .activity-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .activity-item:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .map-legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .map-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .workplace-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .workplace-item:hover {
+            border-color: #a5b4fc;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+        }
+
+        .workplace-item.ring-2 {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Utility class for text truncation on multiple lines */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-100 to-blue-50 min-h-screen flex">
+<body class="flex">
 
-    <!-- Enhanced Sidebar -->
+    <!-- Clean Sidebar -->
     <aside
-        class="w-64 lg:w-72 bg-white shadow-xl h-screen fixed border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[60]"
+        class="sidebar w-72 fixed h-screen shadow-lg transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-[60]"
         id="sidebar">
-        <div class="p-4 lg:p-6 border-b border-gray-100">
-            <div class="text-indigo-600 text-2xl lg:text-3xl font-bold flex items-center">
-                <i class="fas fa-map-marker-alt mr-2 lg:mr-3"></i>
-                CISAM
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center shadow-md">
+                    <i class="fas fa-map-marker-alt text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">CISAM</h1>
+                    <p class="text-xs text-gray-500 font-medium">Attendance Monitor</p>
+                </div>
             </div>
-            <p class="text-gray-500 text-xs lg:text-sm mt-1">Curriculum Implementation System - Attendance Monitoring
-            </p>
         </div>
-        <nav class="mt-6 lg:mt-8 space-y-1 px-3 lg:px-4">
+
+        <nav class="mt-6 space-y-1 px-2">
             <a href="javascript:void(0)" class="sidebar-link active" data-section="dashboard">
                 <i class="fas fa-home w-5"></i>
-                <span>My Dashboard</span>
+                <span class="ml-3">Dashboard</span>
             </a>
             <a href="javascript:void(0)" class="sidebar-link" data-section="my-workplace">
-                <i class="fas fa-map-marked-alt w-5"></i>
-                <span>My Workplace</span>
+                <i class="fas fa-building w-5"></i>
+                <span class="ml-3">Workplace</span>
             </a>
             <a href="javascript:void(0)" class="sidebar-link" data-section="gps-checkin">
                 <i class="fas fa-map-pin w-5"></i>
-                <span>Check In/Out</span>
+                <span class="ml-3">Check In/Out</span>
             </a>
             <a href="javascript:void(0)" class="sidebar-link" data-section="special-checkin">
                 <i class="fas fa-star w-5"></i>
-                <span>Special Check In/Out</span>
+                <span class="ml-3">Special Check-In</span>
             </a>
             <a href="javascript:void(0)" class="sidebar-link" data-section="attendance-history">
                 <i class="fas fa-history w-5"></i>
-                <span>My Attendance History</span>
+                <span class="ml-3">History</span>
+            </a>
+            <a href="javascript:void(0)" class="sidebar-link" data-section="absence-history">
+                <i class="fas fa-calendar-times w-5"></i>
+                <span class="ml-3">Absence Records</span>
             </a>
         </nav>
 
-        <!-- Location Status Indicator -->
-        <div class="absolute bottom-4 lg:bottom-6 left-3 lg:left-4 right-3 lg:right-4">
-            <div class="bg-green-50 border border-green-200 rounded-lg p-2 lg:p-3">
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                    <span class="text-green-700 text-xs lg:text-sm font-medium" id="location-status">Location
-                        Active</span>
+        <div class="absolute bottom-6 left-4 right-4">
+            <div class="location-status-card rounded-xl p-4 shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 bg-green-500 rounded-full pulse-dot"></div>
+                    <div class="flex-1">
+                        <p class="text-xs text-green-700 font-semibold">Location Status</p>
+                        <p class="text-sm font-bold text-green-800" id="location-status">Active</p>
+                    </div>
                 </div>
             </div>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="ml-0 lg:ml-72 flex-1 w-full">
-        <!-- Enhanced Topbar -->
-        <div class="bg-white shadow-sm border-b border-gray-200 p-4 lg:p-6">
+    <main class="ml-0 lg:ml-72 flex-1 min-h-screen">
+        <!-- Clean Topbar -->
+        <div class="topbar shadow-sm p-4 lg:p-6 sticky top-0 z-50">
             <div class="flex justify-between items-center">
-                <!-- Mobile Menu Button -->
-                <button class="lg:hidden text-gray-600 hover:text-indigo-600 mr-3" onclick="toggleMobileSidebar()">
+                <button class="lg:hidden text-gray-600 hover:text-indigo-600 mr-3 transition-colors"
+                    onclick="toggleMobileSidebar()">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
+
                 <div class="flex-1">
-                    <h1 class="text-xl lg:text-3xl font-bold text-gray-800" id="page-title">My Dashboard</h1>
-                    <p class="text-xs lg:text-base text-gray-600 mt-1 hidden sm:block" id="page-subtitle">Welcome to
-                        your attendance management portal</p>
+                    <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 leading-none" id="page-title">My Dashboard</h1>
+                    <p class="text-sm text-gray-600 mt-0.5 hidden sm:block leading-none" id="page-subtitle">Welcome to your attendance portal</p>
                 </div>
-                <div class="flex items-center space-x-2 lg:space-x-4">
+
+                <div class="flex items-center space-x-3">
                     <div class="text-right hidden md:block">
-                        <p class="text-xs lg:text-sm text-gray-500">Welcome back,</p>
-                        <p class="text-sm lg:text-base font-semibold text-gray-800">{{ Auth::user()->name ?? 'User' }}
-                        </p>
+                        <p class="text-xs text-gray-500 font-medium">Welcome back,</p>
+                        <p class="text-sm font-bold text-gray-900">{{ Auth::user()->name ?? 'User' }}</p>
                     </div>
                     <div
-                        class="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm lg:text-base">
+                        class="w-11 h-11 gradient-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </div>
-                    <div class="flex items-center space-x-2 lg:space-x-3 border-l border-gray-200 pl-2 lg:pl-4">
+                    <div class="flex items-center space-x-2 border-l border-gray-300 pl-3">
                         @if (Auth::user()->isAdmin())
                             <a href="{{ route('admin.dashboard') }}"
-                                class="px-2 lg:px-4 py-2 text-xs lg:text-sm bg-indigo-500 text-white rounded-lg shadow hover:bg-indigo-600 transition-colors duration-200 flex items-center">
-                                <i class="fas fa-user-shield mr-1 lg:mr-2"></i>
+                                class="px-4 py-2 gradient-info text-white rounded-lg shadow-sm hover:shadow-md transition-all text-sm font-semibold btn-modern">
+                                <i class="fas fa-user-shield mr-2"></i>
                                 <span class="hidden sm:inline">Admin</span>
                             </a>
                         @endif
                         <a href="{{ route('logout.get') }}"
-                            class="px-3 lg:px-6 py-2 text-xs lg:text-sm bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors duration-200 flex items-center">
-                            <i class="fas fa-sign-out-alt mr-1 lg:mr-2"></i>
+                            class="px-4 py-2 gradient-danger text-white rounded-lg shadow-sm hover:shadow-md transition-all text-sm font-semibold btn-modern">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
                             <span class="hidden sm:inline">Logout</span>
                         </a>
                     </div>
@@ -149,372 +448,170 @@
         </div>
 
         <div class="p-4 sm:p-6 lg:p-8">
-            <!-- Dashboard Overview Section -->
+            <!-- Dashboard Section -->
             <div id="dashboard-section" class="section-content">
-                <!-- Personal Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-                    <div
-                        class="bg-white p-4 lg:p-6 rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow duration-200">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-2xl lg:text-3xl font-bold text-green-600" id="my-checkins">
-                                    <i class="fas fa-spinner fa-spin text-base lg:text-lg"></i>
-                                </h3>
-                                <p class="text-sm lg:text-base text-gray-600 font-medium">Days Present This Month</p>
-                                <p class="text-xs lg:text-sm text-green-600 mt-1" id="attendance-rate">Loading...</p>
-                            </div>
-                            <div
-                                class="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-calendar-check text-green-600 text-lg lg:text-xl"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="bg-white p-4 lg:p-6 rounded-xl shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow duration-200">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-2xl lg:text-3xl font-bold text-blue-600" id="avg-checkin">
-                                    <i class="fas fa-spinner fa-spin text-base lg:text-lg"></i>
-                                </h3>
-                                <p class="text-sm lg:text-base text-gray-600 font-medium">Average Check-in Time</p>
-                                <p class="text-xs lg:text-sm text-blue-600 mt-1" id="checkin-trend">Loading...</p>
-                            </div>
-                            <div
-                                class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-clock text-blue-600 text-lg lg:text-xl"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="bg-white p-4 lg:p-6 rounded-xl shadow-lg border-l-4 border-indigo-500 hover:shadow-xl transition-shadow duration-200">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-2xl lg:text-3xl font-bold text-indigo-600" id="hours-worked">
-                                    <i class="fas fa-spinner fa-spin text-base lg:text-lg"></i>
-                                </h3>
-                                <p class="text-sm lg:text-base text-gray-600 font-medium">Today's Work Hours</p>
-                                <p class="text-xs lg:text-sm text-indigo-600 mt-1" id="work-status">Loading...</p>
-                            </div>
-                            <div
-                                class="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-hourglass-half text-indigo-600 text-lg lg:text-xl"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 mb-6 lg:mb-8">
-                    <div
-                        class="bg-gradient-to-br from-green-500 to-green-600 text-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-map-marker-alt text-3xl mr-4"></i>
-                            <h2 class="text-xl font-bold">Check In/Out</h2>
-                        </div>
-                        <p class="mb-6 opacity-90">Quick access to check in or out with GPS location verification.</p>
-                        <button
-                            class="w-full px-6 py-3 bg-white text-green-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
-                            onclick="switchToSection('gps-checkin')">
-                            Go to Check In/Out
-                        </button>
-                    </div>
-
-                    <div
-                        class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-star text-3xl mr-4"></i>
-                            <h2 class="text-xl font-bold">Special Check In/Out</h2>
-                        </div>
-                        <p class="mb-6 opacity-90">Up to 4 check-ins/outs per day at your assigned locations. No lunch
-                            break required.</p>
-                        <button
-                            class="w-full px-6 py-3 bg-white text-yellow-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
-                            onclick="switchToSection('special-checkin')">
-                            Go to Special Check In/Out
-                        </button>
-                    </div>
-
-                    <div
-                        class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-history text-3xl mr-4"></i>
-                            <h2 class="text-xl font-bold">Attendance History</h2>
-                        </div>
-                        <p class="mb-6 opacity-90">View your detailed attendance records and work hour summaries.</p>
-                        <button
-                            class="w-full px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
-                            onclick="switchToSection('attendance-history')">
-                            View My History
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Today's Workflow -->
-                <div class="bg-white rounded-xl shadow-lg p-6" id="todays-schedule-section">
-                    <h3 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-tasks text-indigo-600 mr-2"></i>
-                        Today's Workflow
-                    </h3>
-                    <div class="space-y-3" id="schedule-content">
-                        <!-- Loading state -->
-                        <div class="flex items-center justify-center p-8 text-gray-500">
-                            <div class="text-center">
-                                <i class="fas fa-spinner fa-spin text-2xl mb-3 text-gray-300"></i>
-                                <p>Loading schedule...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Enhanced Special Check-in Section -->
-            <div id="special-checkin-section" class="section-content hidden">
-                <div class="grid lg:grid-cols-2 gap-8">
-                    <!-- Special Check-in Interface -->
-                    <div class="space-y-6">
-                        <div class="bg-white rounded-xl shadow-lg p-8">
-                            <div class="text-center mb-6">
-                                <div
-                                    class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-star text-3xl text-yellow-600"></i>
-                                </div>
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Special Check In/Out</h2>
-                                <p class="text-gray-600">Check in/out up to 4 times per day at your assigned locations.
-                                    No lunch break required.</p>
-                            </div>
-
-                            <!-- Location Status -->
-                            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-gray-700">Location Status:</span>
-                                    <div class="flex items-center space-x-2">
-                                        <span
-                                            class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium"
-                                            id="special-location-badge">
-                                            Checking...
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="text-sm text-gray-600 mb-2" id="special-current-location">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>Getting your location...
-                                </div>
-                            </div>
-
-                            <!-- Special Location Selection -->
-                            <div class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-gray-700">Assigned Special Locations:</span>
-                                    <button id="refresh-special-locations"
-                                        class="text-xs text-yellow-600 hover:text-yellow-800">
-                                        <i class="fas fa-sync-alt mr-1"></i>Refresh
-                                    </button>
-                                </div>
-                                <select id="special-location-select" class="w-full mt-2 p-2 border rounded text-sm">
-                                    <option value="">Loading special locations...</option>
-                                </select>
-                                <div class="mt-2 text-xs text-yellow-700" id="special-location-info">
-                                    Select a location to check in/out
-                                </div>
-                            </div>
-
-                            <!-- Special Check-in Button -->
-                            <button id="special-checkin-btn"
-                                class="w-full py-4 bg-gray-400 text-white rounded-lg font-semibold text-lg cursor-not-allowed"
-                                disabled>
-                                <i class="fas fa-location-crosshairs mr-2"></i>
-                                Waiting for Location...
-                            </button>
-
-                            <!-- Special Check-in Info -->
-                            <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                <h4 class="text-sm font-medium text-blue-800 mb-2 flex items-center">
-                                    <i class="fas fa-info-circle mr-2"></i>About Special Check-in
-                                </h4>
-                                <ul class="text-xs text-blue-700 space-y-1">
-                                    <li>• Up to 4 check-in/out pairs per day (8 total actions)</li>
-                                    <li>• Can check in/out at up to 4 different locations</li>
-                                    <li>• No lunch break required</li>
-                                    <li>• Must be within assigned location area</li>
-                                    <li>• Perfect for field work or multiple locations</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- Today's Special Activity -->
-                        <div class="bg-white rounded-xl shadow-lg p-6">
-                            <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                <i class="fas fa-history text-yellow-600 mr-2"></i>
-                                Today's Special Activity
-                            </h3>
-                            <div class="space-y-3" id="special-todays-activity">
-                                <div class="flex items-center justify-center p-8 text-gray-500"
-                                    id="special-activity-empty">
-                                    <div class="text-center">
-                                        <i class="fas fa-calendar-day text-3xl mb-3 text-gray-300"></i>
-                                        <p>No special activity recorded today</p>
-                                        <p class="text-sm text-gray-400 mt-1">Check in to start tracking</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>              
-                    </div>
-
-                    <!-- Special Location Map -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold flex items-center">
-                                <i class="fas fa-map text-yellow-600 mr-2"></i>
-                                Special Location Verification
-                            </h3>
-                            <button onclick="initializeSpecialCheckinMap()"
-                                class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded text-sm hover:bg-yellow-200 transition-colors">
-                                <i class="fas fa-redo mr-1"></i>Reload Map
-                            </button>
-                        </div>
-                        <div id="special-checkin-map"
-                            class="w-full h-96 bg-gray-200 rounded-lg relative overflow-hidden">
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="text-center">
-                                    <i class="fas fa-map text-3xl text-gray-400 mb-3"></i>
-                                    <p class="text-gray-500 mb-2">Map will load when you visit this section</p>
-                                    <button onclick="initializeSpecialCheckinMap()"
-                                        class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm">
-                                        <i class="fas fa-play mr-2"></i>Load Map Now
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                            <h4 class="text-sm font-medium text-gray-700 mb-2">Map Legend:</h4>
-                            <div class="flex flex-wrap gap-4 text-xs">
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
-                                    <span>Your Location</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
-                                    <span>Special Location</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 border-2 border-dashed border-yellow-500 rounded-full mr-1">
-                                    </div>
-                                    <span>Geofence Boundary</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Special Workflow Status -->
-                        <div class="mt-6 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                            <h4 class="text-sm font-medium text-yellow-800 mb-3 flex items-center">
-                                <i class="fas fa-tasks mr-2"></i>Special Workflow Status
-                            </h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-yellow-700">Today's Activity:</span>
-                                    <span class="font-medium text-yellow-800" id="special-checkins-count">0/4 pairs (0/8 actions)</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-yellow-700">Last Action:</span>
-                                    <span class="font-medium text-yellow-800" id="special-last-action">None</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-yellow-700">Status:</span>
-                                    <span class="font-medium text-yellow-800" id="special-workflow-status">Ready</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- My Workplace Section -->
-            <div id="my-workplace-section" class="section-content hidden">
+                <!-- Primary Action Card - Mobile First -->
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                        <i class="fas fa-building text-indigo-600 mr-3"></i>
-                        My Workplace
-                    </h2>
-                    <p class="text-gray-600">Select and view your assigned workplace locations.</p>
-                </div>
-
-                <div class="grid lg:grid-cols-2 gap-8">
-                    <!-- Assigned Workplaces -->
-                    <div class="bg-white rounded-xl shadow-lg p-8">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-map-marked-alt text-green-600 mr-3"></i>
-                            Assigned Workplaces
-                        </h3>
-
-                        <div id="assigned-workplaces-list" class="space-y-4">
-                            <!-- Workplaces will be loaded here dynamically -->
-                            <div class="flex items-center justify-center p-8 text-gray-500">
-                                <div class="text-center">
-                                    <i class="fas fa-spinner fa-spin text-3xl mb-3 text-gray-300"></i>
-                                    <p>Loading your workplaces...</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- No workplaces message -->
-                        <div id="no-workplaces-message" class="hidden text-center p-8">
-                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                                <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3"></i>
-                                <h4 class="text-lg font-semibold text-gray-800 mb-2">No Workplaces Assigned</h4>
-                                <p class="text-gray-600 mb-4">You haven't been assigned to any workplace yet. Please
-                                    contact your administrator to assign you to a workplace.</p>
-                                <button onclick="refreshWorkplaces()"
-                                    class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-                                    <i class="fas fa-refresh mr-2"></i>Refresh
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Selected Workplace Details -->
-                    <div class="bg-white rounded-xl shadow-lg p-8">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-info-circle text-blue-600 mr-3"></i>
-                            Workplace Details
-                        </h3>
-
-                        <div id="selected-workplace-details">
-                            <div class="text-center p-8 text-gray-500">
-                                <i class="fas fa-building text-3xl mb-3 text-gray-300"></i>
-                                <p>Select a workplace to view details</p>
-                            </div>
-                        </div>
-
-                        <!-- Workplace Map -->
-                        <div id="workplace-map-container" class="hidden">
-                            <div class="mt-6">
-                                <h4 class="text-lg font-semibold text-gray-800 mb-3">Location Map</h4>
-                                <div id="workplace-map"
-                                    class="w-full h-64 bg-gray-200 rounded-lg relative overflow-hidden">
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <div class="text-center">
-                                            <i class="fas fa-map text-3xl text-gray-400 mb-2"></i>
-                                            <p class="text-gray-500">Loading map...</p>
-                                        </div>
+                    <div class="card-modern rounded-2xl shadow-md overflow-hidden gradient-success text-white">
+                        <div class="p-6 lg:p-8">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-12 h-12 lg:w-14 lg:h-14 bg-[#E1AD01] shadow-lg bg-opacity-20 rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                                        <i class="fas fa-map-marker-alt text-white text-xl lg:text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-xl lg:text-2xl font-bold">Check In/Out</h2>
+                                        <p class="text-xs lg:text-sm opacity-90">Quick GPS verification</p>
                                     </div>
                                 </div>
+                                <div class="text-right hidden lg:block">
+                                    <div class="text-2xl font-bold" id="current-time">--:--</div>
+                                    <div class="text-xs opacity-75" id="current-date">Loading...</div>
+                                </div>
+                            </div>
+                            <button onclick="switchToSection('gps-checkin')"
+                                class="w-full px-6 py-3 bg-white text-green-600 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm text-base lg:text-lg">
+                                <i class="fas fa-location-crosshairs mr-2"></i>Start Check In
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compact Stats - Mobile Optimized -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">Today's Overview
+                    </h3>
+                    <div class="grid grid-cols-3 gap-3 lg:gap-6">
+                        <!-- Days Present -->
+                        <div class="card-modern rounded-xl lg:rounded-2xl p-3 lg:p-6 shadow-sm stat-card">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <div
+                                    class="w-10 h-10 lg:w-12 lg:h-12 gradient-success rounded-lg lg:rounded-xl flex items-center justify-center mb-2 lg:mb-3">
+                                    <i class="fas fa-calendar-check text-white text-sm lg:text-xl"></i>
+                                </div>
+                                <h3 class="text-xl lg:text-3xl font-bold text-gray-900 mb-0.5 lg:mb-1"
+                                    id="my-checkins">
+                                    <i class="fas fa-spinner fa-spin text-sm lg:text-lg text-gray-400"></i>
+                                </h3>
+                                <p class="text-[10px] lg:text-sm text-gray-600 font-semibold mb-1 leading-tight">Days
+                                    Present</p>
+                                <p class="text-[9px] lg:text-xs text-green-600 font-medium hidden lg:block"
+                                    id="attendance-rate">Loading...</p>
+                            </div>
+                        </div>
+
+                        <!-- Average Check-in -->
+                        <div class="card-modern rounded-xl lg:rounded-2xl p-3 lg:p-6 shadow-sm stat-card">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <div
+                                    class="w-10 h-10 lg:w-12 lg:h-12 gradient-info rounded-lg lg:rounded-xl flex items-center justify-center mb-2 lg:mb-3">
+                                    <i class="fas fa-clock text-white text-sm lg:text-xl"></i>
+                                </div>
+                                <h3 class="text-xl lg:text-3xl font-bold text-gray-900 mb-0.5 lg:mb-1"
+                                    id="avg-checkin">
+                                    <i class="fas fa-spinner fa-spin text-sm lg:text-lg text-gray-400"></i>
+                                </h3>
+                                <p class="text-[10px] lg:text-sm text-gray-600 font-semibold mb-1 leading-tight">Avg
+                                    Check-in</p>
+                                <p class="text-[9px] lg:text-xs text-blue-600 font-medium hidden lg:block"
+                                    id="checkin-trend">Loading...</p>
+                            </div>
+                        </div>
+
+                        <!-- Work Hours -->
+                        <div class="card-modern rounded-xl lg:rounded-2xl p-3 lg:p-6 shadow-sm stat-card">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <div
+                                    class="w-10 h-10 lg:w-12 lg:h-12 gradient-primary rounded-lg lg:rounded-xl flex items-center justify-center mb-2 lg:mb-3">
+                                    <i class="fas fa-hourglass-half text-white text-sm lg:text-xl"></i>
+                                </div>
+                                <h3 class="text-xl lg:text-3xl font-bold text-gray-900 mb-0.5 lg:mb-1"
+                                    id="hours-worked">
+                                    <i class="fas fa-spinner fa-spin text-sm lg:text-lg text-gray-400"></i>
+                                </h3>
+                                <p class="text-[10px] lg:text-sm text-gray-600 font-semibold mb-1 leading-tight">Work
+                                    Hours</p>
+                                <p class="text-[9px] lg:text-xs text-indigo-600 font-medium hidden lg:block"
+                                    id="work-status">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile: Show extra stats info -->
+                    <div class="lg:hidden mt-3 grid grid-cols-3 gap-2 text-center">
+                        <div class="text-[9px] text-green-600 font-medium" id="attendance-rate-mobile">Loading...
+                        </div>
+                        <div class="text-[9px] text-blue-600 font-medium" id="checkin-trend-mobile">Loading...</div>
+                        <div class="text-[9px] text-indigo-600 font-medium" id="work-status-mobile">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Grid -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">Quick Actions
+                    </h3>
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
+                        <!-- Special Check-in -->
+                        <div class="action-card gradient-warning text-white p-4 lg:p-8 rounded-xl shadow-md cursor-pointer"
+                            onclick="switchToSection('special-checkin')">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <i class="fas fa-star text-2xl lg:text-3xl mb-2 lg:mb-4 opacity-90"></i>
+                                <h3 class="text-sm lg:text-xl font-bold mb-1 lg:mb-2">Special Check-In</h3>
+                                <p class="text-[10px] lg:text-sm opacity-90 leading-tight hidden lg:block">Up to 4
+                                    check-ins per day</p>
+                            </div>
+                        </div>
+
+                        <!-- History -->
+                        <div class="action-card gradient-info text-white p-4 lg:p-8 rounded-xl shadow-md cursor-pointer"
+                            onclick="switchToSection('attendance-history')">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <i class="fas fa-history text-2xl lg:text-3xl mb-2 lg:mb-4 opacity-90"></i>
+                                <h3 class="text-sm lg:text-xl font-bold mb-1 lg:mb-2">View History</h3>
+                                <p class="text-[10px] lg:text-sm opacity-90 leading-tight hidden lg:block">Attendance
+                                    records</p>
+                            </div>
+                        </div>
+
+                        <!-- My Workplace -->
+                        <div class="action-card bg-gradient-to-br from-purple-500 to-indigo-600 text-white p-4 lg:p-8 rounded-xl shadow-md cursor-pointer col-span-2 lg:col-span-1"
+                            onclick="switchToSection('my-workplace')">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <i class="fas fa-building text-2xl lg:text-3xl mb-2 lg:mb-4 opacity-90"></i>
+                                <h3 class="text-sm lg:text-xl font-bold mb-1 lg:mb-2">Workplace</h3>
+                                <p class="text-[10px] lg:text-sm opacity-90 leading-tight hidden lg:block">Manage
+                                    locations</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Primary Workplace Section -->
-                <div class="mt-8 bg-white rounded-xl shadow-lg p-8">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                        <i class="fas fa-star text-yellow-500 mr-3"></i>
-                        Primary Workplace
-                    </h3>
-
-                    <div id="primary-workplace-info" class="grid md:grid-cols-2 gap-6">
-                        <div class="text-center p-6 text-gray-500">
-                            <i class="fas fa-star text-3xl mb-3 text-gray-300"></i>
-                            <p>No primary workplace set</p>
+                <!-- Today's Workflow - Combined Activity -->
+                <div class="card-modern rounded-2xl shadow-sm p-6 lg:p-8" id="todays-schedule-section">
+                    <div class="section-header">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-10 h-10 lg:w-12 lg:h-12 gradient-primary rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                                    <i class="fas fa-clock text-white text-base lg:text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg lg:text-2xl font-bold text-gray-900">Today's Complete Activity</h3>
+                                    <p class="text-xs lg:text-sm text-gray-600">All check-ins and check-outs today</p>
+                                </div>
+                            </div>
+                            <button onclick="fetchTodaysSchedule()" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                                <i class="fas fa-sync-alt mr-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-3" id="schedule-content">
+                        <div class="flex items-center justify-center p-8 lg:p-12 text-gray-500">
+                            <div class="text-center">
+                                <i class="fas fa-spinner fa-spin text-2xl lg:text-3xl mb-3 lg:mb-4 text-gray-300"></i>
+                                <p class="font-medium text-sm lg:text-base">Loading activity...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -523,232 +620,236 @@
             <!-- GPS Check-in Section -->
             <div id="gps-checkin-section" class="section-content hidden">
                 <div class="grid lg:grid-cols-2 gap-8">
-                    <!-- Check-in Interface -->
-                    <div class="space-y-6">
-                        <div class="bg-white rounded-xl shadow-lg p-8">
-                            <div class="text-center mb-6">
-                                <div
-                                    class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-map-marker-alt text-3xl text-green-600"></i>
-                                </div>
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">GPS Check-In</h2>
-                                <p class="text-gray-600">Verify your location and check-in to start your work day</p>
+                    <!-- LEFT COLUMN: Check-In Interface -->
+                    <div class="space-y-8">
+                        <!-- HEADER CARD -->
+                        <div
+                            class="bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-2xl shadow-md p-6 text-center">
+                            <div class="flex justify-center mb-3">
+                                <i class="fas fa-map-marker-alt text-4xl"></i>
                             </div>
-
-                            <!-- Location Status -->
-                            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-gray-700">Location Status:</span>
-                                    <div class="flex items-center space-x-2">
-                                        <span
-                                            class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium"
-                                            id="location-badge">
-                                            Checking...
-                                        </span>
-                                        <button onclick="showLocationTroubleshooting()"
-                                            class="text-xs text-gray-500 hover:text-gray-700" title="Location Help">
-                                            <i class="fas fa-question-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="text-sm text-gray-600 mb-2" id="current-location">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>Getting your location...
-                                </div>
-
-                                <!-- Location troubleshooting panel (hidden by default) -->
-                                <div id="location-troubleshooting"
-                                    class="hidden mt-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <h4 class="text-sm font-semibold text-blue-900 flex items-center">
-                                            <i class="fas fa-tools mr-2"></i>Location Diagnostics
-                                        </h4>
-                                        <button onclick="runLocationDiagnostics()"
-                                            class="text-blue-600 hover:text-blue-800 text-xs">
-                                            <i class="fas fa-sync-alt mr-1"></i>Run Diagnostics
-                                        </button>
-                                    </div>
-
-                                    <!-- Diagnostic Results -->
-                                    <div id="diagnostic-results" class="space-y-2 text-xs mb-3">
-                                        <div class="flex items-center" id="geolocation-support">
-                                            <i class="fas fa-circle text-gray-400 mr-2"></i>
-                                            <span class="text-gray-600">Checking geolocation support...</span>
-                                        </div>
-                                        <div class="flex items-center" id="permission-status">
-                                            <i class="fas fa-circle text-gray-400 mr-2"></i>
-                                            <span class="text-gray-600">Checking location permissions...</span>
-                                        </div>
-                                        <div class="flex items-center" id="connection-status">
-                                            <i class="fas fa-circle text-gray-400 mr-2"></i>
-                                            <span class="text-gray-600">Checking internet connection...</span>
-                                        </div>
-                                        <div class="flex items-center" id="https-status">
-                                            <i class="fas fa-circle text-gray-400 mr-2"></i>
-                                            <span class="text-gray-600">Checking secure connection...</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Error Details (if any) -->
-                                    <div id="error-details"
-                                        class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs">
-                                        <div class="font-medium text-red-800 mb-1">Error Details:</div>
-                                        <div id="error-message" class="text-red-700"></div>
-                                    </div>
-
-                                    <!-- Recommended Actions -->
-                                    <div id="recommended-actions" class="space-y-1 text-xs text-blue-800 mb-3">
-                                        <!-- Will be populated by diagnostics -->
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2">
-                                        <button onclick="testBasicLocation()"
-                                            class="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700 transition-colors">
-                                            <i class="fas fa-map-marker-alt mr-1"></i>Basic Test
-                                        </button>
-                                        <button onclick="retryLocationAccess()"
-                                            class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors">
-                                            <i class="fas fa-redo mr-1"></i>Retry Location
-                                        </button>
-                                        <button onclick="clearLocationCache()"
-                                            class="px-3 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700 transition-colors">
-                                            <i class="fas fa-trash mr-1"></i>Clear Cache
-                                        </button>
-                                        <button onclick="testHighAccuracy()"
-                                            class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors">
-                                            <i class="fas fa-crosshairs mr-1"></i>High Accuracy Test
-                                        </button>
-                                        <button onclick="toggleLocationTroubleshooting()"
-                                            class="px-3 py-1 border border-blue-300 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors">
-                                            Close
-                                        </button>
-                                    </div>
-                                </div>
-
-
-                                <!-- Testing Mode Panel (Admin Only) -->
-                                @if (Auth::user()->isAdmin())
-                                    <div id="testing-mode-panel"
-                                        class="mt-3 p-4 bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-lg shadow-sm">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <h4 class="text-sm font-semibold text-orange-900 flex items-center">
-                                                <i class="fas fa-flask mr-2"></i>Testing Mode (Admin Only)
-                                            </h4>
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" id="testing-mode-toggle" class="sr-only peer"
-                                                    onchange="toggleTestingMode()">
-                                                <div
-                                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500">
-                                                </div>
-                                            </label>
-                                        </div>
-
-                                        <div id="testing-mode-content" class="hidden">
-                                            <p class="text-xs text-orange-800 mb-3">
-                                                Testing mode allows simulated GPS locations for office demonstrations
-                                                and
-                                                testing.
-                                            </p>
-
-                                            <!-- Preset Locations -->
-                                            <div class="mb-4">
-                                                <h5 class="text-xs font-medium text-orange-800 mb-2">Quick Preset
-                                                    Locations:</h5>
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                    <button
-                                                        onclick="setPresetLocation(14.2784642, 120.8676613, 'DepEd Cavite')"
-                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                        DepEd Cavite
-                                                    </button>
-                                                    <button
-                                                        onclick="setPresetLocation(14.3971478, 120.8530243, 'Tanza National Comprehensive HS')"
-                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                        Tanza National Comprehensive HS
-                                                    </button>
-                                                    <button
-                                                        onclick="setPresetLocation(14.3186223, 120.8591034, 'Tanza National Trade School')"
-                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                        Tanza National Trade School
-                                                    </button>
-                                                    <button
-                                                        onclick="setPresetLocation(14.287075, 120.8687556, 'Trece Martires City Elementary')"
-                                                        class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs">
-                                                        Trece Martires City Elementary
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <!-- Custom Location Input -->
-                                            <div class="grid grid-cols-2 gap-2 mb-3">
-                                                <div>
-                                                    <label
-                                                        class="block text-xs font-medium text-orange-800 mb-1">Latitude</label>
-                                                    <input type="number" id="admin-test-lat" step="any"
-                                                        placeholder="14.2785"
-                                                        class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        class="block text-xs font-medium text-orange-800 mb-1">Longitude</label>
-                                                    <input type="number" id="admin-test-lng" step="any"
-                                                        placeholder="120.8677"
-                                                        class="w-full px-2 py-1 border border-orange-300 rounded text-xs">
-                                                </div>
-                                            </div>
-
-                                            <div class="flex gap-2">
-                                                <button onclick="setCustomTestLocation()"
-                                                    class="flex-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs">
-                                                    Set Custom Location
-                                                </button>
-                                                <button onclick="clearTestLocation()"
-                                                    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
-                                                    Clear Test
-                                                </button>
-                                            </div>
-
-                                            <div class="mt-2 text-xs text-orange-700 bg-orange-100 p-2 rounded">
-                                                <i class="fas fa-info-circle mr-1"></i>
-                                                <strong>Status:</strong> <span id="testing-mode-status">Ready to set
-                                                    test
-                                                    location</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                            </div> <!-- Geofence Status -->
-                            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <h3 class="font-semibold text-blue-800 mb-2">Your Workplace:</h3>
-                                <div class="space-y-2">
-                                    <div class="flex items-center text-sm">
-                                        <i class="fas fa-building text-blue-600 mr-2"></i>
-                                        <span class="text-gray-700" id="workplace-name-display">Not configured</span>
-                                        <span class="ml-auto text-blue-600 font-medium" id="office-distance">--
-                                            meters</span>
-                                    </div>
-                                    <div class="text-xs text-gray-600" id="workplace-address-display">
-                                        Please setup your workplace first
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Check-in Button -->
-                            <button id="checkin-btn"
-                                class="w-full py-4 bg-gray-400 text-white rounded-lg font-semibold text-lg cursor-not-allowed"
-                                disabled>
-                                <i class="fas fa-location-crosshairs mr-2"></i>
-                                Waiting for Location...
-                            </button>
+                            <h2 class="text-2xl font-extrabold">GPS Check-In</h2>
+                            <p class="text-cyan-100 mt-1 text-sm">Verify your location and check-in to start your
+                                workday</p>
                         </div>
 
-                        <!-- Today's Check-in History -->
-                        <div class="bg-white rounded-xl shadow-lg p-6">
-                            <h3 class="text-lg font-semibold mb-4">Today's Activity</h3>
-                            <div class="space-y-3" id="todays-activity">
-                                <div class="flex items-center justify-center p-8 text-gray-500">
+                        <!-- WORKPLACE INFO -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="font-semibold text-gray-800 flex items-center mb-4">
+                                <i class="fas fa-building text-cyan-500 mr-2"></i>Workplace Information
+                            </h3>
+                            
+                            <!-- Primary Workplace -->
+                            <div class="mb-3 pb-3 border-b border-gray-100">
+                                <div class="flex items-center justify-between text-xs mb-1">
+                                    <span class="text-gray-500 font-medium">Primary Workplace:</span>
+                                    <span id="primary-distance" class="text-gray-400 text-xs">-- m</span>
+                                </div>
+                                <span id="primary-workplace-display" class="text-sm font-semibold text-gray-700 block">Not set</span>
+                            </div>
+                            
+                            <!-- Current Workplace (Detected) -->
+                            <div>
+                                <div class="flex items-center justify-between text-xs mb-1">
+                                    <span class="text-gray-500 font-medium">Current Location:</span>
+                                    <span id="current-distance" class="text-cyan-600 font-semibold text-xs">-- m</span>
+                                </div>
+                                <span id="current-workplace-display" class="text-sm font-semibold text-gray-700 block">Detecting...</span>
+                                <p id="current-workplace-address" class="text-xs text-gray-500 mt-1">
+                                    Waiting for location...
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- LOCATION STATUS -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-semibold text-gray-700">Location Status:</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="location-badge"
+                                        class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Checking...</span>
+                                    <button onclick="showLocationTroubleshooting()" title="Location Help"
+                                        class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="current-location" class="text-sm text-gray-600 mb-4">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Getting your location...
+                            </div>
+
+                            <!-- Troubleshooting Panel -->
+                            <div id="location-troubleshooting"
+                                class="hidden bg-violet-50 border border-violet-200 rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-sm font-semibold text-violet-900 flex items-center">
+                                        <i class="fas fa-tools mr-2"></i>Location Diagnostics
+                                    </h4>
+                                    <button onclick="runLocationDiagnostics()"
+                                        class="text-violet-600 hover:text-violet-800 text-xs font-medium">
+                                        <i class="fas fa-sync-alt mr-1"></i>Run Diagnostics
+                                    </button>
+                                </div>
+
+                                <div id="diagnostic-results" class="space-y-2 text-xs text-gray-700 mb-3">
+                                    <div id="geolocation-support" class="flex items-center"><i
+                                            class="fas fa-circle text-gray-400 mr-2"></i>Checking geolocation
+                                        support...</div>
+                                    <div id="permission-status" class="flex items-center"><i
+                                            class="fas fa-circle text-gray-400 mr-2"></i>Checking location
+                                        permissions...</div>
+                                    <div id="connection-status" class="flex items-center"><i
+                                            class="fas fa-circle text-gray-400 mr-2"></i>Checking internet
+                                        connection...</div>
+                                    <div id="https-status" class="flex items-center"><i
+                                            class="fas fa-circle text-gray-400 mr-2"></i>Checking secure connection...
+                                    </div>
+                                </div>
+
+                                <div id="error-details"
+                                    class="hidden bg-red-50 border border-red-200 text-xs p-2 rounded mb-2">
+                                    <div class="font-medium text-red-800 mb-1">Error Details:</div>
+                                    <div id="error-message" class="text-red-700"></div>
+                                </div>
+
+                                <div id="recommended-actions" class="space-y-1 text-xs text-violet-800 mb-3"></div>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="testBasicLocation()"
+                                        class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs hover:bg-indigo-700">
+                                        <i class="fas fa-map-marker-alt mr-1"></i>Basic Test
+                                    </button>
+                                    <button onclick="retryLocationAccess()"
+                                        class="px-3 py-1.5 bg-cyan-600 text-white rounded-lg text-xs hover:bg-cyan-700">
+                                        <i class="fas fa-redo mr-1"></i>Retry
+                                    </button>
+                                    <button onclick="clearLocationCache()"
+                                        class="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs hover:bg-amber-600">
+                                        <i class="fas fa-trash mr-1"></i>Clear
+                                    </button>
+                                    <button onclick="testHighAccuracy()"
+                                        class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs hover:bg-emerald-700">
+                                        <i class="fas fa-crosshairs mr-1"></i>High Accuracy
+                                    </button>
+                                    <button onclick="toggleLocationTroubleshooting()"
+                                        class="px-3 py-1.5 border border-violet-300 text-violet-700 rounded-lg text-xs hover:bg-violet-100">
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Admin Testing Panel -->
+                            @if (Auth::user()->isAdmin())
+                                <div id="testing-mode-panel"
+                                    class="mt-5 bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-sm font-semibold text-amber-900 flex items-center">
+                                            <i class="fas fa-flask mr-2"></i>Testing Mode (Admin)
+                                        </h4>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" id="testing-mode-toggle" class="sr-only peer"
+                                                onchange="toggleTestingMode()">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-amber-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-full">
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div id="testing-mode-content" class="hidden text-xs text-amber-800">
+                                        <p class="mb-3">Testing mode allows simulated GPS locations.</p>
+
+                                        <div class="mb-3">
+                                            <h5 class="font-medium mb-2">Quick Preset Locations:</h5>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <button
+                                                    onclick="setPresetLocation(14.2784642,120.8676613,'DepEd Cavite')"
+                                                    class="px-2 py-1.5 bg-amber-500 text-white rounded hover:bg-amber-600 text-xs">DepEd
+                                                    Cavite</button>
+                                                <button onclick="setPresetLocation(14.3971478,120.8530243,'Tanza HS')"
+                                                    class="px-2 py-1.5 bg-amber-500 text-white rounded hover:bg-amber-600 text-xs">Tanza
+                                                    HS</button>
+                                                <button
+                                                    onclick="setPresetLocation(14.3186223,120.8591034,'Tanza Trade')"
+                                                    class="px-2 py-1.5 bg-amber-500 text-white rounded hover:bg-amber-600 text-xs">Tanza
+                                                    Trade</button>
+                                                <button
+                                                    onclick="setPresetLocation(14.287075,120.8687556,'Trece Elementary')"
+                                                    class="px-2 py-1.5 bg-amber-500 text-white rounded hover:bg-amber-600 text-xs">Trece
+                                                    Elementary</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-2 mb-2">
+                                            <div>
+                                                <label class="block font-medium mb-1">Latitude</label>
+                                                <input type="number" id="admin-test-lat" step="any"
+                                                    placeholder="14.2785"
+                                                    class="w-full px-2 py-1 border border-amber-300 rounded text-xs">
+                                            </div>
+                                            <div>
+                                                <label class="block font-medium mb-1">Longitude</label>
+                                                <input type="number" id="admin-test-lng" step="any"
+                                                    placeholder="120.8677"
+                                                    class="w-full px-2 py-1 border border-amber-300 rounded text-xs">
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-2 mb-2">
+                                            <button onclick="setCustomTestLocation()"
+                                                class="flex-1 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-xs font-medium">Set
+                                                Custom</button>
+                                            <button onclick="clearTestLocation()"
+                                                class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-medium">Clear</button>
+                                        </div>
+
+                                        <div class="bg-amber-100 p-2 rounded">
+                                            <strong>Status:</strong> <span id="testing-mode-status">Ready</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Manual Location Entry (for users) -->
+                            @if (!Auth::user()->isAdmin())
+                                <div class="mt-5 bg-violet-50 border border-violet-200 rounded-lg p-4">
+                                    <h4 class="text-sm font-semibold text-violet-900 mb-2 flex items-center">
+                                        <i class="fas fa-map-pin mr-2"></i>Having Location Issues?
+                                    </h4>
+                                    <p class="text-xs text-violet-700 mb-3">If your GPS isn't working properly, you can
+                                        manually select your workplace location.</p>
+                                    <button onclick="openManualLocationEntry()"
+                                        class="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold">
+                                        <i class="fas fa-edit mr-2"></i>Use Manual Location Entry
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- CHECK-IN BUTTON -->
+                        <button id="checkin-btn" disabled
+                            class="w-full py-4 bg-gray-300 text-white rounded-xl font-bold text-lg cursor-not-allowed shadow-sm">
+                            <i class="fas fa-location-crosshairs mr-2"></i>Waiting for Location...
+                        </button>
+
+                        <!-- TODAY'S REGULAR ACTIVITY -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                                        <i class="fas fa-history text-indigo-600 mr-2"></i>Today's Regular Activity
+                                    </h3>
+                                    <p class="text-xs text-gray-600 mt-1">Regular check-in/out logs only</p>
+                                </div>
+                                <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full">
+                                    Regular Only
+                                </span>
+                            </div>
+                            <div id="todays-activity" class="space-y-3">
+                                <div class="flex justify-center text-gray-500 py-8">
                                     <div class="text-center">
                                         <i class="fas fa-calendar-day text-3xl mb-3 text-gray-300"></i>
-                                        <p>No activity recorded today</p>
+                                        <p class="font-medium">No regular activity recorded today</p>
                                         <p class="text-sm text-gray-400 mt-1">Check in to start tracking</p>
                                     </div>
                                 </div>
@@ -756,46 +857,410 @@
                         </div>
                     </div>
 
-                    <!-- Location Map -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                    <!-- RIGHT COLUMN: Map Section -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold flex items-center">
-                                <i class="fas fa-map text-indigo-600 mr-2"></i>
-                                Location Verification
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                                <i class="fas fa-map text-cyan-600 mr-2"></i>Location Verification
                             </h3>
                             <button onclick="initializeCheckinMap()"
-                                class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-sm hover:bg-indigo-200 transition-colors">
-                                <i class="fas fa-redo mr-1"></i>Reload Map
+                                class="px-3 py-1.5 bg-cyan-100 text-cyan-700 rounded-lg text-sm hover:bg-cyan-200 font-medium">
+                                <i class="fas fa-redo mr-1"></i>Reload
                             </button>
                         </div>
-                        <div id="checkin-map" class="w-full h-96 bg-gray-200 rounded-lg relative overflow-hidden">
+
+                        <div id="checkin-map" class="w-full h-96 bg-gray-100 rounded-xl relative overflow-hidden">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <i class="fas fa-map text-3xl text-gray-400 mb-3"></i>
+                                <p class="text-gray-500 font-medium">Map will load when you visit</p>
+                                <button onclick="initializeCheckinMap()"
+                                    class="mt-3 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-semibold">
+                                    <i class="fas fa-play mr-2"></i>Load Map
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Map Legend -->
+                        <div class="mt-5 bg-gray-50 border border-gray-100 rounded-lg p-4">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Map Legend:</h4>
+                            <div class="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                                <div class="flex items-center gap-2"><span
+                                        class="w-3 h-3 rounded-full bg-blue-500"></span>Your Location</div>
+                                <div class="flex items-center gap-2"><span
+                                        class="w-3 h-3 rounded-full bg-green-500"></span>Workplace</div>
+                                <div class="flex items-center gap-2"><span
+                                        class="w-3 h-3 rounded-full border-2 border-dashed border-red-500"></span>Geofence
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- My Workplace Section -->
+            <div id="my-workplace-section" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 flex items-center">
+                        <i class="fas fa-building text-indigo-600 mr-3"></i>
+                        My Workplaces
+                    </h2>
+                    <p class="text-sm lg:text-base text-gray-600">Select and view your assigned workplace locations</p>
+                </div>
+
+                <!-- Workplaces Stats -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">Quick Overview</h3>
+                    <div class="grid grid-cols-2 gap-3 lg:gap-6">
+                        <div class="card-modern rounded-xl p-4 lg:p-6 shadow-sm stat-card">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mb-2 lg:mb-3 shadow-md">
+                                    <i class="fas fa-map-marked-alt text-white text-sm lg:text-lg"></i>
+                                </div>
+                                <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-0.5" id="workplaces-count-stat">0</h3>
+                                <p class="text-xs lg:text-sm text-gray-600 font-semibold">Assigned Locations</p>
+                                <p class="text-xs text-green-600 mt-1">Available workplaces</p>
+                            </div>
+                        </div>
+
+                        <div class="card-modern rounded-xl p-4 lg:p-6 shadow-sm stat-card">
+                            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-lg flex items-center justify-center mb-2 lg:mb-3 shadow-md">
+                                    <i class="fas fa-star text-white text-sm lg:text-lg"></i>
+                                </div>
+                                <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-0.5" id="primary-workplace-name">-</h3>
+                                <p class="text-xs lg:text-sm text-gray-600 font-semibold">Primary Workplace</p>
+                                <p class="text-xs text-yellow-600 mt-1" id="primary-workplace-subtitle">Not set</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assigned Workplaces Table -->
+                <div class="card-modern rounded-2xl shadow-sm overflow-hidden mb-6">
+                    <div class="p-3 sm:p-4 lg:p-5 border-b border-gray-200">
+                        <div class="flex flex-col gap-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-base sm:text-lg lg:text-xl font-bold text-gray-900">Your Workplaces</h3>
+                                    <p class="text-xs text-gray-600 mt-0.5">Manage and view your assigned workplace locations</p>
+                                </div>
+                                <button onclick="refreshWorkplaces()"
+                                    class="w-9 h-9 sm:w-auto sm:px-3 sm:py-1.5 gradient-success text-white text-xs sm:text-sm font-semibold rounded-lg hover:shadow-md transition-all btn-modern flex items-center justify-center"
+                                    title="Refresh workplaces list">
+                                    <i class="fas fa-sync-alt sm:mr-2"></i><span class="hidden sm:inline">Refresh</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Search, Filter and View All -->
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <div class="relative flex-1">
+                                    <input type="text" id="workplace-search" placeholder="Search workplaces..."
+                                        class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                                </div>
+                                <div class="flex gap-2">
+                                    <select id="workplace-filter" onchange="filterWorkplaces()" 
+                                        class="flex-1 sm:flex-none px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                        title="Filter workplaces by status">
+                                        <option value="all">All Workplaces</option>
+                                        <option value="primary">Primary Only</option>
+                                        <option value="secondary">Secondary</option>
+                                    </select>
+                                    <button onclick="toggleAllWorkplaces()" id="view-all-btn"
+                                        class="px-3 py-2 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-lg hover:bg-indigo-200 transition-all whitespace-nowrap flex items-center gap-1.5"
+                                        title="View all system workplaces">
+                                        <i class="fas fa-globe"></i>
+                                        <span>View All</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Table View -->
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="workplaces-table">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Workplace</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Radius</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="workplaces-table-body">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <i class="fas fa-spinner fa-spin text-3xl text-gray-300 mb-3"></i>
+                                            <p class="text-sm font-medium">Loading workplaces...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile Card View -->
+                    <div class="md:hidden" id="workplaces-cards">
+                        <div class="p-6 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fas fa-spinner fa-spin text-3xl text-gray-300 mb-3"></i>
+                                <p class="text-sm font-medium">Loading workplaces...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200" id="workplaces-pagination" style="display: none;">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div class="text-xs sm:text-sm text-gray-700" id="workplaces-pagination-info">
+                                Showing 0 of 0 workplaces
+                            </div>
+                            <div class="flex items-center gap-1 justify-center sm:justify-end">
+                                <button id="workplaces-prev-btn"
+                                    class="px-2 lg:px-3 py-1 lg:py-1.5 border border-gray-300 rounded-lg text-xs lg:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    onclick="changeWorkplacesPage(-1)" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div id="workplaces-page-numbers" class="flex gap-1">
+                                    <!-- Page numbers will be dynamically generated -->
+                                </div>
+                                <button id="workplaces-next-btn"
+                                    class="px-2 lg:px-3 py-1 lg:py-1.5 border border-gray-300 rounded-lg text-xs lg:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    onclick="changeWorkplacesPage(1)" disabled>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- No Workplaces Message -->
+                    <div id="no-workplaces-message" class="hidden p-6">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-3"></i>
+                            <h4 class="text-lg font-bold text-gray-900 mb-2">No Workplaces Assigned</h4>
+                            <p class="text-gray-600 mb-4 text-sm">Contact your administrator to assign a workplace</p>
+                            <button onclick="refreshWorkplaces()"
+                                class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold text-sm">
+                                <i class="fas fa-sync-alt mr-2"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected Workplace Details -->
+                <div class="card-modern rounded-2xl shadow-sm overflow-hidden" id="workplace-details-card" style="display: none;">
+                    <div class="p-3 sm:p-4 lg:p-5 border-b border-gray-200">
+                        <h3 class="text-base sm:text-lg lg:text-xl font-bold text-gray-900 flex items-center">
+                            <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                            Workplace Details
+                        </h3>
+                    </div>
+
+                    <div id="selected-workplace-details" class="p-4 sm:p-5 lg:p-6">
+                        <!-- Details will be populated by JS -->
+                    </div>
+
+                    <div id="workplace-map-container" class="p-4 sm:p-5 lg:p-6 pt-0">
+                        <h4 class="text-base lg:text-lg font-bold text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-map text-green-600 mr-2"></i>
+                            Location Map
+                        </h4>
+                        <div id="workplace-map" class="w-full h-64 lg:h-80 bg-gray-100 rounded-xl relative overflow-hidden shadow-inner">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-map text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-gray-500 font-medium text-sm">Loading map...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Check-in Section -->
+            <div id="special-checkin-section" class="section-content hidden">
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="space-y-6">
+                        <div class="card-modern rounded-2xl shadow-sm p-8">
+                            <div class="text-center mb-6">
+                                <div class="icon-wrapper gradient-warning mx-auto mb-4">
+                                    <i class="fas fa-star text-white text-3xl"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-2">Special Check In/Out</h2>
+                                <p class="text-gray-600">Check in/out up to 4 times per day at any location</p>
+                            </div>
+
+                            <!-- Workplace Information -->
+                            <div class="info-card mb-6 border-yellow-200 bg-yellow-50">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <i class="fas fa-building text-yellow-600 mr-2"></i>Workplace Information
+                                </h4>
+                                
+                                <!-- Primary Workplace -->
+                                <div class="mb-3 pb-3 border-b border-yellow-200">
+                                    <div class="flex items-center justify-between text-xs mb-1">
+                                        <span class="text-gray-600 font-medium">Primary Workplace:</span>
+                                        <span id="special-primary-distance" class="text-gray-400 text-xs">-- m</span>
+                                    </div>
+                                    <span id="special-primary-workplace-display" class="text-sm font-semibold text-gray-700 block">Not set</span>
+                                </div>
+                                
+                                <!-- Current Workplace (Detected) -->
+                                <div>
+                                    <div class="flex items-center justify-between text-xs mb-1">
+                                        <span class="text-gray-600 font-medium">Current Location:</span>
+                                        <span id="special-current-distance" class="text-yellow-600 font-semibold text-xs">-- m</span>
+                                    </div>
+                                    <span id="special-current-workplace-display" class="text-sm font-semibold text-gray-700 block">Detecting...</span>
+                                    <p id="special-current-workplace-address" class="text-xs text-gray-500 mt-1">
+                                        Waiting for location...
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Location Status -->
+                            <div class="info-card mb-6">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm font-semibold text-gray-700">Location Status:</span>
+                                    <span class="status-badge bg-yellow-100 text-yellow-800"
+                                        id="special-location-badge">Checking...</span>
+                                </div>
+                                <div class="text-sm text-gray-600" id="special-current-location">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Getting your location...
+                                </div>
+                            </div>
+
+                            <!-- Special Check-in Button -->
+                            <button id="special-checkin-btn"
+                                class="w-full py-4 bg-gray-400 text-white rounded-xl font-bold text-lg cursor-not-allowed shadow-sm mb-4"
+                                disabled>
+                                <i class="fas fa-location-crosshairs mr-2"></i>
+                                Waiting for Location...
+                            </button>
+
+                            <!-- Special Check-in Info -->
+                            <div class="info-card border-blue-200 bg-blue-50">
+                                <h4 class="text-sm font-semibold text-blue-900 mb-3 flex items-center">
+                                    <i class="fas fa-info-circle mr-2"></i>About Special Check-in
+                                </h4>
+                                <ul class="text-xs text-blue-800 space-y-1.5">
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                                        <span>Up to 4 check-in/out pairs per day (8 total actions)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                                        <span>Can check in at ANY workplace in the system</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                                        <span>First check-in locks you to that workplace for the day</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                                        <span>No lunch break required</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                                        <span>Perfect for field work or off-site assignments</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Today's Special Activity -->
+                        <div class="card-modern rounded-2xl shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                                        <i class="fas fa-star text-yellow-600 mr-2"></i>
+                                        Today's Special Activity
+                                    </h3>
+                                    <p class="text-xs text-gray-600 mt-1">Special check-in/out logs only (max 4 pairs)</p>
+                                </div>
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+                                    Special Only
+                                </span>
+                            </div>
+                            <div class="space-y-3" id="special-todays-activity">
+                                <div class="flex items-center justify-center p-8 text-gray-500"
+                                    id="special-activity-empty">
+                                    <div class="text-center">
+                                        <i class="fas fa-calendar-day text-3xl mb-3 text-gray-300"></i>
+                                        <p class="font-medium">No special activity today</p>
+                                        <p class="text-sm text-gray-400 mt-1">Check in to start tracking</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Location Map -->
+                    <div class="card-modern rounded-2xl shadow-sm p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                                <i class="fas fa-map text-yellow-600 mr-2"></i>
+                                Special Location Verification
+                            </h3>
+                            <button onclick="initializeSpecialCheckinMap()"
+                                class="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-sm hover:bg-yellow-200 transition-colors font-medium">
+                                <i class="fas fa-redo mr-1"></i>Reload
+                            </button>
+                        </div>
+                        <div id="special-checkin-map"
+                            class="w-full h-96 bg-gray-100 rounded-xl relative overflow-hidden">
                             <div class="absolute inset-0 flex items-center justify-center">
                                 <div class="text-center">
                                     <i class="fas fa-map text-3xl text-gray-400 mb-3"></i>
-                                    <p class="text-gray-500 mb-2">Map will load when you visit this section</p>
-                                    <button onclick="initializeCheckinMap()"
-                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
-                                        <i class="fas fa-play mr-2"></i>Load Map Now
+                                    <p class="text-gray-500 mb-2 font-medium">Map will load when you visit</p>
+                                    <button onclick="initializeSpecialCheckinMap()"
+                                        class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-semibold">
+                                        <i class="fas fa-play mr-2"></i>Load Map
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Map Legend -->
-                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                            <h4 class="text-sm font-medium text-gray-700 mb-2">Map Legend:</h4>
-                            <div class="flex flex-wrap gap-4 text-xs">
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-blue-500 rounded-full mr-1"></div>
+                        <div class="mt-4 info-card">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Map Legend:</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="map-legend-item">
+                                    <div class="map-legend-dot bg-yellow-500"></div>
                                     <span>Your Location</span>
                                 </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
-                                    <span>Allowed Area</span>
+                                <div class="map-legend-item">
+                                    <div class="map-legend-dot bg-yellow-500"></div>
+                                    <span>Special Location</span>
                                 </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 border-2 border-dashed border-red-500 rounded-full mr-1"></div>
-                                    <span>Geofence Boundary</span>
+                                <div class="map-legend-item">
+                                    <div class="map-legend-dot border-2 border-dashed border-yellow-500"></div>
+                                    <span>Geofence</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Special Workflow Status -->
+                        <div class="mt-6 info-card border-yellow-200 bg-yellow-50">
+                            <h4 class="text-sm font-semibold text-yellow-900 mb-3 flex items-center">
+                                <i class="fas fa-tasks mr-2"></i>Special Workflow Status
+                            </h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-700 font-medium">Today's Activity:</span>
+                                    <span class="font-bold text-yellow-900" id="special-checkins-count">0/4
+                                        pairs</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-700 font-medium">Last Action:</span>
+                                    <span class="font-bold text-yellow-900" id="special-last-action">None</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-yellow-700 font-medium">Status:</span>
+                                    <span class="font-bold text-yellow-900" id="special-workflow-status">Ready</span>
                                 </div>
                             </div>
                         </div>
@@ -805,40 +1270,40 @@
 
             <!-- Attendance History Section -->
             <div id="attendance-history-section" class="section-content hidden">
-                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
-                    <!-- Header with responsive controls -->
-                    <div class="mb-4 sm:mb-6">
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center mb-4">
-                            <i class="fas fa-history text-indigo-600 mr-2 sm:mr-3"></i>
+                <div class="card-modern rounded-2xl shadow-sm p-6 lg:p-8">
+                    <!-- Header -->
+                    <div class="mb-6">
+                        <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center mb-4">
+                            <i class="fas fa-history text-indigo-600 mr-3"></i>
                             My Attendance History
                         </h2>
 
-                        <!-- Controls - Stack on mobile -->
+                        <!-- Controls -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <!-- View Toggle -->
                             <div class="flex items-center space-x-2">
-                                <span class="text-xs sm:text-sm text-gray-600">View:</span>
+                                <span class="text-sm text-gray-600 font-medium">View:</span>
                                 <div class="flex bg-gray-100 rounded-lg p-1">
                                     <button id="detailed-view-btn"
-                                        class="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md bg-indigo-600 text-white transition-colors"
+                                        class="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white transition-colors font-semibold"
                                         onclick="switchAttendanceView('detailed')">
                                         Detailed
                                     </button>
                                     <button id="summary-view-btn"
-                                        class="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md text-gray-600 hover:bg-white transition-colors"
+                                        class="px-4 py-2 text-sm rounded-lg text-gray-600 hover:bg-white transition-colors font-medium"
                                         onclick="switchAttendanceView('summary')">
                                         Summary
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Records per page and filter - responsive -->
-                            <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                            <!-- Records per page and filter -->
+                            <div class="flex flex-wrap items-center gap-3">
                                 <div class="flex items-center space-x-2">
                                     <label for="records-per-page"
-                                        class="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Per page:</label>
+                                        class="text-sm text-gray-600 font-medium whitespace-nowrap">Per page:</label>
                                     <select id="records-per-page"
-                                        class="px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
                                         onchange="changeRecordsPerPage(this.value)">
                                         <option value="5">5</option>
                                         <option value="10">10</option>
@@ -846,8 +1311,9 @@
                                         <option value="50">50</option>
                                     </select>
                                 </div>
-                                <select
-                                    class="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+                                <select id="attendance-period-filter"
+                                    class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                                    onchange="filterAttendanceByPeriod(this.value)">
                                     <option value="thisweek">This Week</option>
                                     <option value="lastweek">Last Week</option>
                                     <option value="thismonth">This Month</option>
@@ -857,87 +1323,92 @@
                         </div>
                     </div>
 
-                    <!-- Weekly Summary - Responsive Grid -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-                        <div class="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+                    <!-- Weekly Summary -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="info-card border-green-200 bg-green-50">
                             <div class="text-center">
-                                <h3 class="text-lg sm:text-2xl font-bold text-green-600" id="weekly-hours">
-                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
+                                <h3 class="text-2xl lg:text-3xl font-bold text-green-600" id="weekly-hours">
+                                    <i class="fas fa-spinner fa-spin text-sm"></i>
                                 </h3>
-                                <p class="text-xs sm:text-sm text-green-700 font-medium">Total Hours</p>
-                                <p class="text-xs text-green-600">This Week</p>
+                                <p class="text-sm text-green-700 font-semibold">Total Hours</p>
+                                <p class="text-xs text-green-600 mt-1">This Week</p>
                             </div>
                         </div>
-                        <div class="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+                        <div class="info-card border-blue-200 bg-blue-50">
                             <div class="text-center">
-                                <h3 class="text-lg sm:text-2xl font-bold text-blue-600" id="weekly-days">
-                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
+                                <h3 class="text-2xl lg:text-3xl font-bold text-blue-600" id="weekly-days">
+                                    <i class="fas fa-spinner fa-spin text-sm"></i>
                                 </h3>
-                                <p class="text-xs sm:text-sm text-blue-700 font-medium">Days Present</p>
+                                <p class="text-sm text-blue-700 font-semibold">Days Present</p>
                                 <p class="text-xs text-blue-500" id="weekly-date-range">Loading...</p>
-                                <p class="text-xs sm:text-sm text-blue-600" id="weekly-days-total">Out of 0</p>
+                                <p class="text-sm text-blue-600 mt-1" id="weekly-days-total">Out of 0</p>
                             </div>
                         </div>
-                        <div class="bg-yellow-50 p-3 sm:p-4 rounded-lg border border-yellow-200">
+                        <div class="info-card border-yellow-200 bg-yellow-50">
                             <div class="text-center">
-                                <h3 class="text-lg sm:text-2xl font-bold text-yellow-600" id="weekly-avg-checkin">
-                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
+                                <h3 class="text-2xl lg:text-3xl font-bold text-yellow-600" id="weekly-avg-checkin">
+                                    <i class="fas fa-spinner fa-spin text-sm"></i>
                                 </h3>
-                                <p class="text-xs sm:text-sm text-yellow-700 font-medium">Avg Check-in</p>
-                                <p class="text-xs sm:text-sm text-yellow-600" id="weekly-checkin-trend">Loading...</p>
+                                <p class="text-sm text-yellow-700 font-semibold">Avg Check-in</p>
+                                <p class="text-sm text-yellow-600 mt-1" id="weekly-checkin-trend">Loading...</p>
                             </div>
                         </div>
-                        <div class="bg-indigo-50 p-3 sm:p-4 rounded-lg border border-indigo-200">
+                        <div class="info-card border-indigo-200 bg-indigo-50">
                             <div class="text-center">
-                                <h3 class="text-lg sm:text-2xl font-bold text-indigo-600" id="weekly-attendance">
-                                    <i class="fas fa-spinner fa-spin text-xs sm:text-sm"></i>
+                                <h3 class="text-2xl lg:text-3xl font-bold text-indigo-600" id="weekly-attendance">
+                                    <i class="fas fa-spinner fa-spin text-sm"></i>
                                 </h3>
-                                <p class="text-xs sm:text-sm text-indigo-700 font-medium">Attendance</p>
-                                <p class="text-xs sm:text-sm text-indigo-600" id="weekly-performance">Loading...</p>
+                                <p class="text-sm text-indigo-700 font-semibold">Attendance</p>
+                                <p class="text-sm text-indigo-600 mt-1" id="weekly-performance">Loading...</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Detailed Records - Scrollable on mobile -->
-                    <div class="overflow-x-auto -mx-4 sm:mx-0">
-                        <div class="inline-block min-w-full align-middle">
-                            <div class="overflow-hidden">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th
-                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Date</th>
-                                            <th
-                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Action</th>
-                                            <th
-                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Time</th>
-                                            <th
-                                                class="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Shift Type</th>
-                                            <th
-                                                class="hidden lg:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Location</th>
-                                            <th
-                                                class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200" id="attendance-history-tbody">
-                                        <tr>
-                                            <td colspan="6"
-                                                class="px-3 sm:px-6 py-8 sm:py-12 text-center text-gray-500">
-                                                <div class="flex flex-col items-center">
-                                                    <i
-                                                        class="fas fa-spinner fa-spin text-xl sm:text-2xl mb-2 sm:mb-3"></i>
-                                                    <p class="text-xs sm:text-sm">Loading attendance history...</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    <!-- Attendance Table -->
+                    <!-- Desktop Table View (hidden on mobile) -->
+                    <div class="hidden md:block overflow-x-auto rounded-xl border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Date</th>
+                                    <th
+                                        class="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Action</th>
+                                    <th
+                                        class="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Time</th>
+                                    <th
+                                        class="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Shift Type</th>
+                                    <th
+                                        class="hidden lg:table-cell px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Location</th>
+                                    <th
+                                        class="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="attendance-history-tbody">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                        <div class="flex flex-col items-center">
+                                            <i class="fas fa-spinner fa-spin text-2xl mb-3 text-gray-300"></i>
+                                            <p class="font-medium">Loading attendance history...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile Card View (visible only on mobile) -->
+                    <div class="md:hidden space-y-3" id="attendance-history-mobile">
+                        <div class="bg-white rounded-lg border border-gray-200 p-4 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-spinner fa-spin text-xl mb-2 text-gray-300"></i>
+                                <p class="font-medium text-sm">Loading attendance history...</p>
                             </div>
                         </div>
                     </div>
@@ -961,6 +1432,301 @@
                                 class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 onclick="changePage(1)" disabled>
                                 Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Absence History Section -->
+            <div id="absence-history-section" class="section-content hidden">
+                <div class="section-header">
+                    <h2 class="text-3xl font-bold text-gray-800">Absence History</h2>
+                    <p class="text-gray-600 mt-2">View your absence records and statistics</p>
+                </div>
+
+                <!-- Info Banner -->
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-r-lg">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400 text-xl mt-0.5"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                <strong class="font-semibold">Information:</strong> This is a read-only view of your
+                                absence records for informational purposes.
+                                Absences are automatically tracked based on workdays without check-ins. If you need to
+                                update any information or have concerns about your records,
+                                please contact your administrator.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request Leave Section -->
+                <div class="card-modern rounded-xl shadow-sm overflow-hidden mb-8">
+                    <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                                    <i class="fas fa-calendar-plus mr-2 text-indigo-600"></i>
+                                    Request Leave
+                                </h3>
+                                <p class="text-sm text-gray-600 mt-1">Inform your administrator about upcoming leave in
+                                    advance</p>
+                            </div>
+                            <button onclick="toggleAbsenceRequestForm()" id="toggle-absence-form-btn"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+                                <i class="fas fa-plus mr-2"></i>New Request
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Leave Request Form (Hidden by default) -->
+                    <div id="absence-request-form" class="p-6 border-b border-gray-200 bg-white hidden">
+                        <form id="absence-request-form-element" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="absence-start-date"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                    <input type="date" id="absence-start-date" name="start_date" required
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label for="absence-end-date"
+                                        class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                    <input type="date" id="absence-end-date" name="end_date" required
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="absence-reason"
+                                    class="block text-sm font-medium text-gray-700 mb-2">Reason for Leave</label>
+                                <textarea id="absence-reason" name="reason" rows="3" required minlength="10" maxlength="500"
+                                    placeholder="Please provide a detailed reason for your leave (minimum 10 characters)..."
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                                <p class="text-xs text-gray-500 mt-1"><span id="reason-char-count">0</span>/500
+                                    characters</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button type="submit"
+                                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                                    <i class="fas fa-paper-plane mr-2"></i>Submit Request
+                                </button>
+                                <button type="button" onclick="toggleAbsenceRequestForm()"
+                                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                                    <i class="fas fa-times mr-2"></i>Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- My Leave Requests -->
+                    <div class="p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">My Leave Requests</h4>
+                        <div id="absence-requests-list" class="space-y-3">
+                            <div class="flex items-center justify-center py-8 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-2xl mr-3"></i>
+                                <span>Loading requests...</span>
+                            </div>
+                        </div>
+
+                        <!-- Pagination for Leave Requests -->
+                        <div class="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-200"
+                            id="absence-requests-pagination" style="display: none;">
+                            <div class="text-xs sm:text-sm text-gray-500 text-center sm:text-left"
+                                id="requests-pagination-info">
+                                Showing 0 of 0 requests
+                            </div>
+                            <div class="flex flex-wrap items-center justify-center gap-2"
+                                id="requests-pagination-controls">
+                                <button id="requests-prev-btn"
+                                    class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onclick="changeRequestsPage(-1)" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div id="requests-page-numbers" class="flex space-x-1">
+                                    <!-- Page numbers will be dynamically generated -->
+                                </div>
+                                <button id="requests-next-btn"
+                                    class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onclick="changeRequestsPage(1)" disabled>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Absence Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                    <!-- This Week Absences -->
+                    <div class="card-modern rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">This Week</p>
+                                <h3 class="text-3xl font-bold text-red-600 mt-2" id="week-absences">0</h3>
+                                <p class="text-xs text-gray-500 mt-1">Absent days</p>
+                            </div>
+                            <div class="icon-wrapper bg-red-100">
+                                <i class="fas fa-calendar-times text-2xl text-red-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- This Month Absences -->
+                    <div class="card-modern rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">This Month</p>
+                                <h3 class="text-3xl font-bold text-orange-600 mt-2" id="month-absences">0</h3>
+                                <p class="text-xs text-gray-500 mt-1">Total absences</p>
+                            </div>
+                            <div class="icon-wrapper bg-orange-100">
+                                <i class="fas fa-calendar-xmark text-2xl text-orange-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Excused Absences -->
+                    <div class="card-modern rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Excused</p>
+                                <h3 class="text-3xl font-bold text-blue-600 mt-2" id="excused-absences">0</h3>
+                                <p class="text-xs text-gray-500 mt-1">Approved</p>
+                            </div>
+                            <div class="icon-wrapper bg-blue-100">
+                                <i class="fas fa-check-circle text-2xl text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unexcused Absences -->
+                    <div class="card-modern rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Unexcused</p>
+                                <h3 class="text-3xl font-bold text-red-700 mt-2" id="unexcused-absences">0</h3>
+                                <p class="text-xs text-gray-500 mt-1">Needs attention</p>
+                            </div>
+                            <div class="icon-wrapper bg-red-200">
+                                <i class="fas fa-exclamation-triangle text-2xl text-red-700"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Rate -->
+                    <div class="card-modern rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Attendance Rate</p>
+                                <h3 class="text-3xl font-bold text-green-600 mt-2" id="attendance-rate-absence">0%
+                                </h3>
+                                <p class="text-xs text-gray-500 mt-1">This month</p>
+                            </div>
+                            <div class="icon-wrapper bg-green-100">
+                                <i class="fas fa-chart-line text-2xl text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Absence Records Table -->
+                <div class="card-modern rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-gray-200 bg-gray-50">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <h3 class="text-xl font-semibold text-gray-800">Absence Records</h3>
+                            <div class="flex items-center gap-3">
+                                <select id="absence-month-filter"
+                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                    <option value="current">Current Month</option>
+                                    <option value="last30">Last 30 Days</option>
+                                    <option value="last90">Last 90 Days</option>
+                                </select>
+                                <button onclick="refreshAbsenceData()"
+                                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Table View (hidden on mobile) -->
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100 border-b border-gray-200">
+                                <tr>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Date</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Day</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Reason</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="absence-history-tbody" class="divide-y divide-gray-200">
+                                <!-- Data will be populated by JavaScript -->
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p>Loading absence data...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile Card View (visible only on mobile) -->
+                    <div class="md:hidden space-y-3 p-4" id="absence-history-mobile">
+                        <div class="bg-white rounded-lg border border-gray-200 p-4 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-spinner fa-spin text-xl mb-2 text-gray-300"></i>
+                                <p class="font-medium text-sm">Loading absence data...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="absence-empty-state" class="hidden p-8 text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <i class="fas fa-check-circle text-3xl text-green-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Perfect Attendance!</h3>
+                        <p class="text-gray-600">You have no absence records for the selected period. Keep up the great
+                            work!</p>
+                    </div>
+
+                    <!-- Pagination for Absence Records -->
+                    <div class="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-200"
+                        id="absence-records-pagination" style="display: none;">
+                        <div class="text-xs sm:text-sm text-gray-500 text-center sm:text-left"
+                            id="records-pagination-info">
+                            Showing 0 of 0 records
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center gap-2"
+                            id="records-pagination-controls">
+                            <button id="records-prev-btn"
+                                class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onclick="changeRecordsPage(-1)" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div id="records-page-numbers" class="flex space-x-1">
+                                <!-- Page numbers will be dynamically generated -->
+                            </div>
+                            <button id="records-next-btn"
+                                class="px-2 sm:px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onclick="changeRecordsPage(1)" disabled>
+                                <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
                     </div>
@@ -1166,10 +1932,11 @@
             // Update page title and subtitle
             const titles = {
                 'dashboard': ['My Dashboard', 'Welcome to your attendance management portal'],
-                'my-workplace': ['My Workplace', 'View and select your assigned workplace locations'],
+                'my-workplace': ['Workplace', 'View and select your assigned workplace locations'],
                 'gps-checkin': ['Check In/Out', 'GPS location verification for attendance tracking'],
-                'special-checkin': ['Special Check In/Out', 'Up to 4 check-ins/outs per day at assigned locations'],
-                'attendance-history': ['My Attendance History', 'View your detailed attendance records and summaries']
+                'special-checkin': ['Special Check In', 'Up to 4 check-ins/outs per day at assigned locations'],
+                'attendance-history': ['History', 'View your detailed attendance records and summaries'],
+                'absence-history': ['Absence Records', 'View your absence history and attendance statistics']
             };
 
             if (titles[sectionName]) {
@@ -1183,6 +1950,15 @@
                 fetchAttendanceHistory();
             }
 
+            // Refresh data when switching to absence history
+            if (sectionName === 'absence-history') {
+                console.log('Loading absence data...');
+                fetchAbsenceRecords();
+                fetchWeeklyAbsenceSummary();
+                fetchMonthlyAbsenceSummary();
+                fetchAbsenceRequests(); // Load user's absence requests
+            }
+
             // Refresh data when switching to my-workplace
             if (sectionName === 'my-workplace') {
                 console.log('Loading workplace data...');
@@ -1194,6 +1970,7 @@
                 console.log('Initializing GPS check-in section...');
                 setTimeout(() => {
                     initializeCheckinMap();
+                    checkTodayCheckinType(); // Check if special check-in was used
 
                     // Refresh location and status when entering GPS check-in section
                     if (userLocation && hasLocationPermission) {
@@ -1214,6 +1991,7 @@
                     initializeSpecialCheckinMap();
                     fetchSpecialLocations();
                     fetchSpecialCheckinLogs();
+                    checkTodayCheckinType(); // Check if regular check-in was used
 
                     // Update location status if we have it
                     if (userLocation && hasLocationPermission) {
@@ -1256,35 +2034,53 @@
 
                 // Update attendance rate display with more context
                 const attendanceRateEl = document.getElementById('attendance-rate');
-                if (attendanceRateEl) {
+                const attendanceRateMobileEl = document.getElementById('attendance-rate-mobile');
+                if (attendanceRateEl || attendanceRateMobileEl) {
                     const daysPresent = data.days_present_this_month || 0;
                     const totalWorkDays = data.total_work_days_this_month || 0;
 
+                    let rateText, mobileText;
                     if (totalWorkDays > 0) {
                         const percentage = Math.round((daysPresent / totalWorkDays) * 100);
-                        attendanceRateEl.textContent = `${percentage}% (${daysPresent} of ${totalWorkDays} work days)`;
+                        rateText = `${percentage}% (${daysPresent} of ${totalWorkDays} work days)`;
+                        mobileText = `${percentage}% rate`;
                     } else if (daysPresent > 0) {
-                        attendanceRateEl.textContent = `${daysPresent} day(s) this month`;
+                        rateText = `${daysPresent} day(s) this month`;
+                        mobileText = `${daysPresent} days`;
                     } else {
-                        attendanceRateEl.textContent = 'No attendance data yet';
+                        rateText = 'No attendance data yet';
+                        mobileText = 'No data';
                     }
+
+                    if (attendanceRateEl) attendanceRateEl.textContent = rateText;
+                    if (attendanceRateMobileEl) attendanceRateMobileEl.textContent = mobileText;
                 }
 
                 // Update check-in trend display
                 const checkinTrendEl = document.getElementById('checkin-trend');
-                if (checkinTrendEl) {
+                const checkinTrendMobileEl = document.getElementById('checkin-trend-mobile');
+                if (checkinTrendEl || checkinTrendMobileEl) {
+                    let trendText, mobileTrend;
                     if (data.days_present_this_month > 0) {
-                        checkinTrendEl.textContent = 'Based on ' + data.days_present_this_month + ' day(s)';
+                        trendText = 'Based on ' + data.days_present_this_month + ' day(s)';
+                        mobileTrend = data.days_present_this_month + ' days';
                     } else {
-                        checkinTrendEl.textContent = 'No check-ins yet';
+                        trendText = 'No check-ins yet';
+                        mobileTrend = 'No data';
                     }
+
+                    if (checkinTrendEl) checkinTrendEl.textContent = trendText;
+                    if (checkinTrendMobileEl) checkinTrendMobileEl.textContent = mobileTrend;
                 }
 
                 // Update status text
                 const workStatusEl = document.getElementById('work-status');
-                if (workStatusEl) {
-                    workStatusEl.textContent = data.current_status || 'Not checked in';
-                }
+                const workStatusMobileEl = document.getElementById('work-status-mobile');
+                const statusText = data.current_status || 'Not checked in';
+                const mobileStatus = data.current_status === 'Checked In' ? 'Active' : 'Inactive';
+
+                if (workStatusEl) workStatusEl.textContent = statusText;
+                if (workStatusMobileEl) workStatusMobileEl.textContent = mobileStatus;
 
                 console.log('User stats updated:', data);
 
@@ -1392,8 +2188,9 @@
                 // Display based on current view mode
                 displayAttendanceData();
 
-                // Update weekly summary based on enhanced summary data
-                updateWeeklySummary(enhancedSummaryData);
+                // Update weekly summary based on enhanced summary data and current period filter
+                const filteredData = getFilteredAttendanceByPeriod(enhancedSummaryData, currentAttendancePeriod);
+                updateWeeklySummary(filteredData, currentAttendancePeriod);
 
             } catch (error) {
                 console.error('Failed to fetch attendance history:', error);
@@ -1772,7 +2569,7 @@
                 // Determine action based on logs for THIS specific workplace
                 const workplaceLogs = statusData.logs.filter(log => log.workplace_id == selectedSpecialLocationId);
                 const lastWorkplaceLog = workplaceLogs[workplaceLogs.length - 1];
-                
+
                 let action;
                 if (!lastWorkplaceLog || lastWorkplaceLog.action === 'check_out') {
                     action = 'check_in';
@@ -1784,7 +2581,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content') || ''
                     },
                     body: JSON.stringify({
                         user_id: getCurrentUserId(),
@@ -1804,12 +2602,25 @@
                     // Refresh special check-in data
                     fetchSpecialCheckinLogs();
                     updateSpecialWorkflowStatus();
+                    
+                    // Refresh regular check-in status (to disable/enable it based on special check-in)
+                    fetchCurrentStatus();
+                    checkTodayCheckinType(); // Update mutual exclusivity status
+                    
+                    // Refresh dashboard activity
+                    fetchTodaysSchedule();
 
                     // Reset button
                     checkinBtn.innerHTML = originalContent;
                     updateSpecialLocationStatus(userLocation);
                 } else {
                     showNotification(result.error || 'Special check-in failed', 'error');
+                    
+                    // Handle mutual exclusivity error
+                    if (result.locked_type) {
+                        checkTodayCheckinType(); // Refresh the UI to show locked state
+                    }
+                    
                     checkinBtn.innerHTML = originalContent;
                     checkinBtn.disabled = false;
                 }
@@ -1840,6 +2651,7 @@
                         const isCheckIn = log.action === 'check_in';
                         const color = isCheckIn ? 'yellow' : 'orange';
                         const icon = isCheckIn ? 'fa-star' : 'fa-sign-out-alt';
+                        const locationInfo = log.location ? ` • <i class="fas fa-map-marker-alt"></i> ${log.location}` : '';
 
                         html += `
                     <div class="flex items-center p-3 bg-${color}-50 rounded-lg border border-${color}-200">
@@ -1848,7 +2660,7 @@
                         </div>
                         <div class="flex-1">
                             <p class="font-medium text-${color}-800">${isCheckIn ? 'Special Check-in' : 'Special Check-out'} #${index + 1}</p>
-                            <p class="text-sm text-${color}-600">${log.location} • ${log.timestamp}</p>
+                            <p class="text-sm text-${color}-600">${log.timestamp}${locationInfo}</p>
                         </div>
                         <div class="text-${color}-600">
                             <i class="fas fa-check"></i>
@@ -1896,7 +2708,8 @@
 
             if (lastAction && logs && logs.length > 0) {
                 const latest = logs[logs.length - 1];
-                lastAction.textContent = `${latest.action === 'check_in' ? 'Check-in' : 'Check-out'} at ${latest.timestamp}`;
+                lastAction.textContent =
+                `${latest.action === 'check_in' ? 'Check-in' : 'Check-out'} at ${latest.timestamp}`;
             } else if (lastAction) {
                 lastAction.textContent = 'None';
             }
@@ -1951,21 +2764,105 @@
             return detailedLogs;
         }
 
+        // Current selected period for attendance filtering
+        let currentAttendancePeriod = 'thisweek';
+
+        // Filter attendance by period
+        function filterAttendanceByPeriod(period) {
+            currentAttendancePeriod = period;
+            console.log('Filtering attendance by period:', period);
+            
+            // Reset pagination
+            attendancePagination.currentPage = 1;
+            
+            // Redisplay with new filter
+            displayAttendanceData();
+            
+            // Update summary based on filtered data
+            const filteredData = getFilteredAttendanceByPeriod(cachedAttendanceData.summary, period);
+            updateWeeklySummary(filteredData, period);
+        }
+
+        // Get filtered attendance data based on period
+        function getFilteredAttendanceByPeriod(data, period) {
+            if (!data || data.length === 0) return [];
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let startDate, endDate;
+            
+            switch(period) {
+                case 'thisweek':
+                    // Monday to Sunday of current week
+                    const currentDay = today.getDay();
+                    const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - daysFromMonday);
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6);
+                    endDate.setHours(23, 59, 59, 999);
+                    break;
+                    
+                case 'lastweek':
+                    // Monday to Sunday of last week
+                    const lastWeekDay = today.getDay();
+                    const daysFromLastMonday = lastWeekDay === 0 ? 6 : lastWeekDay - 1;
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - daysFromLastMonday - 7);
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6);
+                    endDate.setHours(23, 59, 59, 999);
+                    break;
+                    
+                case 'thismonth':
+                    // First day to last day of current month
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    endDate.setHours(23, 59, 59, 999);
+                    break;
+                    
+                case 'lastmonth':
+                    // First day to last day of last month
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    endDate.setHours(23, 59, 59, 999);
+                    break;
+                    
+                default:
+                    return data;
+            }
+            
+            console.log(`Filtering ${period}:`, startDate.toDateString(), 'to', endDate.toDateString());
+            
+            return data.filter(record => {
+                const recordDate = new Date(record.date_raw);
+                return recordDate >= startDate && recordDate <= endDate;
+            });
+        }
+
         function displayAttendanceData() {
             const tbody = document.getElementById('attendance-history-tbody');
+            const mobileContainer = document.getElementById('attendance-history-mobile');
             if (!tbody) return;
 
-            const logsData = cachedAttendanceData.logs;
-            const summaryData = cachedAttendanceData.summary;
+            // Filter data by current period
+            const filteredSummary = getFilteredAttendanceByPeriod(cachedAttendanceData.summary, currentAttendancePeriod);
+            const filteredLogs = getFilteredAttendanceByPeriod(cachedAttendanceData.logs, currentAttendancePeriod);
+            
+            const logsData = filteredLogs;
+            const summaryData = filteredSummary;
 
             if (currentAttendanceView === 'detailed' && logsData.length > 0) {
                 updateTableHeaders('detailed');
                 displayDetailedAttendanceLogs(logsData, tbody);
+                if (mobileContainer) displayMobileAttendanceCards(logsData, mobileContainer, 'detailed');
             } else if (summaryData.length > 0) {
                 updateTableHeaders('summary');
                 displaySummaryAttendanceData(summaryData, tbody);
+                if (mobileContainer) displayMobileAttendanceCards(summaryData, mobileContainer, 'summary');
             } else {
-                // Show empty state
+                // Show empty state for desktop
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center text-gray-500">
@@ -1980,7 +2877,196 @@
                         </td>
                     </tr>
                 `;
+                // Show empty state for mobile
+                if (mobileContainer) {
+                    mobileContainer.innerHTML = `
+                        <div class="bg-white rounded-lg border border-gray-200 p-6 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-calendar-times text-2xl mb-2 text-gray-300"></i>
+                                <h3 class="text-base font-medium text-gray-900 mb-1">No Attendance Records</h3>
+                                <p class="text-sm text-gray-500 mb-3">You haven't checked in yet.</p>
+                                <button onclick="switchToSection('gps-checkin')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+                                    Go to Check In
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
                 updatePaginationControls(0);
+            }
+        }
+
+        function displayMobileAttendanceCards(data, container, viewType) {
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (viewType === 'detailed') {
+                // Group logs by date
+                const logsByDate = {};
+                data.forEach(log => {
+                    const dateKey = log.date_raw || log.date || new Date(log.timestamp).toISOString().split('T')[0];
+                    if (!logsByDate[dateKey]) {
+                        logsByDate[dateKey] = [];
+                    }
+                    logsByDate[dateKey].push(log);
+                });
+
+                // Sort dates (newest first)
+                const sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(b) - new Date(a));
+                const paginatedDates = getPaginatedData(sortedDates);
+
+                paginatedDates.forEach(dateKey => {
+                    let dateLogs = logsByDate[dateKey];
+
+                    // DEDUPLICATE logs - remove duplicates based on action, timestamp, and shift_type
+                    const uniqueLogs = [];
+                    const seenKeys = new Set();
+                    
+                    dateLogs.forEach(log => {
+                        const uniqueKey = `${log.action}-${log.timestamp}-${log.shift_type || 'regular'}`;
+                        if (!seenKeys.has(uniqueKey)) {
+                            seenKeys.add(uniqueKey);
+                            uniqueLogs.push(log);
+                        }
+                    });
+                    
+                    dateLogs = uniqueLogs;
+
+                    // Sort logs by timestamp with action sequence as secondary sort
+                    const actionOrder = {
+                        'check_in': 1,
+                        'break_start': 2,
+                        'start_lunch': 2,
+                        'lunch_start': 2,
+                        'break_end': 3,
+                        'end_lunch': 3,
+                        'lunch_end': 3,
+                        'check_out': 4
+                    };
+
+                    dateLogs.sort((a, b) => {
+                        const timeA = new Date('1970/01/01 ' + (a.timestamp || '00:00')).getTime();
+                        const timeB = new Date('1970/01/01 ' + (b.timestamp || '00:00')).getTime();
+
+                        // First sort by timestamp
+                        if (timeA !== timeB) {
+                            return timeA - timeB;
+                        }
+
+                        // If timestamps are equal, sort by action sequence
+                        const orderA = actionOrder[a.action] || 99;
+                        const orderB = actionOrder[b.action] || 99;
+                        return orderA - orderB;
+                    });
+
+                    const displayDate = dateKey === new Date().toISOString().split('T')[0] ? 'Today' :
+                        new Date(dateKey).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        });
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg border border-gray-200 p-4';
+
+                    const checkIn = dateLogs.find(log => log.action === 'check_in');
+                    const checkOut = dateLogs.find(log => log.action === 'check_out');
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">${displayDate}</div>
+                                <div class="text-xs text-gray-500 mt-0.5">${dateLogs.length} action${dateLogs.length !== 1 ? 's' : ''}</div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${checkOut ? 'bg-green-100 text-green-800' : checkIn ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
+                                ${checkOut ? 'Completed' : checkIn ? 'Active' : 'No Data'}
+                            </span>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            ${dateLogs.map(log => {
+                                const actionIcons = {
+                                    'check_in': 'fa-sign-in-alt',
+                                    'check_out': 'fa-sign-out-alt',
+                                    'break_start': 'fa-utensils',
+                                    'break_end': 'fa-play'
+                                };
+                                const actionColors = {
+                                    'check_in': 'text-green-600',
+                                    'check_out': 'text-red-600',
+                                    'break_start': 'text-yellow-600',
+                                    'break_end': 'text-blue-600'
+                                };
+                                const icon = actionIcons[log.action] || 'fa-clock';
+                                const color = actionColors[log.action] || 'text-gray-600';
+                                const label = log.action.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                
+                                return `
+                                    <div class="flex items-center space-x-2 py-1 border-t border-gray-100">
+                                        <i class="fas ${icon} ${color} w-3"></i>
+                                        <span class="font-medium ${color}">${label}</span>
+                                        <span class="text-gray-500 ml-auto">${log.timestamp}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                // Summary view
+                const paginatedData = getPaginatedData(data);
+
+                paginatedData.forEach(attendance => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg border border-gray-200 p-4';
+
+                    const workHours = attendance.total_hours || '0.0 hrs';
+                    const checkOut = attendance.check_out || attendance.attendance_check_out || '--';
+                    const isComplete = checkOut !== '--' && checkOut !== 'Still working';
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">${attendance.date_raw === new Date().toISOString().split('T')[0] ? 'Today' : attendance.date}</div>
+                                <div class="text-xs text-gray-500 mt-0.5">${attendance.location || 'Workplace'}</div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${isComplete ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                                ${isComplete ? 'Completed' : 'Active'}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <div class="text-gray-500 mb-1">Check In</div>
+                                <div class="font-medium text-green-600">
+                                    <i class="fas fa-sign-in-alt mr-1"></i>${attendance.check_in || '--'}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500 mb-1">Check Out</div>
+                                <div class="font-medium ${isComplete ? 'text-red-600' : 'text-blue-600'}">
+                                    ${isComplete ? `<i class="fas fa-sign-out-alt mr-1"></i>${checkOut}` : '<span>Still working</span>'}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500">Total Hours</span>
+                                <span class="font-bold text-gray-900">${workHours}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            if (data.length === 0 || getPaginatedData(data).length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 text-center text-gray-500">
+                        <i class="fas fa-info-circle text-xl mb-2 text-gray-300"></i>
+                        <p class="text-sm">No records available</p>
+                    </div>
+                `;
             }
         }
 
@@ -2106,11 +3192,31 @@
                 dateLogs = uniqueLogs;
                 console.log(`Date ${dateKey} has ${dateLogs.length} unique logs:`, dateLogs);
 
-                // Sort logs by timestamp within each date
+                // Sort logs by timestamp within each date, with action sequence as secondary sort
+                const actionOrder = {
+                    'check_in': 1,
+                    'break_start': 2,
+                    'start_lunch': 2,
+                    'lunch_start': 2,
+                    'break_end': 3,
+                    'end_lunch': 3,
+                    'lunch_end': 3,
+                    'check_out': 4
+                };
+
                 dateLogs.sort((a, b) => {
                     const timeA = new Date('1970/01/01 ' + (a.timestamp || '00:00')).getTime();
                     const timeB = new Date('1970/01/01 ' + (b.timestamp || '00:00')).getTime();
-                    return timeA - timeB;
+
+                    // First sort by timestamp
+                    if (timeA !== timeB) {
+                        return timeA - timeB;
+                    }
+
+                    // If timestamps are equal, sort by action sequence
+                    const orderA = actionOrder[a.action] || 99;
+                    const orderB = actionOrder[b.action] || 99;
+                    return orderA - orderB;
                 });
 
                 const displayDate = dateKey === new Date().toISOString().split('T')[0] ? 'Today' :
@@ -2129,22 +3235,22 @@
 
                 // Calculate total hours for this date
                 let totalHours = '0.0';
-                
+
                 // Check if this is a special attendance (multiple check-in/out pairs)
                 const isSpecialAttendance = dateLogs.some(log => log.shift_type === 'special');
-                
+
                 if (isSpecialAttendance) {
                     // For special attendance, calculate hours by pairing check-ins with check-outs
                     let totalMinutes = 0;
                     const openCheckIns = [];
-                    
+
                     // Sort logs by timestamp to ensure proper pairing
                     const sortedLogs = [...dateLogs].sort((a, b) => {
                         const timeA = parseTime(a.timestamp);
                         const timeB = parseTime(b.timestamp);
                         return timeA - timeB;
                     });
-                    
+
                     sortedLogs.forEach(log => {
                         if (log.action === 'check_in') {
                             openCheckIns.push(log);
@@ -2154,13 +3260,17 @@
                             const endTime = parseTime(log.timestamp);
                             if (startTime && endTime) {
                                 const minutes = (endTime - startTime) / (1000 * 60);
-                                console.log(`Special pair: ${checkInLog.timestamp} to ${log.timestamp} = ${minutes.toFixed(1)} minutes`);
+                                console.log(
+                                    `Special pair: ${checkInLog.timestamp} to ${log.timestamp} = ${minutes.toFixed(1)} minutes`
+                                    );
                                 totalMinutes += minutes;
                             }
                         }
                     });
-                    
-                    console.log(`Total minutes for special attendance: ${totalMinutes}, Total hours: ${(totalMinutes / 60).toFixed(1)}`);
+
+                    console.log(
+                        `Total minutes for special attendance: ${totalMinutes}, Total hours: ${(totalMinutes / 60).toFixed(1)}`
+                        );
                     totalHours = (totalMinutes / 60).toFixed(1);
                 } else {
                     // Regular attendance - calculate from first check-in to last check-out
@@ -2267,13 +3377,13 @@
                                 const label = actionLabels[log.action] || log.action.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                                 
                                 return `
-                                                    <div class="flex items-center space-x-3 py-1">
-                                                        <i class="fas ${icon} ${color} w-4"></i>
-                                                        <span class="text-sm font-medium ${color}">${label}</span>
-                                                        <span class="text-sm text-gray-500">${log.timestamp}</span>
-                                                        <span class="text-xs text-gray-400">${log.shift_type ? log.shift_type.toUpperCase() + ' Shift' : 'Regular'}</span>
-                                                    </div>
-                                                `;
+                                                        <div class="flex items-center space-x-3 py-1">
+                                                            <i class="fas ${icon} ${color} w-4"></i>
+                                                            <span class="text-sm font-medium ${color}">${label}</span>
+                                                            <span class="text-sm text-gray-500">${log.timestamp}</span>
+                                                            <span class="text-xs text-gray-400">${log.shift_type ? log.shift_type.toUpperCase() + ' Shift' : 'Regular'}</span>
+                                                        </div>
+                                                    `;
                             }).join('')}
                         </div>
                     </td>
@@ -2341,11 +3451,13 @@
                 // Prefer row-level check_in/check_out values (set by API for special pairs).
                 // Fall back to attendance_check_in / attendance_check_out for compatibility,
                 // then to attached logs if necessary.
-                let checkInDisplay = attendance.check_in || attendance.attendance_check_in || attendance.check_in || '--';
+                let checkInDisplay = attendance.check_in || attendance.attendance_check_in || attendance.check_in ||
+                    '--';
                 let checkOutDisplay = attendance.check_out || attendance.attendance_check_out || '--';
 
                 // If we still don't have a check_out and logs exist, try to find one in logs
-                if ((checkOutDisplay === '--' || checkOutDisplay === null) && attendance.logs && attendance.logs.length > 0) {
+                if ((checkOutDisplay === '--' || checkOutDisplay === null) && attendance.logs && attendance.logs
+                    .length > 0) {
                     const checkOutLog = attendance.logs.find(log => log.action === 'check_out');
                     if (checkOutLog) {
                         checkOutDisplay = checkOutLog.timestamp;
@@ -2354,7 +3466,8 @@
                 }
 
                 // If still marked as 'Still working', render a styled label
-                if (attendance.check_out === 'Still working' || attendance.attendance_check_out === 'Still working') {
+                if (attendance.check_out === 'Still working' || attendance.attendance_check_out ===
+                    'Still working') {
                     checkOutDisplay = '<span class="text-blue-600 font-medium">Still working</span>';
                 }
 
@@ -2496,24 +3609,24 @@
 
             // Handle both "11:04 AM" format and full datetime strings
             let time, period;
-            
+
             if (timeString.includes('T') || timeString.includes('-')) {
                 // Full datetime string - parse as Date
                 return new Date(timeString);
             }
-            
+
             // Time only format like "11:04 AM"
             const parts = timeString.trim().split(' ');
             time = parts[0];
             period = parts[1];
-            
+
             if (!time || !period) {
                 console.warn('Invalid time format:', timeString);
                 return null;
             }
-            
+
             const [hours, minutes] = time.split(':').map(Number);
-            
+
             if (isNaN(hours) || isNaN(minutes)) {
                 console.warn('Invalid time components:', timeString);
                 return null;
@@ -2521,7 +3634,7 @@
 
             const today = new Date();
             let hour24 = hours;
-            
+
             if (period.toLowerCase() === 'pm' && hours !== 12) {
                 hour24 += 12;
             } else if (period.toLowerCase() === 'am' && hours === 12) {
@@ -2599,8 +3712,9 @@
                 // Display based on current view mode
                 displayAttendanceData();
 
-                // Update weekly summary based on enhanced summary data
-                updateWeeklySummary(enhancedSummaryData);
+                // Update weekly summary based on enhanced summary data and current period filter
+                const filteredDataSecond = getFilteredAttendanceByPeriod(enhancedSummaryData, currentAttendancePeriod);
+                updateWeeklySummary(filteredDataSecond, currentAttendancePeriod);
 
             } catch (error) {
                 console.error('Failed to fetch attendance history:', error);
@@ -2624,7 +3738,7 @@
 
 
         // Update the updateWeeklySummary function to handle the new hour calculation
-        function updateWeeklySummary(attendanceData) {
+        function updateWeeklySummary(attendanceData, period = 'thisweek') {
             const weeklyHours = document.getElementById('weekly-hours');
             const weeklyDays = document.getElementById('weekly-days');
             const weeklyAvgCheckin = document.getElementById('weekly-avg-checkin');
@@ -2634,79 +3748,117 @@
             const weeklyPerformance = document.getElementById('weekly-performance');
             const weeklyDateRange = document.getElementById('weekly-date-range');
 
-            // Get current week boundaries (Monday to Sunday) in local timezone
+            // Get period boundaries
             const today = new Date();
-
-            // Get local day of week (0 = Sunday, 1 = Monday, etc.)
-            const currentDay = today.getDay();
-
-            // Calculate Monday of this week in local time
-            const monday = new Date(today);
-            const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // Sunday = 6 days from Monday
-            monday.setDate(today.getDate() - daysFromMonday);
-            monday.setHours(0, 0, 0, 0);
-
-            // Calculate Friday of this week (work week end)
-            const friday = new Date(monday);
-            friday.setDate(monday.getDate() + 4); // Monday + 4 days = Friday
-            friday.setHours(23, 59, 59, 999);
-
-            // Calculate Sunday for data filtering purposes
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-            sunday.setHours(23, 59, 59, 999);
-
-            // Format date range (Monday to Friday for display)
+            let startDate, endDate, dateRangeText, periodLabel;
+            
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const mondayStr = `${monthNames[monday.getMonth()]} ${monday.getDate()}`;
-            const fridayStr = `${monthNames[friday.getMonth()]} ${friday.getDate()}`;
-            const dateRangeText = `${mondayStr} - ${fridayStr}`;
+            
+            switch(period) {
+                case 'thisweek':
+                    const currentDay = today.getDay();
+                    const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - daysFromMonday);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6);
+                    endDate.setHours(23, 59, 59, 999);
+                    dateRangeText = `${monthNames[startDate.getMonth()]} ${startDate.getDate()} - ${monthNames[endDate.getMonth()]} ${endDate.getDate()}`;
+                    periodLabel = 'This Week';
+                    break;
+                    
+                case 'lastweek':
+                    const lastWeekDay = today.getDay();
+                    const daysFromLastMonday = lastWeekDay === 0 ? 6 : lastWeekDay - 1;
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - daysFromLastMonday - 7);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6);
+                    endDate.setHours(23, 59, 59, 999);
+                    dateRangeText = `${monthNames[startDate.getMonth()]} ${startDate.getDate()} - ${monthNames[endDate.getMonth()]} ${endDate.getDate()}`;
+                    periodLabel = 'Last Week';
+                    break;
+                    
+                case 'thismonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    endDate.setHours(23, 59, 59, 999);
+                    dateRangeText = monthNames[startDate.getMonth()] + ' ' + startDate.getFullYear();
+                    periodLabel = 'This Month';
+                    break;
+                    
+                case 'lastmonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    endDate.setHours(23, 59, 59, 999);
+                    dateRangeText = monthNames[startDate.getMonth()] + ' ' + startDate.getFullYear();
+                    periodLabel = 'Last Month';
+                    break;
+                    
+                default:
+                    startDate = new Date(today);
+                    endDate = new Date(today);
+                    dateRangeText = 'All Time';
+                    periodLabel = 'All Time';
+            }
 
             // Update date range display
             if (weeklyDateRange) weeklyDateRange.textContent = dateRangeText;
 
-            console.log('Current week (local time):', monday.toString(), 'to', sunday.toString());
-            console.log('Today is:', today.toString(), 'Day of week:', currentDay);
+            console.log(`${periodLabel} (local time):`, startDate.toString(), 'to', endDate.toString());
 
-            // Filter attendance data for current week only
-            const thisWeekData = attendanceData.filter(record => {
-                const recordDate = new Date(record.date_raw);
-                return recordDate >= monday && recordDate <= sunday;
-            });
+            // Use the already filtered data passed in
+            const thisWeekData = attendanceData;
 
-            console.log('This week attendance data:', thisWeekData);
+            console.log(`${periodLabel} attendance data:`, thisWeekData);
 
             if (thisWeekData.length > 0) {
                 let totalWeeklyHours = 0;
                 let checkinTimes = [];
-                
+
                 // Group by date to avoid counting the same day multiple times (for special attendance)
                 const uniqueDates = new Set();
                 const dateGroups = {};
-                
+
                 thisWeekData.forEach(record => {
                     if (!dateGroups[record.date_raw]) {
                         dateGroups[record.date_raw] = [];
                     }
                     dateGroups[record.date_raw].push(record);
                 });
-                
-                // Count unique work days
-                let workDays = Object.keys(dateGroups).length;
+
+                // Count unique work days - ONLY count days where status indicates actual presence
+                // Status must be one of: 'present', 'late', 'special' (case-insensitive)
+                // Do NOT count: 'absent', 'excused', or any other status
+                let workDays = 0;
+                Object.keys(dateGroups).forEach(dateKey => {
+                    const records = dateGroups[dateKey];
+                    // Check if ANY record for this date has a "present" status
+                    const hasPresenceStatus = records.some(record => {
+                        const status = (record.status || '').toLowerCase();
+                        return status === 'present' || status === 'late' || status === 'special';
+                    });
+                    if (hasPresenceStatus) {
+                        workDays++;
+                    }
+                });
 
                 // Calculate hours from actual logs for each unique date
                 Object.keys(dateGroups).forEach(dateKey => {
                     const records = dateGroups[dateKey];
-                    
+
                     // Combine all logs from all records of this date and deduplicate
                     let allLogsForDate = [];
                     const seenLogIds = new Set();
-                    
+
                     records.forEach(record => {
                         if (record.logs && record.logs.length > 0) {
                             record.logs.forEach(log => {
                                 // Create unique key for each log entry
-                                const logKey = `${log.action}-${log.timestamp}-${log.shift_type || 'regular'}`;
+                                const logKey =
+                                    `${log.action}-${log.timestamp}-${log.shift_type || 'regular'}`;
                                 if (!seenLogIds.has(logKey)) {
                                     seenLogIds.add(logKey);
                                     allLogsForDate.push(log);
@@ -2714,9 +3866,9 @@
                             });
                         }
                     });
-                    
+
                     console.log(`Date ${dateKey} has ${allLogsForDate.length} unique logs after deduplication`);
-                    
+
                     if (allLogsForDate.length > 0) {
                         const checkIn = allLogsForDate.find(log => log.action === 'check_in');
                         const breakStart = allLogsForDate.find(log => log.action === 'break_start' || log.action ===
@@ -2730,19 +3882,19 @@
 
                         // Check if this is a special attendance
                         const isSpecialAttendance = allLogsForDate.some(log => log.shift_type === 'special');
-                        
+
                         if (isSpecialAttendance) {
                             // For special attendance, calculate hours by pairing check-ins with check-outs
                             let totalMinutes = 0;
                             const openCheckIns = [];
-                            
+
                             // Sort logs by timestamp to ensure proper pairing
                             allLogsForDate.sort((a, b) => {
                                 const timeA = parseTime(a.timestamp);
                                 const timeB = parseTime(b.timestamp);
                                 return timeA - timeB;
                             });
-                            
+
                             allLogsForDate.forEach(log => {
                                 if (log.action === 'check_in') {
                                     openCheckIns.push(log);
@@ -2755,14 +3907,14 @@
                                     }
                                 }
                             });
-                            
+
                             const dayHours = totalMinutes / 60;
                             totalWeeklyHours += Math.max(0, dayHours);
                             console.log(`Special attendance day hours for ${dateKey}: ${dayHours.toFixed(1)}`);
                         } else {
                             // Regular attendance - calculate from first check-in to last check-out
                             const checkOut = allLogsForDate.find(log => log.action === 'check_out');
-                            
+
                             if (checkOut) {
                                 // Calculate total hours for completed day
                                 const startTime = parseTime(checkIn.timestamp);
@@ -2812,45 +3964,61 @@
                     avgCheckinDisplay = checkinTimes[0]; // Show first check-in as example
                 }
 
-                // Calculate how many work days have passed this week (Monday to today) - GMT+8 timezone
+                // Calculate work days based on period
+                let workDaysElapsed, totalWorkDays;
                 const today_calc = new Date();
-                const currentDayOfWeek_calc = today_calc.getDay(); // 0 = Sunday, 1 = Monday, etc.
-
-                console.log('Today is:', today_calc.toString(), 'Local date:', today_calc.toDateString(), 'Day of week:',
-                    currentDayOfWeek_calc);
-                console.log('GMT+8 time:', new Intl.DateTimeFormat('en-US', {
-                    timeZone: 'Asia/Manila',
-                    dateStyle: 'full'
-                }).format(today_calc));
-
-                // Calculate work days elapsed (Mon-Fri only)
-                let workDaysElapsed;
-                if (currentDayOfWeek_calc === 0) { // Sunday
-                    workDaysElapsed = 5; // Full work week completed (show all 5 days)
-                } else if (currentDayOfWeek_calc === 6) { // Saturday  
-                    workDaysElapsed = 5; // Full work week completed (show all 5 days)
+                
+                if (period === 'thisweek') {
+                    const currentDayOfWeek_calc = today_calc.getDay();
+                    if (currentDayOfWeek_calc === 0) { // Sunday
+                        workDaysElapsed = 5;
+                    } else if (currentDayOfWeek_calc === 6) { // Saturday  
+                        workDaysElapsed = 5;
+                    } else {
+                        workDaysElapsed = currentDayOfWeek_calc;
+                    }
+                    totalWorkDays = 5;
+                } else if (period === 'lastweek') {
+                    // Last week is complete - always 5 work days
+                    workDaysElapsed = 5;
+                    totalWorkDays = 5;
+                } else if (period === 'thismonth' || period === 'lastmonth') {
+                    // Count weekdays in the period
+                    let currentDate = new Date(startDate);
+                    let workDaysInPeriod = 0;
+                    let workDaysElapsedInPeriod = 0;
+                    
+                    while (currentDate <= endDate) {
+                        const dayOfWeek = currentDate.getDay();
+                        if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Monday to Friday
+                            workDaysInPeriod++;
+                            if (period === 'lastmonth' || currentDate <= today_calc) {
+                                workDaysElapsedInPeriod++;
+                            }
+                        }
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    
+                    workDaysElapsed = workDaysElapsedInPeriod;
+                    totalWorkDays = workDaysInPeriod;
                 } else {
-                    // Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5
-                    workDaysElapsed = currentDayOfWeek_calc; // This correctly counts weekdays from Monday
+                    workDaysElapsed = 5;
+                    totalWorkDays = 5;
                 }
 
-                console.log('Work days elapsed this week (Mon-Fri):', workDaysElapsed);
-                console.log('Current week range:', dateRangeText);
+                console.log(`Work days elapsed for ${periodLabel}:`, workDaysElapsed);
+                console.log(`Period range: ${dateRangeText}`);
                 console.log('Days present in database:', workDays, 'out of', workDaysElapsed, 'work days');
 
-                // Always show "Out of 5" for work week (Mon-Fri)
-                const totalWorkDays = 5;
-                const attendanceRate = Math.round((workDays / workDaysElapsed) * 100);
+                const attendanceRate = workDaysElapsed > 0 ? Math.round((workDays / workDaysElapsed) * 100) : 0;
 
                 if (weeklyHours) weeklyHours.textContent = totalWeeklyHours.toFixed(1);
                 if (weeklyDays) weeklyDays.textContent = workDays;
                 if (weeklyAttendance) weeklyAttendance.textContent = attendanceRate + '%';
                 if (weeklyAvgCheckin) weeklyAvgCheckin.textContent = avgCheckinDisplay;
                 if (weeklyDaysTotal) weeklyDaysTotal.textContent = `Out of ${totalWorkDays}`;
-                if (weeklyCheckinTrend) weeklyCheckinTrend.textContent = totalWeeklyHours >= 32 ? 'Good hours' :
-                    'Needs improvement';
-                if (weeklyPerformance) weeklyPerformance.textContent = totalWeeklyHours > 0 ? 'Active week!' :
-                    'Start tracking!';
+                if (weeklyCheckinTrend) weeklyCheckinTrend.textContent = totalWeeklyHours >= 32 ? 'Good hours' : 'Needs improvement';
+                if (weeklyPerformance) weeklyPerformance.textContent = totalWeeklyHours > 0 ? 'Active!' : 'Start tracking!';
             } else {
                 // Calculate work days elapsed even when no data
                 const today = new Date();
@@ -3057,53 +4225,68 @@
 
                 const data = await response.json();
                 console.log('Workplace API data received:', data);
+                console.log('Primary workplace from API:', data.primary_workplace);
 
                 const workplacesList = document.getElementById('assigned-workplaces-list');
                 const noWorkplacesMessage = document.getElementById('no-workplaces-message');
+                const workplacesCount = document.getElementById('workplaces-count');
+                const workplacesCountStat = document.getElementById('workplaces-count-stat');
 
                 if (data.workplaces && data.workplaces.length > 0) {
+                    // Cache the workplaces data
+                    cachedWorkplacesData = data.workplaces;
+
+                    // Update pagination
+                    workplacesPagination.totalItems = data.workplaces.length;
+                    workplacesPagination.totalPages = Math.ceil(data.workplaces.length / workplacesPagination
+                        .itemsPerPage);
+                    workplacesPagination.currentPage = 1; // Reset to first page
+
+                    // Update count displays
+                    if (workplacesCount) {
+                        workplacesCount.textContent =
+                            `${data.workplaces.length} location${data.workplaces.length !== 1 ? 's' : ''}`;
+                    }
+                    if (workplacesCountStat) {
+                        workplacesCountStat.textContent = data.workplaces.length;
+                    }
+
                     // Hide no workplaces message
-                    noWorkplacesMessage.classList.add('hidden');
+                    if (noWorkplacesMessage) {
+                        noWorkplacesMessage.classList.add('hidden');
+                    }
 
-                    // Display workplaces
-                    let html = '';
-                    data.workplaces.forEach(workplace => {
-                        const isPrimary = workplace.is_primary;
-                        html += `
-                            <div class="workplace-item border rounded-lg p-4 hover:bg-gray-50 cursor-pointer ${isPrimary ? 'border-green-500 bg-green-50' : 'border-gray-200'}" 
-                                 data-workplace-id="${workplace.id}" 
-                                 onclick="selectWorkplace(${workplace.id}, '${workplace.name}', '${workplace.address}', ${workplace.latitude}, ${workplace.longitude}, ${workplace.radius}, ${isPrimary})">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center">
-                                            <h4 class="font-semibold text-gray-900">${workplace.name}</h4>
-                                            ${isPrimary ? '<span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Primary</span>' : ''}
-                                        </div>
-                                        <p class="text-sm text-gray-600 mt-1">${workplace.address || 'No address provided'}</p>
-                                        <div class="flex items-center text-xs text-gray-500 mt-2">
-                                            <i class="fas fa-map-marker-alt mr-1"></i>
-                                            <span>Radius: ${workplace.radius}m</span>
-                                            ${workplace.assigned_at ? `<span class="ml-3"><i class="fas fa-calendar mr-1"></i>Assigned: ${workplace.assigned_at}</span>` : ''}
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        ${!isPrimary ? `<button onclick="event.stopPropagation(); setPrimaryWorkplace(${workplace.id}, \`${workplace.name}\`)" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded text-xs hover:bg-indigo-200 transition-colors">Set Primary</button>` : ''}
-                                        <i class="fas fa-chevron-right text-gray-400"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    workplacesList.innerHTML = html;
+                    // Display paginated workplaces
+                    displayPaginatedWorkplaces();
 
                     // Update primary workplace info
                     updatePrimaryWorkplaceInfo(data.primary_workplace);
 
                 } else {
+                    // Clear cache
+                    cachedWorkplacesData = [];
+                    workplacesPagination.totalItems = 0;
+                    workplacesPagination.totalPages = 0;
+
                     // Show no workplaces message
-                    workplacesList.innerHTML = '';
-                    noWorkplacesMessage.classList.remove('hidden');
+                    if (workplacesList) {
+                        workplacesList.innerHTML = '';
+                    }
+                    if (noWorkplacesMessage) {
+                        noWorkplacesMessage.classList.remove('hidden');
+                    }
+                    if (workplacesCount) {
+                        workplacesCount.textContent = '0 locations';
+                    }
+                    if (workplacesCountStat) {
+                        workplacesCountStat.textContent = '0';
+                    }
+
+                    // Hide pagination
+                    const paginationContainer = document.getElementById('workplaces-pagination');
+                    if (paginationContainer) {
+                        paginationContainer.style.display = 'none';
+                    }
 
                     // Clear primary workplace info
                     updatePrimaryWorkplaceInfo(null);
@@ -3118,12 +4301,12 @@
 
                 if (workplacesList) {
                     workplacesList.innerHTML = `
-                        <div class="flex items-center justify-center p-8 text-red-500">
+                        <div class="flex items-center justify-center p-6 sm:p-8 text-red-500">
                             <div class="text-center">
-                                <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
-                                <p>Failed to load workplaces</p>
-                                <p class="text-sm text-gray-500 mt-1">${error.message}</p>
-                                <button onclick="fetchUserWorkplaces()" class="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                <i class="fas fa-exclamation-triangle text-2xl sm:text-3xl mb-3"></i>
+                                <p class="text-sm sm:text-base">Failed to load workplaces</p>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">${error.message}</p>
+                                <button onclick="fetchUserWorkplaces()" class="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base">
                                     Try Again
                                 </button>
                             </div>
@@ -3134,6 +4317,361 @@
                 if (noWorkplacesMessage) {
                     noWorkplacesMessage.classList.add('hidden');
                 }
+            }
+        }
+
+        // Display paginated workplaces
+        function displayPaginatedWorkplaces() {
+            const tableBody = document.getElementById('workplaces-table-body');
+            const cardsContainer = document.getElementById('workplaces-cards');
+            if (!tableBody && !cardsContainer) return;
+
+            // Calculate start and end indices
+            const startIndex = (workplacesPagination.currentPage - 1) * workplacesPagination.itemsPerPage;
+            const endIndex = Math.min(startIndex + workplacesPagination.itemsPerPage, cachedWorkplacesData.length);
+            const paginatedWorkplaces = cachedWorkplacesData.slice(startIndex, endIndex);
+
+            if (paginatedWorkplaces.length === 0) {
+                const emptyState = `
+                    <div class="p-6 text-center text-gray-500">
+                        <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-sm font-medium">No workplaces found</p>
+                        <p class="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
+                    </div>
+                `;
+                if (tableBody) {
+                    tableBody.innerHTML = `<tr><td colspan="5">${emptyState}</td></tr>`;
+                }
+                if (cardsContainer) {
+                    cardsContainer.innerHTML = emptyState;
+                }
+                return;
+            }
+
+            // Populate desktop table
+            if (tableBody) {
+                tableBody.innerHTML = paginatedWorkplaces.map(workplace => {
+                    const isPrimary = workplace.is_primary;
+                    return `
+                        <tr class="hover:bg-gray-50 transition-colors workplace-row" data-workplace-id="${workplace.id}" data-is-primary="${isPrimary}">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-gradient-to-br ${isPrimary ? 'from-green-500 to-emerald-600' : 'from-indigo-500 to-purple-600'} rounded-lg flex items-center justify-center shadow-sm mr-3">
+                                        <i class="fas ${isPrimary ? 'fa-star' : 'fa-building'} text-white text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-semibold text-gray-900">${workplace.name}</div>
+                                        ${isPrimary ? '<span class="inline-block mt-0.5 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Primary</span>' : ''}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700 max-w-xs">
+                                <div class="flex items-start">
+                                    <i class="fas fa-map-marker-alt text-gray-400 mr-2 mt-0.5"></i>
+                                    <span class="line-clamp-2">${workplace.address || 'No address provided'}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <span class="flex items-center">
+                                    <i class="fas fa-circle-notch text-gray-400 mr-1"></i>
+                                    ${workplace.radius}m
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                ${workplace.assigned_at ? `
+                                    <div class="text-xs text-gray-600">
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        ${workplace.assigned_at}
+                                    </div>
+                                ` : '<span class="text-xs text-gray-400">-</span>'}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <button onclick="selectWorkplace(${workplace.id}, '${workplace.name.replace(/'/g, "\\'")}', '${(workplace.address || '').replace(/'/g, "\\'")}', ${workplace.latitude}, ${workplace.longitude}, ${workplace.radius}, ${isPrimary})"
+                                        class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-200 transition-colors"
+                                        title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${!isPrimary ? `
+                                        <button onclick="event.stopPropagation(); setPrimaryWorkplace(${workplace.id}, \`${workplace.name.replace(/`/g, "\\`")}\`)"
+                                            class="px-3 py-1.5 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg text-xs font-semibold hover:shadow-md transition-all"
+                                            title="Set as Primary">
+                                            <i class="fas fa-star"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Populate mobile cards
+            if (cardsContainer) {
+                cardsContainer.innerHTML = paginatedWorkplaces.map(workplace => {
+                    const isPrimary = workplace.is_primary;
+                    return `
+                        <div class="p-4 border-b border-gray-200 last:border-b-0 workplace-row" data-workplace-id="${workplace.id}" data-is-primary="${isPrimary}">
+                            <div class="flex items-start gap-3 mb-3">
+                                <div class="w-12 h-12 bg-gradient-to-br ${isPrimary ? 'from-green-500 to-emerald-600' : 'from-indigo-500 to-purple-600'} rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                                    <i class="fas ${isPrimary ? 'fa-star' : 'fa-building'} text-white text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-gray-900 text-base mb-1">${workplace.name}</h4>
+                                    ${isPrimary ? '<span class="inline-block px-2.5 py-1 bg-green-100 text-green-700 text-xs rounded-full font-semibold">Primary Workplace</span>' : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-3 space-y-2.5 mb-3">
+                                <div class="flex items-start gap-2">
+                                    <i class="fas fa-map-marker-alt text-gray-400 text-sm mt-0.5 flex-shrink-0"></i>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-medium text-gray-500 uppercase mb-0.5">Address</p>
+                                        <p class="text-sm text-gray-700">${workplace.address || 'No address provided'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-circle-notch text-gray-400 text-sm flex-shrink-0"></i>
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-500 uppercase">Radius</p>
+                                            <p class="text-sm text-gray-700 font-semibold">${workplace.radius}m</p>
+                                        </div>
+                                    </div>
+                                    ${workplace.assigned_at ? `
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-calendar text-gray-400 text-sm flex-shrink-0"></i>
+                                            <div>
+                                                <p class="text-xs font-medium text-gray-500 uppercase">Assigned</p>
+                                                <p class="text-sm text-gray-700 font-semibold">${workplace.assigned_at}</p>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                
+                                ${workplace.role ? `
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-user-tag text-gray-400 text-sm flex-shrink-0"></i>
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-500 uppercase">Role</p>
+                                            <p class="text-sm text-gray-700 font-semibold capitalize">${workplace.role}</p>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button onclick="selectWorkplace(${workplace.id}, '${workplace.name.replace(/'/g, "\\'")}', '${(workplace.address || '').replace(/'/g, "\\'")}', ${workplace.latitude}, ${workplace.longitude}, ${workplace.radius}, ${isPrimary})"
+                                    class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm">
+                                    <i class="fas fa-eye mr-2"></i>View Details
+                                </button>
+                                ${!isPrimary ? `
+                                    <button onclick="setPrimaryWorkplace(${workplace.id}, \`${workplace.name.replace(/`/g, "\\`")}\`)"
+                                        class="flex-1 px-4 py-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all shadow-sm">
+                                        <i class="fas fa-star mr-2"></i>Set Primary
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Update pagination controls
+            updateWorkplacesPaginationControls();
+
+            // Setup search functionality
+            setupWorkplaceSearch();
+        }
+
+        // Setup workplace search
+        function setupWorkplaceSearch() {
+            const searchInput = document.getElementById('workplace-search');
+            if (!searchInput) return;
+
+            // Remove old listener if exists
+            searchInput.replaceWith(searchInput.cloneNode(true));
+            const newSearchInput = document.getElementById('workplace-search');
+
+            newSearchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('.workplace-row');
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Update count if needed
+                console.log(`Found ${visibleCount} workplaces matching "${searchTerm}"`);
+            });
+        }
+
+        // Filter workplaces
+        function filterWorkplaces() {
+            const filter = document.getElementById('workplace-filter')?.value || 'all';
+            const rows = document.querySelectorAll('.workplace-row');
+
+            rows.forEach(row => {
+                const isPrimary = row.dataset.isPrimary === 'true';
+                
+                if (filter === 'all') {
+                    row.style.display = '';
+                } else if (filter === 'primary' && isPrimary) {
+                    row.style.display = '';
+                } else if (filter === 'secondary' && !isPrimary) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle view all workplaces
+        let viewingAllWorkplaces = false;
+        async function toggleAllWorkplaces() {
+            const btn = document.getElementById('view-all-btn');
+            if (!btn) return;
+
+            viewingAllWorkplaces = !viewingAllWorkplaces;
+
+            if (viewingAllWorkplaces) {
+                // Fetch all workplaces from system
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin sm:mr-2"></i><span class="hidden sm:inline">Loading...</span>';
+                btn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/all-workplaces');
+                    console.log('All workplaces API response:', response.status);
+                    
+                    if (!response.ok) throw new Error('Failed to fetch all workplaces');
+                    
+                    const data = await response.json();
+                    console.log('All workplaces data:', data);
+                    
+                    if (data.success && data.workplaces) {
+                        // Store original data
+                        window.originalWorkplacesData = cachedWorkplacesData;
+                        
+                        // Update cached data with all workplaces
+                        cachedWorkplacesData = data.workplaces;
+                        workplacesPagination.totalItems = data.workplaces.length;
+                        workplacesPagination.totalPages = Math.ceil(data.workplaces.length / workplacesPagination.itemsPerPage);
+                        workplacesPagination.currentPage = 1;
+
+                        // Update display
+                        displayPaginatedWorkplaces();
+
+                        // Update button
+                        btn.innerHTML = '<i class="fas fa-user-check sm:mr-2"></i><span class="hidden sm:inline">My Workplaces</span>';
+                        btn.classList.remove('bg-indigo-100', 'text-indigo-700', 'hover:bg-indigo-200');
+                        btn.classList.add('bg-yellow-100', 'text-yellow-700', 'hover:bg-yellow-200');
+                    }
+                } catch (error) {
+                    console.error('Error fetching all workplaces:', error);
+                    showNotification('Failed to load all workplaces', 'error');
+                    viewingAllWorkplaces = false;
+                } finally {
+                    btn.disabled = false;
+                }
+            } else {
+                // Restore original workplaces
+                if (window.originalWorkplacesData) {
+                    cachedWorkplacesData = window.originalWorkplacesData;
+                    workplacesPagination.totalItems = cachedWorkplacesData.length;
+                    workplacesPagination.totalPages = Math.ceil(cachedWorkplacesData.length / workplacesPagination.itemsPerPage);
+                    workplacesPagination.currentPage = 1;
+
+                    // Update display
+                    displayPaginatedWorkplaces();
+                }
+
+                // Update button
+                btn.innerHTML = '<i class="fas fa-globe sm:mr-2"></i><span class="hidden sm:inline">View All</span>';
+                btn.classList.remove('bg-yellow-100', 'text-yellow-700', 'hover:bg-yellow-200');
+                btn.classList.add('bg-indigo-100', 'text-indigo-700', 'hover:bg-indigo-200');
+            }
+        }
+
+        // Update pagination controls for workplaces
+        function updateWorkplacesPaginationControls() {
+            const paginationContainer = document.getElementById('workplaces-pagination');
+            const paginationInfo = document.getElementById('workplaces-pagination-info');
+            const prevBtn = document.getElementById('workplaces-prev-btn');
+            const nextBtn = document.getElementById('workplaces-next-btn');
+            const pageNumbersContainer = document.getElementById('workplaces-page-numbers');
+
+            if (!paginationContainer) return;
+
+            // Show/hide pagination based on total items
+            if (workplacesPagination.totalItems > workplacesPagination.itemsPerPage) {
+                paginationContainer.style.display = 'block';
+            } else {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+
+            // Update info text
+            const startIndex = (workplacesPagination.currentPage - 1) * workplacesPagination.itemsPerPage + 1;
+            const endIndex = Math.min(workplacesPagination.currentPage * workplacesPagination.itemsPerPage,
+                workplacesPagination.totalItems);
+            if (paginationInfo) {
+                paginationInfo.textContent =
+                    `Showing ${startIndex}-${endIndex} of ${workplacesPagination.totalItems} workplace${workplacesPagination.totalItems !== 1 ? 's' : ''}`;
+            }
+
+            // Update prev/next buttons
+            if (prevBtn) {
+                prevBtn.disabled = workplacesPagination.currentPage === 1;
+            }
+            if (nextBtn) {
+                nextBtn.disabled = workplacesPagination.currentPage === workplacesPagination.totalPages;
+            }
+
+            // Generate page numbers
+            if (pageNumbersContainer) {
+                let pageNumbersHtml = '';
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, workplacesPagination.currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(workplacesPagination.totalPages, startPage + maxVisiblePages - 1);
+
+                // Adjust start page if we're near the end
+                if (endPage - startPage < maxVisiblePages - 1) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const isActive = i === workplacesPagination.currentPage;
+                    pageNumbersHtml += `
+                        <button onclick="goToWorkplacesPage(${i})" 
+                                class="px-3 py-1 border ${isActive ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-gray-300 hover:bg-gray-50'} rounded-lg text-xs lg:text-sm transition-colors font-medium">
+                            ${i}
+                        </button>
+                    `;
+                }
+                pageNumbersContainer.innerHTML = pageNumbersHtml;
+            }
+        }
+
+        // Navigate to specific page
+        function goToWorkplacesPage(page) {
+            if (page < 1 || page > workplacesPagination.totalPages) return;
+            workplacesPagination.currentPage = page;
+            displayPaginatedWorkplaces();
+        }
+
+        // Change page (next/prev)
+        function changeWorkplacesPage(direction) {
+            const newPage = workplacesPagination.currentPage + direction;
+            if (newPage >= 1 && newPage <= workplacesPagination.totalPages) {
+                goToWorkplacesPage(newPage);
             }
         }
 
@@ -3184,6 +4722,11 @@
                     }
                 } else {
                     showNotification(result.error || 'Check-in failed', 'error');
+
+                    // Handle mutual exclusivity error
+                    if (result.locked_type) {
+                        checkTodayCheckinType(); // Refresh the UI to show locked state
+                    }
 
                     // Handle specific error cases
                     if (result.redirect === 'my-workplace') {
@@ -3350,7 +4893,21 @@
                 const result = await response.json();
 
                 if (response.ok) {
+                    // Show success message
                     showNotification(result.message, 'success');
+
+                    // Show warning if checking in at non-assigned workplace
+                    if (result.warning) {
+                        setTimeout(() => {
+                            showNotification(result.warning, 'warning');
+                        }, 2000);
+                        
+                        if (result.info) {
+                            setTimeout(() => {
+                                showNotification(result.info, 'info');
+                            }, 3500);
+                        }
+                    }
 
                     // Refresh all data
                     fetchCurrentStatus();
@@ -3387,9 +4944,51 @@
                 const response = await fetch(`/api/current-status/${userId}`);
                 const data = await response.json();
 
+                // Check if there's an active special check-in today
+                let hasActiveSpecialCheckin = false;
+                try {
+                    const specialResponse = await fetch(`/api/special-checkin-logs/${userId}`);
+                    if (specialResponse.ok) {
+                        const specialData = await specialResponse.json();
+                        // Check if last action was a check-in (meaning they haven't checked out yet)
+                        if (specialData.logs && specialData.logs.length > 0) {
+                            const lastLog = specialData.logs[specialData.logs.length - 1];
+                            hasActiveSpecialCheckin = lastLog.action === 'check_in';
+                        }
+                    }
+                } catch (specialError) {
+                    console.log('Could not check special check-in status:', specialError);
+                }
+
+                // Check if user is within geofence before updating button
+                const workplace = workLocations.mainOffice;
+                let inWorkplaceGeofence = false;
+
+                if (workplace && workplace.lat && workplace.lng && userLocation && userLocation.coords) {
+                    const workplaceDistance = calculateDistance(
+                        userLocation.coords.latitude,
+                        userLocation.coords.longitude,
+                        workplace.lat,
+                        workplace.lng
+                    );
+                    inWorkplaceGeofence = workplaceDistance <= workplace.radius;
+                }
+
                 // Update button based on current status
                 const checkinBtn = document.getElementById('checkin-btn');
                 if (checkinBtn) {
+                    // If there's an active special check-in, disable regular check-in
+                    if (hasActiveSpecialCheckin) {
+                        checkinBtn.className =
+                            'w-full py-4 bg-amber-500 text-white rounded-xl font-bold text-lg cursor-not-allowed shadow-sm';
+                        checkinBtn.innerHTML =
+                            '<i class="fas fa-star mr-2"></i>Special Check-in Active - Check out first';
+                        checkinBtn.disabled = true;
+                        checkinBtn.onclick = null;
+                        return; // Don't process further
+                    }
+
+                    // Show action button - backend will validate location
                     if (data.can_perform_action) {
                         const colorClasses = {
                             'green': 'bg-green-600 hover:bg-green-700',
@@ -3400,13 +4999,13 @@
 
                         const colorClass = colorClasses[data.button_color] || 'bg-gray-600';
                         checkinBtn.className =
-                            `w-full py-4 ${colorClass} text-white rounded-lg font-semibold text-lg transition-colors duration-200`;
+                            `w-full py-4 ${colorClass} text-white rounded-xl font-bold text-lg transition-colors duration-200 shadow-sm`;
                         checkinBtn.innerHTML = `<i class="fas fa-clock mr-2"></i>${data.button_text}`;
                         checkinBtn.disabled = false;
                         checkinBtn.onclick = performCheckin;
                     } else {
                         checkinBtn.className =
-                            'w-full py-4 bg-gray-500 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
+                            'w-full py-4 bg-gray-500 text-white rounded-xl font-bold text-lg cursor-not-allowed shadow-sm';
                         checkinBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Work Day Complete';
                         checkinBtn.disabled = true;
                         checkinBtn.onclick = null;
@@ -3425,25 +5024,28 @@
 
         function updateTodaysActivityFromLogs(logs) {
             const activityContainer = document.getElementById('todays-activity');
-            if (!activityContainer || !logs || logs.length === 0) {
+            if (!activityContainer) return;
+            
+            // Filter only REGULAR shift logs (not special)
+            const regularLogs = logs ? logs.filter(log => log.shift_type !== 'special') : [];
+            
+            if (regularLogs.length === 0) {
                 // Show empty state
-                if (activityContainer) {
-                    activityContainer.innerHTML = `
-                        <div class="flex items-center justify-center p-8 text-gray-500">
-                            <div class="text-center">
-                                <i class="fas fa-calendar-day text-3xl mb-3 text-gray-300"></i>
-                                <p>No activity recorded today</p>
-                                <p class="text-sm text-gray-400 mt-1">Check in to start tracking</p>
-                            </div>
+                activityContainer.innerHTML = `
+                    <div class="flex items-center justify-center p-8 text-gray-500">
+                        <div class="text-center">
+                            <i class="fas fa-calendar-day text-3xl mb-3 text-gray-300"></i>
+                            <p class="font-medium">No regular activity recorded today</p>
+                            <p class="text-sm text-gray-400 mt-1">Check in to start tracking</p>
                         </div>
-                    `;
-                }
+                    </div>
+                `;
                 return;
             }
 
             let html = '';
 
-            logs.forEach((log, index) => {
+            regularLogs.forEach((log, index) => {
                 const actionIcons = {
                     'check_in': 'fa-sign-in-alt',
                     'break_start': 'fa-utensils',
@@ -3490,7 +5092,7 @@
                 const label = actionLabels[log.action] || log.action;
 
                 html += `
-                    <div class="flex items-center p-3 ${colors.bg} rounded-lg">
+                    <div class="flex items-center p-3 ${colors.bg} rounded-lg border border-gray-200">
                         <div class="w-10 h-10 ${colors.dot} rounded-full flex items-center justify-center mr-3">
                             <i class="fas ${icon} text-white text-sm"></i>
                         </div>
@@ -3548,144 +5150,304 @@
             }
         }
 
-        async function fetchTodaysSchedule(userId = null) {
+        // Check today's check-in type to enforce mutual exclusivity
+        async function checkTodayCheckinType(userId = null) {
             userId = userId || getCurrentUserId();
             try {
-                // Get current status from API to show workflow progress
+                const response = await fetch(`/api/today-checkin-type/${userId}`);
+                const data = await response.json();
+
+                console.log('Today\'s check-in type:', data);
+
+                // Update Regular Check-In section
+                const checkinBtn = document.getElementById('checkin-btn');
+                const regularSection = document.getElementById('gps-checkin-section');
+                
+                if (!data.can_use_regular && data.type === 'special') {
+                    // User has already used special check-in, lock regular check-in
+                    if (checkinBtn && !regularSection?.classList.contains('hidden')) {
+                        const existingWarning = document.getElementById('regular-checkin-locked-warning');
+                        if (!existingWarning) {
+                            const warningDiv = document.createElement('div');
+                            warningDiv.id = 'regular-checkin-locked-warning';
+                            warningDiv.className = 'mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg';
+                            warningDiv.innerHTML = `
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-lock text-amber-500 text-xl"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-bold text-amber-800">Regular Check-In Locked</h3>
+                                        <p class="text-sm text-amber-700 mt-1">${data.message}. You cannot use both regular and special check-in on the same day.</p>
+                                    </div>
+                                </div>
+                            `;
+                            checkinBtn.parentElement?.insertBefore(warningDiv, checkinBtn);
+                        }
+                        
+                        checkinBtn.className = 'w-full py-4 bg-gray-400 text-white rounded-xl font-bold text-lg cursor-not-allowed shadow-sm opacity-60';
+                        checkinBtn.innerHTML = '<i class="fas fa-lock mr-2"></i>Locked - Special Check-In Active Today';
+                        checkinBtn.disabled = true;
+                        checkinBtn.onclick = null;
+                    }
+                } else {
+                    // Remove warning if exists
+                    const existingWarning = document.getElementById('regular-checkin-locked-warning');
+                    if (existingWarning) {
+                        existingWarning.remove();
+                    }
+                }
+
+                // Update Special Check-In section
+                const specialCheckinBtn = document.getElementById('special-checkin-btn');
+                const specialSection = document.getElementById('special-checkin-section');
+                
+                if (!data.can_use_special && data.type === 'regular') {
+                    // User has already used regular check-in, lock special check-in
+                    if (specialCheckinBtn && !specialSection?.classList.contains('hidden')) {
+                        const existingWarning = document.getElementById('special-checkin-locked-warning');
+                        if (!existingWarning) {
+                            const warningDiv = document.createElement('div');
+                            warningDiv.id = 'special-checkin-locked-warning';
+                            warningDiv.className = 'mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg';
+                            warningDiv.innerHTML = `
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-lock text-blue-500 text-xl"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-bold text-blue-800">Special Check-In Locked</h3>
+                                        <p class="text-sm text-blue-700 mt-1">${data.message}. You cannot use both regular and special check-in on the same day.</p>
+                                    </div>
+                                </div>
+                            `;
+                            specialCheckinBtn.parentElement?.insertBefore(warningDiv, specialCheckinBtn);
+                        }
+                        
+                        specialCheckinBtn.className = 'w-full py-4 bg-gray-400 text-white rounded-xl font-bold text-lg cursor-not-allowed shadow-sm opacity-60';
+                        specialCheckinBtn.innerHTML = '<i class="fas fa-lock mr-2"></i>Locked - Regular Check-In Active Today';
+                        specialCheckinBtn.disabled = true;
+                        specialCheckinBtn.onclick = null;
+                    }
+                } else {
+                    // Remove warning if exists
+                    const existingWarning = document.getElementById('special-checkin-locked-warning');
+                    if (existingWarning) {
+                        existingWarning.remove();
+                    }
+                }
+
+            } catch (error) {
+                console.error('Failed to check today\'s check-in type:', error);
+            }
+        }
+
+        async function fetchTodaysSchedule(userId = null) {
+            userId = userId || getCurrentUserId();
+            
+            const scheduleContent = document.getElementById('schedule-content');
+            
+            // Show loading animation
+            if (scheduleContent) {
+                scheduleContent.style.opacity = '0.5';
+                scheduleContent.innerHTML = `
+                    <div class="flex items-center justify-center p-8 text-gray-500">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-3 text-indigo-600"></i>
+                            <p class="font-medium text-sm">Refreshing activity...</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            try {
+                // Get current status from API to show all activity
                 const statusResponse = await fetch(`/api/current-status/${userId}`);
                 const statusData = await statusResponse.json();
 
-                // Check if user has a workplace configured
-                const workplace = await fetch(`/api/user-workplace/${userId}`);
+                // Also fetch special check-in logs
+                let specialLogs = [];
+                try {
+                    const specialResponse = await fetch(`/api/special-checkin-logs/${userId}`);
+                    if (specialResponse.ok) {
+                        const specialData = await specialResponse.json();
+                        console.log('Special logs API response:', specialData);
+                        
+                        // The API returns { logs: [...], count: x, ... }
+                        if (specialData.logs && Array.isArray(specialData.logs)) {
+                            const today = new Date().toISOString().split('T')[0];
+                            specialLogs = specialData.logs.filter(log => log.date === today);
+                            console.log('Filtered special logs for today:', specialLogs);
+                        }
+                    }
+                } catch (error) {
+                    console.log('Could not fetch special logs:', error);
+                }
 
-                const scheduleContent = document.getElementById('schedule-content');
-                const scheduleSection = document.getElementById('todays-schedule-section');
-
-                if (workplace.ok && !statusData.error) {
+                if (!statusData.error) {
                     let scheduleHtml = '';
 
-                    // Determine shift type and create appropriate workflow steps
-                    const shiftType = statusData.shift_type || statusData.next_shift_type || 'am';
-                    let steps = [];
-
-                    if (shiftType === 'am') {
-                        // AM shift workflow: Check In → Lunch Start → Lunch End → Check Out
-                        steps = [{
-                                action: 'check_in',
-                                label: 'Check In',
-                                icon: '🟢',
-                                description: 'Start your morning shift'
-                            },
-                            {
-                                action: 'break_start',
-                                label: 'Start Lunch',
-                                icon: '🟡',
-                                description: 'Begin lunch break'
-                            },
-                            {
-                                action: 'break_end',
-                                label: 'End Lunch',
-                                icon: '🔵',
-                                description: 'Resume afternoon work'
-                            },
-                            {
-                                action: 'check_out',
-                                label: 'Check Out',
-                                icon: '🔴',
-                                description: 'End your work day'
-                            }
-                        ];
-                    } else {
-                        // PM shift workflow: Check In → Check Out (no lunch break)
-                        steps = [{
-                                action: 'check_in',
-                                label: 'Check In',
-                                icon: '🟢',
-                                description: 'Start your afternoon shift'
-                            },
-                            {
-                                action: 'check_out',
-                                label: 'Check Out',
-                                icon: '🔴',
-                                description: 'End your PM shift'
-                            }
-                        ];
+                    // Combine regular and special logs, sorted by time
+                    const allLogs = [];
+                    
+                    // Add regular logs with type marker
+                    if (statusData.logs && statusData.logs.length > 0) {
+                        console.log('Adding regular logs:', statusData.logs);
+                        statusData.logs.forEach(log => {
+                            allLogs.push({
+                                ...log,
+                                type: 'regular',
+                                sort_time: log.timestamp || ''
+                            });
+                        });
                     }
 
-                    steps.forEach((step, index) => {
-                        const isCompleted = index < statusData.current_logs_count;
-                        const isCurrent = index === statusData.current_logs_count && !statusData
-                            .completed_today;
-                        const isPending = index > statusData.current_logs_count;
+                    // Add special logs with type marker
+                    if (specialLogs.length > 0) {
+                        console.log('Adding special logs:', specialLogs);
+                        specialLogs.forEach(log => {
+                            allLogs.push({
+                                action: log.action,
+                                timestamp: log.time || log.timestamp,
+                                shift_type: 'special',
+                                location: log.workplace_name || log.location,
+                                type: 'special',
+                                sort_time: log.time || log.timestamp || ''
+                            });
+                        });
+                    }
 
-                        let statusText = '';
-                        let statusColor = '';
-                        let bgColor = '';
-                        let dotColor = '';
+                    console.log('Combined logs with types:', allLogs);
 
-                        if (isCompleted) {
-                            const log = statusData.logs[index];
-                            statusText = log ? log.timestamp : 'Completed';
-                            statusColor = 'text-green-600';
-                            bgColor = 'bg-green-50';
-                            dotColor = 'bg-green-500';
-                        } else if (isCurrent) {
-                            statusText = 'Ready';
-                            statusColor = 'text-blue-600';
-                            bgColor = 'bg-blue-50';
-                            dotColor = 'bg-blue-500';
-                        } else {
-                            statusText = 'Pending';
-                            statusColor = 'text-gray-500';
-                            bgColor = 'bg-gray-50';
-                            dotColor = 'bg-gray-400';
-                        }
+                    // Sort by time
+                    allLogs.sort((a, b) => a.sort_time.localeCompare(b.sort_time));
 
-                        scheduleHtml += `
-                            <div class="flex items-center p-3 ${bgColor} rounded-lg ${isPending ? 'opacity-60' : ''}">
-                                <div class="w-3 h-3 ${dotColor} rounded-full mr-4"></div>
-                                <div class="flex-1">
-                                    <p class="font-medium text-gray-800">${step.icon} ${step.label}</p>
-                                    <p class="text-sm text-gray-600">${step.description}</p>
-                                </div>
-                                <div class="${statusColor} text-sm font-medium">
-                                    ${statusText}
+                    if (allLogs.length === 0) {
+                        scheduleHtml = `
+                            <div class="flex items-center justify-center p-8 text-gray-500">
+                                <div class="text-center">
+                                    <i class="fas fa-calendar-day text-3xl mb-3 text-gray-300"></i>
+                                    <p class="font-medium">No activity recorded today</p>
+                                    <p class="text-sm text-gray-400 mt-1">Check in to start tracking</p>
                                 </div>
                             </div>
                         `;
-                    });
+                    } else {
+                        allLogs.forEach((log, index) => {
+                            console.log(`Rendering log ${index}:`, {
+                                action: log.action,
+                                type: log.type,
+                                isRegular: log.type === 'regular',
+                                isSpecial: log.type === 'special'
+                            });
+                            
+                            const actionIcons = {
+                                'check_in': 'fa-sign-in-alt',
+                                'break_start': 'fa-utensils',
+                                'break_end': 'fa-play',
+                                'check_out': 'fa-sign-out-alt'
+                            };
 
-                    // Add completion message if all steps are done
-                    if (statusData.completed_today) {
-                        scheduleHtml += `
-                            <div class="flex items-center p-3 bg-purple-50 rounded-lg border-2 border-purple-200">
-                                <div class="w-3 h-3 bg-purple-500 rounded-full mr-4"></div>
-                                <div class="flex-1">
-                                    <p class="font-medium text-purple-800">🎉 Work Day Complete!</p>
-                                    <p class="text-sm text-purple-600">All tasks completed for today</p>
+                            const isRegular = log.type === 'regular';
+                            const isSpecial = log.type === 'special';
+                            
+                            console.log(`  -> isRegular: ${isRegular}, isSpecial: ${isSpecial}`);
+
+                            const actionColors = {
+                                'check_in': {
+                                    bg: isSpecial ? 'bg-yellow-50' : 'bg-green-50',
+                                    text: isSpecial ? 'text-yellow-800' : 'text-green-800',
+                                    dot: isSpecial ? 'bg-yellow-500' : 'bg-green-500',
+                                    icon: isSpecial ? 'text-yellow-600' : 'text-green-600'
+                                },
+                                'break_start': {
+                                    bg: 'bg-orange-50',
+                                    text: 'text-orange-800',
+                                    dot: 'bg-orange-500',
+                                    icon: 'text-orange-600'
+                                },
+                                'break_end': {
+                                    bg: 'bg-blue-50',
+                                    text: 'text-blue-800',
+                                    dot: 'bg-blue-500',
+                                    icon: 'text-blue-600'
+                                },
+                                'check_out': {
+                                    bg: isSpecial ? 'bg-amber-50' : 'bg-red-50',
+                                    text: isSpecial ? 'text-amber-800' : 'text-red-800',
+                                    dot: isSpecial ? 'bg-amber-500' : 'bg-red-500',
+                                    icon: isSpecial ? 'text-amber-600' : 'text-red-600'
+                                }
+                            };
+
+                            const actionLabels = {
+                                'check_in': 'Checked In',
+                                'break_start': 'Lunch Break Started',
+                                'break_end': 'Lunch Break Ended',
+                                'check_out': 'Checked Out'
+                            };
+
+                            const colors = actionColors[log.action] || actionColors['check_in'];
+                            const icon = actionIcons[log.action] || 'fa-clock';
+                            const label = actionLabels[log.action] || log.action;
+                            
+                            const typeLabel = isSpecial ? 
+                                '<span class="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded-full font-semibold">Special</span>' : 
+                                '<span class="px-2 py-0.5 bg-indigo-200 text-indigo-800 text-xs rounded-full font-semibold">Regular</span>';
+                            
+                            // Add location for special check-ins
+                            const locationInfo = isSpecial && log.location ? 
+                                ` • <i class="fas fa-map-marker-alt mr-1"></i>${log.location}` : '';
+
+                            scheduleHtml += `
+                                <div class="flex items-center p-3 ${colors.bg} rounded-lg border border-gray-200">
+                                    <div class="w-10 h-10 ${colors.dot} rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                        <i class="fas ${icon} text-white text-sm"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <p class="font-semibold ${colors.text}">${label}</p>
+                                            ${typeLabel}
+                                        </div>
+                                        <p class="text-sm ${colors.icon}">${log.timestamp}${locationInfo}</p>
+                                    </div>
+                                    <div class="${colors.icon}">
+                                        <i class="fas fa-check-circle text-lg"></i>
+                                    </div>
                                 </div>
-                                <div class="text-purple-600 text-sm font-medium">
-                                    Done
-                                </div>
-                            </div>
-                        `;
+                            `;
+                        });
                     }
 
                     scheduleContent.innerHTML = scheduleHtml;
+                    
+                    // Animate content fade-in
+                    scheduleContent.style.opacity = '0';
+                    requestAnimationFrame(() => {
+                        scheduleContent.style.transition = 'opacity 0.4s ease-in-out';
+                        scheduleContent.style.opacity = '1';
+                    });
                 } else {
                     // No workplace configured or error - show setup prompt
                     scheduleContent.innerHTML = `
                         <div class="flex items-center justify-center p-8 text-gray-500">
                             <div class="text-center">
                                 <i class="fas fa-map-marker-alt text-3xl mb-3 text-gray-300"></i>
-                                <h4 class="font-medium text-gray-800 mb-2">No Workflow Available</h4>
-                                <p class="text-gray-500 mb-4">Set up your workplace first to see your daily workflow</p>
+                                <h4 class="font-medium text-gray-800 mb-2">No Activity Available</h4>
+                                <p class="text-gray-500 mb-4">Set up your workplace first to start tracking</p>
                                 <button onclick="switchToSection('my-workplace')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                                     Select Workplace
                                 </button>
                             </div>
                         </div>
                     `;
+                    
+                    // Animate content fade-in
+                    scheduleContent.style.opacity = '0';
+                    requestAnimationFrame(() => {
+                        scheduleContent.style.transition = 'opacity 0.4s ease-in-out';
+                        scheduleContent.style.opacity = '1';
+                    });
                 }
             } catch (error) {
                 console.error('Failed to fetch workflow status:', error);
@@ -3699,6 +5461,13 @@
                             </div>
                         </div>
                     `;
+                    
+                    // Animate error message fade-in
+                    scheduleContent.style.opacity = '0';
+                    requestAnimationFrame(() => {
+                        scheduleContent.style.transition = 'opacity 0.4s ease-in-out';
+                        scheduleContent.style.opacity = '1';
+                    });
                 }
             }
         }
@@ -3793,6 +5562,15 @@
             totalRecords: 0,
             totalPages: 1
         }; // Pagination state
+
+        // Workplace pagination state
+        let cachedWorkplacesData = [];
+        let workplacesPagination = {
+            currentPage: 1,
+            itemsPerPage: 5,
+            totalItems: 0,
+            totalPages: 1
+        };
 
         // Get current user ID from meta tag
         function getCurrentUserId() {
@@ -4581,6 +6359,11 @@
             }, 10000);
         }
 
+        // Function to open manual location entry (triggered by button)
+        function openManualLocationEntry() {
+            showManualLocationEntry();
+        }
+
         function showManualLocationEntry() {
             // Show code verification modal first
             const verifyModal = document.createElement('div');
@@ -4686,36 +6469,43 @@
                 <div class="bg-white rounded-lg p-6 max-w-md w-full">
                     <div class="flex items-center mb-4">
                         <div class="bg-green-100 rounded-full p-2 mr-3">
-                            <i class="fas fa-check-circle text-green-600"></i>
+                            <i class="fas fa-map-marker-alt text-green-600"></i>
                         </div>
                         <h3 class="text-lg font-bold text-gray-900">Manual Location Entry</h3>
                     </div>
                     <p class="text-sm text-gray-600 mb-4">
-                        Enter coordinates manually for testing purposes. Contact your administrator for proper workplace coordinates.
+                        Select your workplace location. This will use your workplace's coordinates for check-in.
                     </p>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-                            <input type="number" id="manual-lat" step="any" placeholder="14.2785" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Your Workplace</label>
+                            <select id="manual-workplace-select" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                                <option value="">Loading workplaces...</option>
+                            </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-                            <input type="number" id="manual-lng" step="any" placeholder="120.8677" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                        <div id="selected-workplace-info" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div class="text-xs text-blue-900 space-y-1">
+                                <div><strong>Address:</strong> <span id="info-address">-</span></div>
+                                <div><strong>Coordinates:</strong> <span id="info-coords">-</span></div>
+                                <div><strong>Radius:</strong> <span id="info-radius">-</span></div>
+                            </div>
                         </div>
-                        <div class="text-xs text-gray-500">
-                            <strong>Common DepEd Cavite locations:</strong><br>
-                            • DepEd Cavite: 14.2785, 120.8677<br>
-                            • Tanza National Comprehensive HS: 14.3971, 120.8530<br>
-                            • Tanza National Trade School: 14.3186, 120.8591<br>
-                            • Trece Martires City Elementary: 14.2871, 120.8688
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                            <div class="flex">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 mr-2 mt-0.5"></i>
+                                <p class="text-xs text-yellow-700">
+                                    This will set your location to your selected workplace. Only use this if GPS is not working properly.
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div class="flex gap-3 mt-6">
-                        <button onclick="setManualLocation(); document.body.removeChild(this.closest('.fixed'))" 
-                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-                            Set Location
+                        <button onclick="setManualWorkplaceLocation(); document.body.removeChild(this.closest('.fixed'))" 
+                                id="set-workplace-btn"
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                disabled>
+                            <i class="fas fa-check mr-2"></i>Use This Location
                         </button>
                         <button onclick="document.body.removeChild(this.closest('.fixed'))" 
                                 class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
@@ -4726,16 +6516,79 @@
             `;
 
             document.body.appendChild(modal);
+
+            // Load user's workplaces
+            loadWorkplacesForManualEntry();
         }
 
-        function setManualLocation() {
-            const lat = parseFloat(document.getElementById('manual-lat').value);
-            const lng = parseFloat(document.getElementById('manual-lng').value);
+        function loadWorkplacesForManualEntry() {
+            fetch('/api/user/workplaces')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const select = document.getElementById('manual-workplace-select');
+                    const setButton = document.getElementById('set-workplace-btn');
 
-            if (isNaN(lat) || isNaN(lng)) {
-                alert('Please enter valid latitude and longitude values');
+                    if (data.workplaces && data.workplaces.length > 0) {
+                        select.innerHTML = '<option value="">-- Select a workplace --</option>';
+                        data.workplaces.forEach(workplace => {
+                            const option = document.createElement('option');
+                            option.value = workplace.id;
+                            option.textContent = workplace.name;
+                            option.dataset.lat = workplace.latitude;
+                            option.dataset.lng = workplace.longitude;
+                            option.dataset.address = workplace.address;
+                            option.dataset.radius = workplace.radius;
+                            select.appendChild(option);
+                        });
+
+                        // Enable button when workplace is selected
+                        select.addEventListener('change', function() {
+                            const selectedOption = this.options[this.selectedIndex];
+                            const infoDiv = document.getElementById('selected-workplace-info');
+
+                            if (selectedOption.value) {
+                                setButton.disabled = false;
+                                infoDiv.classList.remove('hidden');
+                                document.getElementById('info-address').textContent = selectedOption.dataset
+                                    .address;
+                                document.getElementById('info-coords').textContent =
+                                    `${parseFloat(selectedOption.dataset.lat).toFixed(6)}, ${parseFloat(selectedOption.dataset.lng).toFixed(6)}`;
+                                document.getElementById('info-radius').textContent =
+                                    `${selectedOption.dataset.radius} meters`;
+                            } else {
+                                setButton.disabled = true;
+                                infoDiv.classList.add('hidden');
+                            }
+                        });
+                    } else {
+                        select.innerHTML = '<option value="">No workplaces assigned - Contact admin</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading workplaces:', error);
+                    const select = document.getElementById('manual-workplace-select');
+                    select.innerHTML = '<option value="">Error loading workplaces - Please try again</option>';
+                    showSimpleNotification('Failed to load workplaces. Please refresh and try again.', 'error');
+                });
+        }
+
+        function setManualWorkplaceLocation() {
+            const select = document.getElementById('manual-workplace-select');
+            const selectedOption = select.options[select.selectedIndex];
+
+            if (!selectedOption.value) {
+                alert('Please select a workplace');
                 return;
             }
+
+            const lat = parseFloat(selectedOption.dataset.lat);
+            const lng = parseFloat(selectedOption.dataset.lng);
+            const workplaceName = selectedOption.textContent;
 
             // Create a manual location object
             const manualLocation = createLocationObject(lat, lng, 50, 'manual');
@@ -4745,7 +6598,8 @@
                 lat: lat,
                 lng: lng,
                 accuracy: 50,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                workplace: workplaceName
             }));
 
             // Set as current location
@@ -4753,11 +6607,11 @@
             hasLocationPermission = true;
 
             // Update UI
-            updateLocationStatus('warning', manualLocation, 'Manual location set');
+            updateLocationStatus('warning', manualLocation, `Manual location set: ${workplaceName}`);
             updateCurrentLocationDisplay(manualLocation);
             updateGeofenceStatus(manualLocation);
 
-            showSimpleNotification(`Manual location set: ${lat.toFixed(4)}, ${lng.toFixed(4)}`, 'success');
+            showSimpleNotification(`Location set to ${workplaceName}`, 'success');
         }
 
         // Enhanced Error Messaging System
@@ -5686,6 +7540,268 @@
                 useLocationBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 useLocationBtn.classList.add('hover:bg-blue-700');
             }
+
+            // Detect which workplace user is currently at (for regular check-in)
+            detectCurrentWorkplace(position);
+            
+            // Detect which workplace user is currently at (for special check-in)
+            detectSpecialCurrentWorkplace(position);
+        }
+
+        // Detect which workplace the user is currently at based on GPS
+        async function detectCurrentWorkplace(position) {
+            if (!position) return;
+
+            try {
+                // Get all workplaces (user's assigned + system workplaces)
+                const userId = getCurrentUserId();
+                const response = await fetch(`/api/user-workplaces/${userId}`);
+                
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                const allWorkplaces = data.workplaces || [];
+                
+                // Also get all system workplaces
+                const allWorkplacesResponse = await fetch('/api/all-workplaces');
+                if (allWorkplacesResponse.ok) {
+                    const allWorkplacesData = await allWorkplacesResponse.json();
+                    if (allWorkplacesData.workplaces) {
+                        // Merge, avoiding duplicates
+                        const existingIds = allWorkplaces.map(w => w.id);
+                        allWorkplacesData.workplaces.forEach(w => {
+                            if (!existingIds.includes(w.id)) {
+                                allWorkplaces.push(w);
+                            }
+                        });
+                    }
+                }
+
+                // Find which workplace user is currently at
+                let currentWorkplace = null;
+                let minDistance = Infinity;
+
+                for (const workplace of allWorkplaces) {
+                    const distance = calculateDistance(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                        workplace.latitude,
+                        workplace.longitude
+                    );
+
+                    if (distance <= workplace.radius && distance < minDistance) {
+                        currentWorkplace = workplace;
+                        minDistance = distance;
+                    }
+                }
+
+                // Update the Current Workplace display
+                const currentWorkplaceDisplay = document.getElementById('current-workplace-display');
+                const currentWorkplaceAddress = document.getElementById('current-workplace-address');
+                const currentDistance = document.getElementById('current-distance');
+
+                if (currentWorkplace) {
+                    if (currentWorkplaceDisplay) {
+                        currentWorkplaceDisplay.textContent = currentWorkplace.name;
+                        currentWorkplaceDisplay.className = 'text-sm font-semibold text-green-700 block';
+                    }
+                    if (currentWorkplaceAddress) {
+                        currentWorkplaceAddress.textContent = currentWorkplace.address || 'No address';
+                    }
+                    if (currentDistance) {
+                        currentDistance.textContent = Math.round(minDistance) + 'm';
+                        currentDistance.className = 'text-green-600 font-semibold text-xs';
+                    }
+                } else {
+                    if (currentWorkplaceDisplay) {
+                        currentWorkplaceDisplay.textContent = 'Not at any workplace';
+                        currentWorkplaceDisplay.className = 'text-sm font-semibold text-gray-500 block';
+                    }
+                    if (currentWorkplaceAddress) {
+                        currentWorkplaceAddress.textContent = 'You are outside all workplace areas';
+                    }
+                    if (currentDistance) {
+                        currentDistance.textContent = '--';
+                        currentDistance.className = 'text-gray-400 text-xs';
+                    }
+                }
+
+                // Update Primary Workplace display
+                const primaryWorkplace = data.primary_workplace;
+                const primaryWorkplaceDisplay = document.getElementById('primary-workplace-display');
+                const primaryDistance = document.getElementById('primary-distance');
+
+                if (primaryWorkplace) {
+                    if (primaryWorkplaceDisplay) {
+                        primaryWorkplaceDisplay.textContent = primaryWorkplace.name;
+                    }
+                    if (primaryDistance) {
+                        const dist = calculateDistance(
+                            position.coords.latitude,
+                            position.coords.longitude,
+                            primaryWorkplace.latitude,
+                            primaryWorkplace.longitude
+                        );
+                        primaryDistance.textContent = Math.round(dist) + 'm';
+                    }
+                } else {
+                    if (primaryWorkplaceDisplay) {
+                        primaryWorkplaceDisplay.textContent = 'Not set';
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error detecting current workplace:', error);
+            }
+        }
+
+        // Detect current workplace for special check-in
+        async function detectSpecialCurrentWorkplace(position) {
+            if (!position) return;
+
+            try {
+                // Get all workplaces (user's assigned + system workplaces)
+                const userId = getCurrentUserId();
+                const response = await fetch(`/api/user-workplaces/${userId}`);
+                
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                const allWorkplaces = data.workplaces || [];
+                
+                // Also get all system workplaces
+                const allWorkplacesResponse = await fetch('/api/all-workplaces');
+                if (allWorkplacesResponse.ok) {
+                    const allWorkplacesData = await allWorkplacesResponse.json();
+                    if (allWorkplacesData.workplaces) {
+                        // Merge, avoiding duplicates
+                        const existingIds = allWorkplaces.map(w => w.id);
+                        allWorkplacesData.workplaces.forEach(w => {
+                            if (!existingIds.includes(w.id)) {
+                                allWorkplaces.push(w);
+                            }
+                        });
+                    }
+                }
+
+                // Find which workplace user is currently at
+                let currentWorkplace = null;
+                let minDistance = Infinity;
+
+                for (const workplace of allWorkplaces) {
+                    const distance = calculateDistance(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                        workplace.latitude,
+                        workplace.longitude
+                    );
+
+                    if (distance <= workplace.radius && distance < minDistance) {
+                        currentWorkplace = workplace;
+                        minDistance = distance;
+                    }
+                }
+
+                // Store the detected workplace ID globally for special check-in
+                selectedSpecialLocationId = currentWorkplace ? currentWorkplace.id : null;
+
+                // Update the Current Workplace display for special check-in
+                const currentWorkplaceDisplay = document.getElementById('special-current-workplace-display');
+                const currentWorkplaceAddress = document.getElementById('special-current-workplace-address');
+                const currentDistance = document.getElementById('special-current-distance');
+
+                if (currentWorkplace) {
+                    if (currentWorkplaceDisplay) {
+                        currentWorkplaceDisplay.textContent = currentWorkplace.name;
+                        currentWorkplaceDisplay.className = 'text-sm font-semibold text-yellow-700 block';
+                    }
+                    if (currentWorkplaceAddress) {
+                        currentWorkplaceAddress.textContent = currentWorkplace.address || 'No address';
+                    }
+                    if (currentDistance) {
+                        currentDistance.textContent = Math.round(minDistance) + 'm';
+                        currentDistance.className = 'text-yellow-600 font-semibold text-xs';
+                    }
+                } else {
+                    if (currentWorkplaceDisplay) {
+                        currentWorkplaceDisplay.textContent = 'Not at any workplace';
+                        currentWorkplaceDisplay.className = 'text-sm font-semibold text-gray-500 block';
+                    }
+                    if (currentWorkplaceAddress) {
+                        currentWorkplaceAddress.textContent = 'You are outside all workplace areas';
+                    }
+                    if (currentDistance) {
+                        currentDistance.textContent = '--';
+                        currentDistance.className = 'text-gray-400 text-xs';
+                    }
+                }
+
+                // Update Primary Workplace display for special check-in
+                const primaryWorkplace = data.primary_workplace;
+                const primaryWorkplaceDisplay = document.getElementById('special-primary-workplace-display');
+                const primaryDistance = document.getElementById('special-primary-distance');
+
+                if (primaryWorkplace) {
+                    if (primaryWorkplaceDisplay) {
+                        primaryWorkplaceDisplay.textContent = primaryWorkplace.name;
+                    }
+                    if (primaryDistance) {
+                        const dist = calculateDistance(
+                            position.coords.latitude,
+                            position.coords.longitude,
+                            primaryWorkplace.latitude,
+                            primaryWorkplace.longitude
+                        );
+                        primaryDistance.textContent = Math.round(dist) + 'm';
+                    }
+                } else {
+                    if (primaryWorkplaceDisplay) {
+                        primaryWorkplaceDisplay.textContent = 'Not set';
+                    }
+                }
+
+                // Update special check-in button state
+                const checkinBtn = document.getElementById('special-checkin-btn');
+                const locationBadge = document.getElementById('special-location-badge');
+                const currentLocation = document.getElementById('special-current-location');
+
+                if (checkinBtn) {
+                    const accuracy = Math.round(position.coords.accuracy);
+                    
+                    // Update location display
+                    if (currentLocation) {
+                        currentLocation.innerHTML = `<i class="fas fa-map-marker-alt text-yellow-600 mr-2"></i>` +
+                            `Location: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)} ` +
+                            `<span class="text-xs text-gray-600">(±${accuracy}m)</span>`;
+                    }
+
+                    if (currentWorkplace) {
+                        // Enable button - user is at a workplace
+                        if (locationBadge) {
+                            locationBadge.className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
+                            locationBadge.textContent = 'In Range';
+                        }
+                        
+                        checkinBtn.className = 'w-full py-4 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl font-bold text-lg transition-colors shadow-sm mb-4';
+                        checkinBtn.innerHTML = '<i class="fas fa-star mr-2"></i>Special Check In/Out';
+                        checkinBtn.disabled = false;
+                        checkinBtn.onclick = performSpecialCheckin;
+                    } else {
+                        // Disable button - user is not at any workplace
+                        if (locationBadge) {
+                            locationBadge.className = 'px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium';
+                            locationBadge.textContent = 'Not in Range';
+                        }
+                        
+                        checkinBtn.className = 'w-full py-4 bg-red-500 text-white rounded-xl font-bold text-lg cursor-not-allowed shadow-sm mb-4';
+                        checkinBtn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Outside All Workplace Areas';
+                        checkinBtn.disabled = true;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error detecting special current workplace:', error);
+            }
         }
 
         // Calculate distance between two coordinates (Haversine formula)
@@ -5773,36 +7889,28 @@
                     geofenceStatus.className = 'flex items-center text-green-700 bg-green-100 px-3 py-2 rounded-lg';
                     geofenceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>You are within the work area';
                 } else {
-                    geofenceStatus.className = 'flex items-center text-red-700 bg-red-100 px-3 py-2 rounded-lg';
+                    geofenceStatus.className = 'flex items-center text-yellow-700 bg-yellow-100 px-3 py-2 rounded-lg';
                     geofenceStatus.innerHTML =
-                        `<i class="fas fa-times-circle mr-2"></i>You are ${Math.round(workplaceDistance)}m away from work area`;
+                        `<i class="fas fa-info-circle mr-2"></i>You are ${Math.round(workplaceDistance)}m away from primary workplace`;
                 }
             }
 
-            // Update check-in button based on geofence status
+            // Always fetch current status to set correct button (backend will validate location)
             const checkinBtn = document.getElementById('checkin-btn');
             if (checkinBtn) {
-                if (!inWorkplaceGeofence) {
-                    checkinBtn.className =
-                        'w-full py-4 bg-red-500 text-white rounded-lg font-semibold text-lg cursor-not-allowed';
-                    checkinBtn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Outside Work Area';
-                    checkinBtn.disabled = true;
-                    checkinBtn.onclick = null;
-                } else {
-                    // If in geofence, fetch current status to set correct button
-                    fetchCurrentStatus();
-                }
+                // Always enable the button - backend will handle validation
+                fetchCurrentStatus();
             }
 
             // Update location badge color based on geofence status
             const badge = document.getElementById('location-badge');
             if (badge) {
                 if (inWorkplaceGeofence) {
-                    badge.className = 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium';
-                    badge.textContent = 'In Work Area';
+                    badge.className = 'status-badge bg-green-100 text-green-800';
+                    badge.textContent = 'At Primary Workplace';
                 } else {
-                    badge.className = 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium';
-                    badge.textContent = 'Outside Work Area';
+                    badge.className = 'status-badge bg-blue-100 text-blue-800';
+                    badge.textContent = 'Location Active';
                 }
             }
         }
@@ -5844,26 +7952,26 @@
         function showNotification(message, type = 'info') {
             // Create notification element
             const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 ${
+            notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 max-w-sm ${
                 type === 'success' ? 'bg-green-500 text-white' : 
                 type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
             }`;
             notification.innerHTML = `
-                <div class="flex items-center">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>
-                    ${message}
+                <div class="flex items-start">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span class="text-sm leading-tight break-words">${message}</span>
                 </div>
             `;
 
             document.body.appendChild(notification);
 
-            // Remove after 3 seconds
+            // Remove after 6 seconds (longer for mobile users to read)
             setTimeout(() => {
                 notification.style.transform = 'translateX(100%)';
                 setTimeout(() => {
                     document.body.removeChild(notification);
                 }, 300);
-            }, 3000);
+            }, 6000);
         }
 
         // Auto-refresh functionality (simplified for user dashboard)
@@ -6477,58 +8585,73 @@
 
         // Workplace selection and management functions
         function selectWorkplace(id, name, address, latitude, longitude, radius, isPrimary) {
+            // Show and scroll to details card
+            const detailsCard = document.getElementById('workplace-details-card');
+            if (detailsCard) {
+                detailsCard.style.display = 'block';
+                detailsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
             // Update selected workplace details
             const detailsContainer = document.getElementById('selected-workplace-details');
             const mapContainer = document.getElementById('workplace-map-container');
 
             if (detailsContainer) {
                 detailsContainer.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-lg font-semibold text-gray-900">${name}</h4>
-                            ${isPrimary ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Primary Workplace</span>' : ''}
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex items-start">
-                                <i class="fas fa-map-marker-alt text-gray-500 mr-3 mt-1"></i>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-700">Address</p>
-                                    <p class="text-sm text-gray-600">${address || 'No address provided'}</p>
-                                </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-building text-indigo-600 mr-2"></i>
+                                <span class="text-xs font-semibold text-gray-600 uppercase">Workplace</span>
                             </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-crosshairs text-gray-500 mr-3 mt-1"></i>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-700">Coordinates</p>
-                                    <p class="text-sm text-gray-600">${latitude.toFixed(6)}, ${longitude.toFixed(6)}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-circle-notch text-gray-500 mr-3 mt-1"></i>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-700">Check-in Radius</p>
-                                    <p class="text-sm text-gray-600">${radius} meters</p>
-                                </div>
-                            </div>
+                            <h4 class="text-lg font-bold text-gray-900">${name}</h4>
+                            ${isPrimary ? '<span class="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Primary</span>' : ''}
                         </div>
                         
-                        <div class="pt-4 border-t border-gray-200">
-                            <div class="flex space-x-3">
-                                ${!isPrimary ? `<button onclick="setPrimaryWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                                                        <i class="fas fa-star mr-2"></i>Set as Primary
-                                                    </button>` : ''}
-                                <button onclick="checkInAtWorkplace(${id}, \`${name}\`)" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                                    <i class="fas fa-map-pin mr-2"></i>Check In Here
-                                </button>
+                        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-circle-notch text-blue-600 mr-2"></i>
+                                <span class="text-xs font-semibold text-gray-600 uppercase">Check-in Radius</span>
+                            </div>
+                            <h4 class="text-2xl font-bold text-gray-900">${radius}<span class="text-sm text-gray-600 ml-1">meters</span></h4>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-4">
+                        <div class="flex items-start p-3 bg-gray-50 rounded-lg">
+                            <i class="fas fa-map-marker-alt text-green-600 mr-3 mt-1 flex-shrink-0"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Address</p>
+                                <p class="text-sm text-gray-900">${address || 'No address provided'}</p>
                             </div>
                         </div>
+                        <div class="flex items-start p-3 bg-gray-50 rounded-lg">
+                            <i class="fas fa-crosshairs text-blue-600 mr-3 mt-1 flex-shrink-0"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Coordinates</p>
+                                <p class="text-sm text-gray-900 font-mono">${latitude.toFixed(6)}, ${longitude.toFixed(6)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        ${!isPrimary ? `
+                            <button onclick="setPrimaryWorkplace(${id}, \`${name}\`)" 
+                                class="flex-1 px-4 py-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg hover:shadow-md transition-all font-semibold text-sm">
+                                <i class="fas fa-star mr-2"></i>Set as Primary
+                            </button>
+                        ` : ''}
+                        <button onclick="checkInAtWorkplace(${id}, \`${name}\`)" 
+                            class="flex-1 px-4 py-2.5 gradient-success text-white rounded-lg hover:shadow-md transition-all font-semibold text-sm">
+                            <i class="fas fa-map-pin mr-2"></i>Check In Here
+                        </button>
                     </div>
                 `;
             }
 
             // Show map container and initialize workplace map
             if (mapContainer) {
-                mapContainer.classList.remove('hidden');
+                mapContainer.style.display = 'block';
                 initializeWorkplaceMap(latitude, longitude, radius, name, address);
             }
 
@@ -6536,7 +8659,10 @@
             document.querySelectorAll('.workplace-item').forEach(item => {
                 item.classList.remove('ring-2', 'ring-indigo-500');
             });
-            document.querySelector(`[data-workplace-id="${id}"]`).classList.add('ring-2', 'ring-indigo-500');
+            const selectedItem = document.querySelector(`[data-workplace-id="${id}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('ring-2', 'ring-indigo-500');
+            }
         }
 
         function initializeWorkplaceMap(latitude, longitude, radius, name, address) {
@@ -6660,69 +8786,73 @@
 
         async function checkInAtWorkplace(workplaceId, workplaceName) {
             try {
-                // First, set this workplace as primary so user can check in there
-                const setPrimaryResponse = await fetch('/api/set-primary-workplace', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                            'content') || ''
-                    },
-                    body: JSON.stringify({
-                        user_id: getCurrentUserId(),
-                        workplace_id: workplaceId
-                    })
-                });
-
-                const setPrimaryResult = await setPrimaryResponse.json();
-
-                if (setPrimaryResponse.ok) {
-                    showNotification(`${workplaceName} set as your active workplace for check-in`, 'success');
-
-                    // Refresh workplace and location data
-                    await fetchUserWorkplaces();
-                    await fetchUserWorkplace();
-
-                    // Update check-in maps if they exist and are initialized
-                    if (checkinMap && mapInitializationState.checkinMap) {
-                        refreshCheckinMapData();
-                    }
-
-                    // Switch to GPS check-in section
-                    switchToSection('gps-checkin');
-
-                    // Refresh the workplace data to get the new workplace info including radius
-                    setTimeout(async () => {
-                        // Get the updated workplace info
-                        try {
-                            const workplaceResponse = await fetch(
-                                `/api/user-workplace/${getCurrentUserId()}`);
-                            if (workplaceResponse.ok) {
-                                const workplaceData = await workplaceResponse.json();
-                                showNotification(
-                                    `You can now check in at ${workplaceName}. Make sure you're within ${workplaceData.radius}m of the workplace.`,
-                                    'info');
-                            } else {
-                                showNotification(
-                                    `You can now check in at ${workplaceName}. Make sure you're within the workplace area.`,
-                                    'info');
-                            }
-                        } catch (error) {
-                            showNotification(
-                                `You can now check in at ${workplaceName}. Make sure you're within the workplace area.`,
-                                'info');
-                        }
-                    }, 1000);
-                } else {
-                    showNotification(setPrimaryResult.error || 'Failed to set workplace for check-in', 'error');
+                // Get current location first
+                if (!userLocation) {
+                    showNotification('Getting your location...', 'info');
+                    await startLocationTracking();
                 }
+
+                showNotification(`Switching to ${workplaceName} for check-in`, 'info');
+
+                // Refresh workplace and location data
+                await fetchUserWorkplaces();
+                await fetchUserWorkplace();
+
+                // Update check-in maps if they exist and are initialized
+                if (checkinMap && mapInitializationState.checkinMap) {
+                    refreshCheckinMapData();
+                }
+
+                // Switch to GPS check-in section
+                switchToSection('gps-checkin');
+
+                // Show info about the workplace
+                setTimeout(() => {
+                    showNotification(
+                        `Now you can check in at ${workplaceName}. Click the check-in button when you're ready.`,
+                        'success'
+                    );
+                }, 500);
+
             } catch (error) {
-                console.error('Error setting workplace for check-in:', error);
-                showNotification('Failed to set workplace for check-in: ' + error.message, 'error');
+                console.error('Error switching to check-in:', error);
+                showNotification('Failed to switch to check-in section: ' + error.message, 'error');
             }
         }
 
         function updatePrimaryWorkplaceInfo(primaryWorkplace) {
+            console.log('updatePrimaryWorkplaceInfo called with:', primaryWorkplace);
+            
+            const primaryWorkplaceName = document.getElementById('primary-workplace-name');
+            const primaryWorkplaceSubtitle = document.getElementById('primary-workplace-subtitle');
+            
+            console.log('Elements found:', {
+                primaryWorkplaceName: !!primaryWorkplaceName,
+                primaryWorkplaceSubtitle: !!primaryWorkplaceSubtitle
+            });
+
+            // Update stat card with actual workplace name
+            if (primaryWorkplaceName) {
+                if (primaryWorkplace && primaryWorkplace.name) {
+                    console.log('Setting primary workplace name to:', primaryWorkplace.name);
+                    primaryWorkplaceName.textContent = primaryWorkplace.name;
+                    if (primaryWorkplaceSubtitle) {
+                        primaryWorkplaceSubtitle.textContent = 'Default location';
+                        primaryWorkplaceSubtitle.classList.remove('text-gray-500');
+                        primaryWorkplaceSubtitle.classList.add('text-yellow-600');
+                    }
+                } else {
+                    console.log('No primary workplace found, setting to "-"');
+                    primaryWorkplaceName.textContent = '-';
+                    if (primaryWorkplaceSubtitle) {
+                        primaryWorkplaceSubtitle.textContent = 'Not set';
+                        primaryWorkplaceSubtitle.classList.remove('text-yellow-600');
+                        primaryWorkplaceSubtitle.classList.add('text-gray-500');
+                    }
+                }
+            }
+
+            // Show detailed primary workplace info if container exists
             const primaryInfoContainer = document.getElementById('primary-workplace-info');
             if (!primaryInfoContainer) return;
 
@@ -6742,44 +8872,39 @@
                             <span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full font-medium">Active</span>
                         </div>
                         
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div class="space-y-3">
-                                <div class="flex items-start">
-                                    <i class="fas fa-map-marker-alt text-green-600 mr-3 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-700">Address</p>
-                                        <p class="text-sm text-gray-600">${primaryWorkplace.address || 'No address provided'}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start">
-                                    <i class="fas fa-circle-notch text-green-600 mr-3 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-700">Check-in Radius</p>
-                                        <p class="text-sm text-gray-600">${primaryWorkplace.radius} meters</p>
-                                    </div>
+                        <div class="space-y-3">
+                            <div class="flex items-start">
+                                <i class="fas fa-map-marker-alt text-green-600 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Address</p>
+                                    <p class="text-sm text-gray-600">${primaryWorkplace.address || 'No address provided'}</p>
                                 </div>
                             </div>
-                            
-                            <div class="space-y-3">
-                                <div class="flex items-start">
-                                    <i class="fas fa-crosshairs text-green-600 mr-3 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-700">Coordinates</p>
-                                        <p class="text-sm text-gray-600">${primaryWorkplace.latitude.toFixed(6)}, ${primaryWorkplace.longitude.toFixed(6)}</p>
-                                    </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-circle-notch text-green-600 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Check-in Radius</p>
+                                    <p class="text-sm text-gray-600">${primaryWorkplace.radius} meters</p>
                                 </div>
-                                <div class="flex items-start">
-                                    <i class="fas fa-user-tag text-green-600 mr-3 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-700">Role</p>
-                                        <p class="text-sm text-gray-600 capitalize">${primaryWorkplace.role || 'Employee'}</p>
-                                    </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-crosshairs text-green-600 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Coordinates</p>
+                                    <p class="text-sm text-gray-600">${primaryWorkplace.latitude.toFixed(6)}, ${primaryWorkplace.longitude.toFixed(6)}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-user-tag text-green-600 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Role</p>
+                                    <p class="text-sm text-gray-600 capitalize">${primaryWorkplace.role || 'Employee'}</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="mt-6 flex space-x-3">
-                            <button onclick="selectWorkplace(${primaryWorkplace.id}, '${primaryWorkplace.name}', '${primaryWorkplace.address}', ${primaryWorkplace.latitude}, ${primaryWorkplace.longitude}, ${primaryWorkplace.radius}, true)" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                            <button onclick="selectWorkplace(${primaryWorkplace.id}, '${primaryWorkplace.name.replace(/'/g, "\\'")}', '${(primaryWorkplace.address || '').replace(/'/g, "\\'")}', ${primaryWorkplace.latitude}, ${primaryWorkplace.longitude}, ${primaryWorkplace.radius}, true)" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                                 <i class="fas fa-eye mr-2"></i>View Details
                             </button>
                             <button onclick="switchToSection('gps-checkin')" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -6800,45 +8925,709 @@
         }
 
         function refreshWorkplaces() {
-            // Show loading state
-            const workplacesList = document.getElementById('assigned-workplaces-list');
+            // Show loading state in both table and cards
+            const tableBody = document.getElementById('workplaces-table-body');
+            const cardsContainer = document.getElementById('workplaces-cards');
             const noWorkplacesMessage = document.getElementById('no-workplaces-message');
 
-            if (workplacesList) {
-                workplacesList.innerHTML = `
-                    <div class="flex items-center justify-center p-8 text-gray-500">
-                        <div class="text-center">
-                            <i class="fas fa-spinner fa-spin text-3xl mb-3 text-gray-300"></i>
-                            <p>Refreshing your workplaces...</p>
-                        </div>
+            const loadingHTML = `
+                <div class="flex items-center justify-center p-8 text-gray-500">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin text-3xl mb-3 text-gray-300"></i>
+                        <p class="text-sm font-medium">Refreshing your workplaces...</p>
                     </div>
-                `;
+                </div>
+            `;
+
+            if (tableBody) {
+                tableBody.innerHTML = `<tr><td colspan="5">${loadingHTML}</td></tr>`;
+            }
+
+            if (cardsContainer) {
+                cardsContainer.innerHTML = loadingHTML;
             }
 
             if (noWorkplacesMessage) {
                 noWorkplacesMessage.classList.add('hidden');
             }
 
-            // Clear selected workplace details
-            const detailsContainer = document.getElementById('selected-workplace-details');
-            if (detailsContainer) {
-                detailsContainer.innerHTML = `
-                    <div class="text-center p-8 text-gray-500">
-                        <i class="fas fa-building text-3xl mb-3 text-gray-300"></i>
-                        <p>Select a workplace to view details</p>
-                    </div>
-                `;
+            // Hide workplace details card
+            const detailsCard = document.getElementById('workplace-details-card');
+            if (detailsCard) {
+                detailsCard.style.display = 'none';
             }
 
-            // Hide map container
-            const mapContainer = document.getElementById('workplace-map-container');
-            if (mapContainer) {
-                mapContainer.classList.add('hidden');
+            // Reset to "My Workplaces" view if viewing all
+            if (viewingAllWorkplaces) {
+                viewingAllWorkplaces = false;
+                const viewAllBtn = document.getElementById('view-all-btn');
+                if (viewAllBtn) {
+                    viewAllBtn.innerHTML = '<i class="fas fa-globe"></i><span>View All</span>';
+                    viewAllBtn.classList.remove('bg-yellow-100', 'text-yellow-700', 'hover:bg-yellow-200');
+                    viewAllBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'hover:bg-indigo-200');
+                }
             }
 
             // Fetch updated data
             fetchUserWorkplaces();
         }
+
+        // Absence History Functions
+        async function fetchAbsenceRecords(userId = null) {
+            userId = userId || getCurrentUserId();
+
+            try {
+                const filter = document.getElementById('absence-month-filter')?.value || 'current';
+                let startDate, endDate;
+                const today = new Date();
+
+                switch (filter) {
+                    case 'current':
+                        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        break;
+                    case 'last30':
+                        endDate = new Date(today);
+                        startDate = new Date(today);
+                        startDate.setDate(startDate.getDate() - 30);
+                        break;
+                    case 'last90':
+                        endDate = new Date(today);
+                        startDate = new Date(today);
+                        startDate.setDate(startDate.getDate() - 90);
+                        break;
+                }
+
+                const startDateStr = startDate.toISOString().split('T')[0];
+                const endDateStr = endDate.toISOString().split('T')[0];
+
+                const response = await fetch(
+                    `/api/absence-records/${userId}?start_date=${startDateStr}&end_date=${endDateStr}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
+                        }
+                    });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch absence records');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayAbsenceRecords(data.absences);
+                    updateAbsenceStats(data.stats);
+                }
+            } catch (error) {
+                console.error('Error fetching absence records:', error);
+                const tbody = document.getElementById('absence-history-tbody');
+                const mobileContainer = document.getElementById('absence-history-mobile');
+
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-red-500">
+                                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                                <p>Failed to load absence records. Please try again.</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                if (mobileContainer) {
+                    mobileContainer.innerHTML = `
+                        <div class="bg-white rounded-lg border border-red-200 p-4 text-center text-red-500">
+                            <i class="fas fa-exclamation-circle text-xl mb-2"></i>
+                            <p class="text-sm font-medium">Failed to load absence records. Please try again.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function displayAbsenceRecords(absences) {
+            allAbsenceRecords = absences || [];
+            const tbody = document.getElementById('absence-history-tbody');
+            const mobileContainer = document.getElementById('absence-history-mobile');
+            const emptyState = document.getElementById('absence-empty-state');
+            const paginationContainer = document.getElementById('absence-records-pagination');
+
+            if (!tbody) return;
+
+            if (absences.length === 0) {
+                tbody.innerHTML = '';
+                if (mobileContainer) {
+                    mobileContainer.innerHTML = '';
+                }
+                if (emptyState) {
+                    emptyState.classList.remove('hidden');
+                }
+                if (paginationContainer) {
+                    paginationContainer.style.display = 'none';
+                }
+                return;
+            }
+
+            if (emptyState) {
+                emptyState.classList.add('hidden');
+            }
+
+            // Calculate pagination
+            const totalPages = Math.ceil(allAbsenceRecords.length / recordsPerPage);
+            const start = (currentRecordsPage - 1) * recordsPerPage;
+            const end = start + recordsPerPage;
+            const paginatedRecords = allAbsenceRecords.slice(start, end);
+
+            // Desktop table view
+            tbody.innerHTML = paginatedRecords.map(absence => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-semibold text-gray-900">${absence.formatted_date}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-700">${absence.day_of_week}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${absence.status_class}">
+                            <i class="fas ${absence.status === 'excused' ? 'fa-check-circle' : 'fa-times-circle'} mr-1"></i>
+                            ${absence.status_label}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-700">${absence.reason || 'N/A'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-600">
+                            ${absence.admin_comment || '-'}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Mobile card view
+            if (mobileContainer) {
+                mobileContainer.innerHTML = paginatedRecords.map(absence => `
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-gray-900 mb-1">${absence.formatted_date}</div>
+                                <div class="text-xs text-gray-600">${absence.day_of_week}</div>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${absence.status_class}">
+                                <i class="fas ${absence.status === 'excused' ? 'fa-check-circle' : 'fa-times-circle'} mr-1"></i>
+                                ${absence.status_label}
+                            </span>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div>
+                                <span class="font-medium text-gray-700">Reason:</span>
+                                <span class="text-gray-600">${absence.reason || 'N/A'}</span>
+                            </div>
+                            ${absence.admin_comment ? `
+                                    <div>
+                                        <span class="font-medium text-gray-700">Notes:</span>
+                                        <span class="text-gray-600">${absence.admin_comment}</span>
+                                    </div>
+                                ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Update pagination controls
+            updateRecordsPagination(totalPages);
+        }
+
+        // Update records pagination controls
+        function updateRecordsPagination(totalPages) {
+            const paginationContainer = document.getElementById('absence-records-pagination');
+            const prevBtn = document.getElementById('records-prev-btn');
+            const nextBtn = document.getElementById('records-next-btn');
+            const pageNumbers = document.getElementById('records-page-numbers');
+            const paginationInfo = document.getElementById('records-pagination-info');
+
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+
+            paginationContainer.style.display = 'flex';
+
+            // Update info
+            const start = (currentRecordsPage - 1) * recordsPerPage + 1;
+            const end = Math.min(currentRecordsPage * recordsPerPage, allAbsenceRecords.length);
+            paginationInfo.textContent = `Showing ${start}-${end} of ${allAbsenceRecords.length} records`;
+
+            // Update buttons
+            prevBtn.disabled = currentRecordsPage === 1;
+            nextBtn.disabled = currentRecordsPage === totalPages;
+
+            // Generate page numbers
+            pageNumbers.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentRecordsPage - 1 && i <= currentRecordsPage + 1)) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.className = i === currentRecordsPage ?
+                        'px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs sm:text-sm font-medium' :
+                        'px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50';
+                    btn.onclick = () => goToRecordsPage(i);
+                    pageNumbers.appendChild(btn);
+                } else if (i === currentRecordsPage - 2 || i === currentRecordsPage + 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.className = 'px-2 text-gray-500';
+                    pageNumbers.appendChild(ellipsis);
+                }
+            }
+        }
+
+        // Change records page
+        function changeRecordsPage(delta) {
+            const totalPages = Math.ceil(allAbsenceRecords.length / recordsPerPage);
+            const newPage = currentRecordsPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentRecordsPage = newPage;
+                displayAbsenceRecords(allAbsenceRecords);
+            }
+        }
+
+        // Go to specific records page
+        function goToRecordsPage(page) {
+            currentRecordsPage = page;
+            displayAbsenceRecords(allAbsenceRecords);
+        }
+
+        function updateAbsenceStats(stats) {
+            // Update statistics cards if they exist
+            const weekAbsences = document.getElementById('week-absences');
+            const monthAbsences = document.getElementById('month-absences');
+            const excusedAbsences = document.getElementById('excused-absences');
+            const unexcusedAbsences = document.getElementById('unexcused-absences');
+
+            if (monthAbsences) monthAbsences.textContent = stats.total || 0;
+            if (excusedAbsences) excusedAbsences.textContent = stats.excused || 0;
+            if (unexcusedAbsences) unexcusedAbsences.textContent = stats.unexcused || 0;
+        }
+
+        async function fetchWeeklyAbsenceSummary(userId = null) {
+            userId = userId || getCurrentUserId();
+
+            try {
+                const response = await fetch(`/api/weekly-absence-summary/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch weekly absence summary');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const weekAbsences = document.getElementById('week-absences');
+                    if (weekAbsences) {
+                        weekAbsences.textContent = data.total_absences || 0;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching weekly absence summary:', error);
+            }
+        }
+
+        async function fetchMonthlyAbsenceSummary(userId = null) {
+            userId = userId || getCurrentUserId();
+
+            try {
+                const response = await fetch(`/api/monthly-absence-summary/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch monthly absence summary');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const attendanceRate = document.getElementById('attendance-rate-absence');
+                    if (attendanceRate) {
+                        attendanceRate.textContent = data.attendance_rate + '%';
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching monthly absence summary:', error);
+            }
+        }
+
+        // Absence Request Functions
+        function toggleAbsenceRequestForm() {
+            const form = document.getElementById('absence-request-form');
+            const btn = document.getElementById('toggle-absence-form-btn');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-times mr-2"></i>Cancel';
+                // Set minimum date to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('absence-start-date').setAttribute('min', today);
+                document.getElementById('absence-end-date').setAttribute('min', today);
+            } else {
+                form.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-plus mr-2"></i>New Request';
+                document.getElementById('absence-request-form-element').reset();
+            }
+        }
+
+        // Character count for reason textarea
+        document.addEventListener('DOMContentLoaded', function() {
+            const reasonTextarea = document.getElementById('absence-reason');
+            const charCount = document.getElementById('reason-char-count');
+
+            if (reasonTextarea && charCount) {
+                reasonTextarea.addEventListener('input', function() {
+                    charCount.textContent = this.value.length;
+                });
+            }
+
+            // Update end date minimum when start date changes
+            const startDateInput = document.getElementById('absence-start-date');
+            const endDateInput = document.getElementById('absence-end-date');
+
+            if (startDateInput && endDateInput) {
+                startDateInput.addEventListener('change', function() {
+                    endDateInput.setAttribute('min', this.value);
+                    if (endDateInput.value && endDateInput.value < this.value) {
+                        endDateInput.value = this.value;
+                    }
+                });
+            }
+        });
+
+        // Submit absence request
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('absence-request-form-element');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const formData = {
+                        start_date: document.getElementById('absence-start-date').value,
+                        end_date: document.getElementById('absence-end-date').value,
+                        reason: document.getElementById('absence-reason').value
+                    };
+
+                    try {
+                        const response = await fetch('/api/absence-requests', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify(formData)
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showSimpleNotification(data.message, 'success');
+                            toggleAbsenceRequestForm();
+                            fetchAbsenceRequests();
+                        } else {
+                            if (data.errors) {
+                                const errorMessages = Object.values(data.errors).flat().join(', ');
+                                showSimpleNotification(errorMessages, 'error');
+                            } else {
+                                showSimpleNotification(data.error || 'Failed to submit request',
+                                    'error');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error submitting absence request:', error);
+                        showSimpleNotification('An error occurred. Please try again.', 'error');
+                    }
+                });
+            }
+        });
+
+        // Fetch user's absence requests
+        async function fetchAbsenceRequests() {
+            try {
+                const response = await fetch('/api/absence-requests', {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayAbsenceRequests(data.requests);
+                }
+            } catch (error) {
+                console.error('Error fetching absence requests:', error);
+            }
+        }
+
+        // Pagination variables for absence requests
+        let allAbsenceRequests = [];
+        let currentRequestsPage = 1;
+        const requestsPerPage = 5;
+
+        // Pagination variables for absence records
+        let allAbsenceRecords = [];
+        let currentRecordsPage = 1;
+        const recordsPerPage = 5; // Show 5 records per page
+
+        // Display absence requests with pagination
+        function displayAbsenceRequests(requests) {
+            allAbsenceRequests = requests || [];
+            const container = document.getElementById('absence-requests-list');
+            const paginationContainer = document.getElementById('absence-requests-pagination');
+
+            if (!requests || requests.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3"></i>
+                        <p>No leave requests yet.</p>
+                        <p class="text-sm">Submit a request above to inform your administrator about planned leave.</p>
+                    </div>
+                `;
+                if (paginationContainer) {
+                    paginationContainer.style.display = 'none';
+                }
+                return;
+            }
+
+            // Calculate pagination
+            const totalPages = Math.ceil(allAbsenceRequests.length / requestsPerPage);
+            const start = (currentRequestsPage - 1) * requestsPerPage;
+            const end = start + requestsPerPage;
+            const paginatedRequests = allAbsenceRequests.slice(start, end);
+
+            const statusConfig = {
+                pending: {
+                    icon: 'fa-clock',
+                    color: 'yellow',
+                    bgColor: 'bg-yellow-100',
+                    textColor: 'text-yellow-800',
+                    label: 'Pending'
+                },
+                approved: {
+                    icon: 'fa-check-circle',
+                    color: 'green',
+                    bgColor: 'bg-green-100',
+                    textColor: 'text-green-800',
+                    label: 'Approved'
+                },
+                rejected: {
+                    icon: 'fa-times-circle',
+                    color: 'red',
+                    bgColor: 'bg-red-100',
+                    textColor: 'text-red-800',
+                    label: 'Rejected'
+                }
+            };
+
+            container.innerHTML = paginatedRequests.map(request => {
+                const status = statusConfig[request.status];
+                const startDate = new Date(request.start_date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                const endDate = new Date(request.end_date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${status.bgColor} ${status.textColor}">
+                                        <i class="fas ${status.icon} mr-1"></i>${status.label}
+                                    </span>
+                                    <span class="text-sm text-gray-600">
+                                        <i class="fas fa-calendar mr-1"></i>${startDate} - ${endDate}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-700 mb-2"><strong>Reason:</strong> ${request.reason}</p>
+                                ${request.admin_comment ? `
+                                        <div class="bg-gray-50 border-l-4 border-${status.color}-400 p-2 mt-2">
+                                            <p class="text-xs text-gray-600"><strong>Admin Response:</strong> ${request.admin_comment}</p>
+                                            ${request.reviewed_at ? `<p class="text-xs text-gray-500 mt-1">Reviewed: ${new Date(request.reviewed_at).toLocaleString()}</p>` : ''}
+                                        </div>
+                                    ` : ''}
+                            </div>
+                            ${request.status === 'pending' ? `
+                                    <button onclick="deleteAbsenceRequest(${request.id})" class="ml-4 text-red-600 hover:text-red-800" title="Delete request">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Update pagination controls
+            updateRequestsPagination(totalPages);
+        }
+
+        // Update requests pagination controls
+        function updateRequestsPagination(totalPages) {
+            const paginationContainer = document.getElementById('absence-requests-pagination');
+            const prevBtn = document.getElementById('requests-prev-btn');
+            const nextBtn = document.getElementById('requests-next-btn');
+            const pageNumbers = document.getElementById('requests-page-numbers');
+            const paginationInfo = document.getElementById('requests-pagination-info');
+
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+
+            paginationContainer.style.display = 'flex';
+
+            // Update info
+            const start = (currentRequestsPage - 1) * requestsPerPage + 1;
+            const end = Math.min(currentRequestsPage * requestsPerPage, allAbsenceRequests.length);
+            paginationInfo.textContent = `Showing ${start}-${end} of ${allAbsenceRequests.length} requests`;
+
+            // Update buttons
+            prevBtn.disabled = currentRequestsPage === 1;
+            nextBtn.disabled = currentRequestsPage === totalPages;
+
+            // Generate page numbers
+            pageNumbers.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentRequestsPage - 1 && i <= currentRequestsPage + 1)) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.className = i === currentRequestsPage ?
+                        'px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs sm:text-sm font-medium' :
+                        'px-3 py-1 border border-gray-300 rounded-lg text-xs sm:text-sm hover:bg-gray-50';
+                    btn.onclick = () => goToRequestsPage(i);
+                    pageNumbers.appendChild(btn);
+                } else if (i === currentRequestsPage - 2 || i === currentRequestsPage + 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.className = 'px-2 text-gray-500';
+                    pageNumbers.appendChild(ellipsis);
+                }
+            }
+        }
+
+        // Change requests page
+        function changeRequestsPage(delta) {
+            const totalPages = Math.ceil(allAbsenceRequests.length / requestsPerPage);
+            const newPage = currentRequestsPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentRequestsPage = newPage;
+                displayAbsenceRequests(allAbsenceRequests);
+            }
+        }
+
+        // Go to specific requests page
+        function goToRequestsPage(page) {
+            currentRequestsPage = page;
+            displayAbsenceRequests(allAbsenceRequests);
+        }
+
+        // Display absence requests (old version - removed)
+        // Delete absence request
+        async function deleteAbsenceRequest(requestId) {
+            if (!confirm('Are you sure you want to delete this absence request?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/absence-requests/${requestId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSimpleNotification(data.message, 'success');
+                    fetchAbsenceRequests();
+                } else {
+                    showSimpleNotification(data.error || 'Failed to delete request', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting absence request:', error);
+                showSimpleNotification('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        function refreshAbsenceData() {
+            fetchAbsenceRecords();
+            fetchWeeklyAbsenceSummary();
+            fetchMonthlyAbsenceSummary();
+
+            showSimpleNotification('Absence data refreshed', 'success');
+        }
+
+        // Add event listener for absence month filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const absenceFilter = document.getElementById('absence-month-filter');
+            if (absenceFilter) {
+                absenceFilter.addEventListener('change', function() {
+                    fetchAbsenceRecords();
+                });
+            }
+
+            // Update clock in dashboard hero section
+            function updateClock() {
+                const now = new Date();
+                const timeEl = document.getElementById('current-time');
+                const dateEl = document.getElementById('current-date');
+
+                if (timeEl) {
+                    const hours = now.getHours();
+                    const minutes = now.getMinutes();
+                    const seconds = now.getSeconds();
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 || 12;
+                    timeEl.textContent =
+                        `${displayHours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+                }
+
+                if (dateEl) {
+                    const options = {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    };
+                    dateEl.textContent = now.toLocaleDateString('en-US', options);
+                }
+            }
+
+            // Update clock immediately and then every second
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
     </script>
 
     <script>

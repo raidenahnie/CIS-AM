@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Workplace;
 use App\Models\UserWorkplace;
+use App\Models\Attendance;
 use App\Models\AdminActivityLog;
 use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Validator;
@@ -33,11 +34,21 @@ class AdminController extends Controller
                                                  ->with('workplace')
                                                  ->first();
             if ($latestLog) {
+                // Use address if available, otherwise use workplace address
+                $address = $latestLog->address;
+                if (!$address && $latestLog->workplace) {
+                    $address = $latestLog->workplace->address;
+                }
+                
                 $latestAttendance[$user->id] = [
                     'action' => $latestLog->action,
-                    'address' => $latestLog->address ?: 'Location not available',
-                    'workplace_name' => $latestLog->workplace ? $latestLog->workplace->name : 'Unknown',
-                    'timestamp' => $latestLog->timestamp
+                    'address' => $address,
+                    'latitude' => $latestLog->latitude,
+                    'longitude' => $latestLog->longitude,
+                    'workplace_name' => $latestLog->workplace ? $latestLog->workplace->name : null,
+                    'workplace_address' => $latestLog->workplace ? $latestLog->workplace->address : null,
+                    'timestamp' => $latestLog->timestamp,
+                    'device' => $latestLog->device ?? 'Unknown'
                 ];
             }
         }
@@ -947,6 +958,55 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'logs' => $logs
+        ]);
+    }
+
+    /**
+     * Get attendance logs (assigned vs non-assigned workplaces)
+     */
+    public function getAttendanceLogs(Request $request)
+    {
+        $perPage = $request->get('per_page', 50);
+        $search = $request->get('search');
+        $type = $request->get('type'); // 'assigned' or 'non_assigned'
+        $date = $request->get('date', now()->format('Y-m-d'));
+        
+        $query = Attendance::with(['user:id,name,email', 'workplace:id,name,address'])
+            ->whereDate('date', $date);
+        
+        // Apply search filter
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                      ->orWhere('email', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('workplace', function($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                });
+            });
+        }
+        
+        // Apply type filter
+        if ($type === 'assigned') {
+            $query->where('is_assigned_workplace', true);
+        } elseif ($type === 'non_assigned') {
+            $query->where('is_assigned_workplace', false);
+        }
+        
+        $logs = $query->orderBy('check_in_time', 'desc')->paginate($perPage);
+        
+        // Calculate stats for the date
+        $stats = [
+            'total' => Attendance::whereDate('date', $date)->count(),
+            'assigned' => Attendance::whereDate('date', $date)->where('is_assigned_workplace', true)->count(),
+            'non_assigned' => Attendance::whereDate('date', $date)->where('is_assigned_workplace', false)->count(),
+        ];
+        
+        return response()->json([
+            'success' => true,
+            'logs' => $logs,
+            'stats' => $stats
         ]);
     }
 

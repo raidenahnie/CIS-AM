@@ -8,6 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Using the CDN for live preview --}}
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/x-icon" href="/img/favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,6 +34,10 @@
 
         ::-webkit-scrollbar {
             display: none;
+        }
+
+        [x-cloak] {
+            display: none !important;
         }
     </style>
 </head>
@@ -223,6 +228,24 @@
                     </button>
                 </form>
 
+                {{-- Data Privacy Notice Summary --}}
+                <div class="mt-6 bg-green-50 border border-green-200 rounded-lg p-4" x-data="privacyModal">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="flex-1">
+                            <h4 class="text-xs font-semibold text-green-800 mb-1">Privacy Notice</h4>
+                            <p class="text-xs text-green-700 leading-relaxed">
+                                By logging in, you consent to the collection of your work data (name, email, location, attendance records) in compliance with 
+                                <button @click="openModal()" type="button" class="font-semibold underline hover:text-green-900 focus:outline-none">
+                                    RA 10173
+                                </button>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Footer Links (from login.blade.php) --}}
                 <p class="mt-6 text-center text-xs sm:text-sm text-gray-600 px-2">
                     Need access? Contact your system administrator.
@@ -234,6 +257,137 @@
             </div>
         </div>
 
+    </div>
+
+    {{-- Privacy Notice Modal (Full Version) --}}
+    <div x-data="privacyModal" x-show="showPrivacyModal" x-cloak 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="closeModal()"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden" 
+             @click.stop
+             x-transition:enter="transition ease-out duration-300 delay-100"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+            
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <h2 class="text-2xl font-bold">Data Privacy Notice</h2>
+                    </div>
+                    <button @click="closeModal()" 
+                            class="rounded-full p-2 transition-colors hover:bg-white/20 cursor-pointer">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 overflow-y-auto max-h-[60vh]">
+                <div class="space-y-4 text-zinc-700">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            <p class="text-sm font-semibold text-yellow-800">
+                                Please review this privacy information before proceeding.
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-zinc-900">CIS-AM Attendance Monitoring System</h3>
+                    
+                    <p class="leading-relaxed">
+                        By accessing and using this system, you acknowledge and agree to the collection, processing, and storage of your personal data in accordance with the 
+                        <a href="https://www.officialgazette.gov.ph/2012/08/15/republic-act-no-10173/" target="_blank" class="text-green-600 font-semibold hover:underline">
+                            Data Privacy Act of 2012 (Republic Act No. 10173)
+                        </a>.
+                    </p>
+
+                    <div class="bg-zinc-50 rounded-lg p-4 space-y-3">
+                        <h4 class="font-bold text-zinc-900 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Data We Collect
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-sm ml-7">
+                            <li>Personal identification information (name, ID number, email)</li>
+                            <li>GPS location data for attendance verification</li>
+                            <li>Attendance records (check-in/check-out times)</li>
+                            <li>Device information and IP addresses</li>
+                            <li>Workplace assignment details</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-zinc-50 rounded-lg p-4 space-y-3">
+                        <h4 class="font-bold text-zinc-900 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                            </svg>
+                            Purpose of Data Collection
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-sm ml-7">
+                            <li>Accurate attendance tracking and monitoring</li>
+                            <li>Workplace compliance and verification</li>
+                            <li>Generation of attendance reports</li>
+                            <li>System security and audit purposes</li>
+                            <li>Administrative and operational requirements</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-zinc-50 rounded-lg p-4 space-y-3">
+                        <h4 class="font-bold text-zinc-900 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Your Rights
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-sm ml-7">
+                            <li>Right to be informed about data collection</li>
+                            <li>Right to access your personal data</li>
+                            <li>Right to correct inaccurate information</li>
+                            <li>Right to object to data processing</li>
+                            <li>Right to data portability</li>
+                            <li>Right to file a complaint with the National Privacy Commission</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p class="text-sm text-zinc-700">
+                            <strong class="text-green-800">Data Security:</strong> We implement appropriate technical and organizational measures to protect your personal data from unauthorized access, disclosure, alteration, or destruction.
+                        </p>
+                    </div>
+
+                    <p class="text-sm text-zinc-600 italic">
+                        For inquiries or concerns regarding your data privacy, please contact your system administrator or the Data Protection Officer.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-zinc-50 p-6 border-t border-zinc-200">
+                <button @click="closeModal()" type="button"
+                        class="w-full px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
     </div>
 
 
@@ -283,6 +437,37 @@
 
     {{-- Modal Control Script (from login.blade.php) --}}
     <script>
+        // Privacy Modal Alpine Store (shared across all components)
+        document.addEventListener('alpine:init', () => {
+            // Create a shared store for privacy modal state
+            Alpine.store('privacy', {
+                showModal: false,
+
+                openModal() {
+                    this.showModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Component for elements that need to access the store
+            Alpine.data('privacyModal', () => ({
+                get showPrivacyModal() {
+                    return Alpine.store('privacy').showModal;
+                },
+                openModal() {
+                    Alpine.store('privacy').openModal();
+                },
+                closeModal() {
+                    Alpine.store('privacy').closeModal();
+                }
+            }));
+        });
+
         function showForgotPasswordModal() {
             document.getElementById('forgotPasswordModal').classList.remove('hidden');
         }
