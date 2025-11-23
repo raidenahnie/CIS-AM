@@ -73,6 +73,17 @@ class AuthController extends Controller
                         'existing_session_id' => $user->current_session_id
                     ]);
                     
+                    // Return JSON for AJAX requests
+                    if ($request->expectsJson() || $request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'This account is already logged in on another device. Please log out from that device first.',
+                            'errors' => [
+                                'email' => ['This account is already logged in on another device. Please log out from that device first.']
+                            ]
+                        ], 401);
+                    }
+                    
                     return back()->withErrors([
                         'email' => 'This account is already logged in on another device. Please log out from that device first.',
                     ]);
@@ -109,7 +120,32 @@ class AuthController extends Controller
                 );
             }
             
+            // Return JSON for AJAX requests
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login successful',
+                    'redirect' => route('dashboard'),
+                    'user' => [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role
+                    ]
+                ]);
+            }
+            
             return redirect()->route('dashboard');
+        }
+
+        // Return JSON for AJAX requests
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials provided.',
+                'errors' => [
+                    'email' => ['Invalid credentials provided.']
+                ]
+            ], 401);
         }
 
         return back()->withErrors([

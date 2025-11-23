@@ -26,6 +26,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'; this.onload=null;">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     
+    <!-- Validation Utilities - Load synchronously -->
+    <script src="{{ asset('js/validation-utils.js') }}"></script>
+    
     <style>
         /* Inline critical font import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -4293,12 +4296,76 @@
                     e.preventDefault();
 
                     const workplaceId = document.getElementById('workplaceId').value;
+                    const nameInput = document.getElementById('workplaceName');
+                    const addressInput = document.getElementById('workplaceAddress');
+                    const latInput = document.getElementById('workplaceLatitude');
+                    const lngInput = document.getElementById('workplaceLongitude');
+                    const radiusInput = document.getElementById('workplaceRadius');
+
+                    // Clear all errors
+                    [nameInput, addressInput, latInput, lngInput, radiusInput].forEach(input => {
+                        ValidationUtils.clearError(input);
+                    });
+
+                    let hasErrors = false;
+
+                    // Validate name
+                    const nameResult = ValidationUtils.validateName(nameInput.value, 'Workplace name');
+                    if (!nameResult.valid) {
+                        ValidationUtils.showError(nameInput, nameResult.errors[0]);
+                        hasErrors = true;
+                    }
+
+                    // Validate address
+                    const addressResult = ValidationUtils.validateTextArea(
+                        addressInput.value, 5, 500, 'Address'
+                    );
+                    if (!addressResult.valid) {
+                        ValidationUtils.showError(addressInput, addressResult.errors[0]);
+                        hasErrors = true;
+                    }
+
+                    // Validate coordinates
+                    const coordsResult = ValidationUtils.validateCoordinates(
+                        latInput.value, lngInput.value
+                    );
+                    if (!coordsResult.valid) {
+                        coordsResult.errors.forEach(err => {
+                            if (err.includes('latitude')) {
+                                ValidationUtils.showError(latInput, err);
+                            } else {
+                                ValidationUtils.showError(lngInput, err);
+                            }
+                        });
+                        hasErrors = true;
+                    }
+
+                    // Validate radius
+                    const radius = parseFloat(radiusInput.value);
+                    if (isNaN(radius) || radius <= 0 || radius > 10000) {
+                        ValidationUtils.showError(radiusInput, 'Radius must be between 1 and 10000 meters');
+                        hasErrors = true;
+                    }
+
+                    if (hasErrors) {
+                        const firstError = workplaceForm.querySelector('.border-red-500');
+                        if (firstError) firstError.focus();
+                        return;
+                    }
+
+                    // Check rate limiting (3 attempts allowed, blocked on 4th)
+                    const rateCheck = ValidationUtils.rateLimiter.canSubmit('workplace-form', 3, 60000);
+                    if (!rateCheck.allowed) {
+                        ValidationUtils.showToast(rateCheck.message, 'warning');
+                        return;
+                    }
+
                     const formData = {
-                        name: document.getElementById('workplaceName').value,
-                        address: document.getElementById('workplaceAddress').value,
-                        latitude: document.getElementById('workplaceLatitude').value,
-                        longitude: document.getElementById('workplaceLongitude').value,
-                        radius: document.getElementById('workplaceRadius').value,
+                        name: nameResult.sanitized,
+                        address: addressResult.sanitized,
+                        latitude: coordsResult.latitude,
+                        longitude: coordsResult.longitude,
+                        radius: radius,
                         is_active: document.getElementById('workplaceActive').checked
                     };
 
@@ -4375,18 +4442,60 @@
                     e.preventDefault();
 
                     const userId = document.getElementById('userId').value;
-                    const password = document.getElementById('userPassword').value;
-                    const passwordConfirm = document.getElementById('userPasswordConfirm').value;
+                    const nameInput = document.getElementById('userName');
+                    const emailInput = document.getElementById('userEmail');
+                    const passwordInput = document.getElementById('userPassword');
+                    const passwordConfirmInput = document.getElementById('userPasswordConfirm');
 
-                    // Validate passwords match for new users or when password is being changed
-                    if ((!userId || password) && password !== passwordConfirm) {
-                        showNotification('Passwords do not match', 'error');
+                    // Clear all errors
+                    [nameInput, emailInput, passwordInput, passwordConfirmInput].forEach(input => {
+                        if (input) ValidationUtils.clearError(input);
+                    });
+
+                    let hasErrors = false;
+
+                    // Validate name
+                    const nameResult = ValidationUtils.validateName(nameInput.value, 'Name');
+                    if (!nameResult.valid) {
+                        ValidationUtils.showError(nameInput, nameResult.errors[0]);
+                        hasErrors = true;
+                    }
+
+                    // Validate email
+                    const emailResult = ValidationUtils.validateEmail(emailInput.value);
+                    if (!emailResult.valid) {
+                        ValidationUtils.showError(emailInput, emailResult.errors[0]);
+                        hasErrors = true;
+                    }
+
+                    // Validate password if provided
+                    const password = passwordInput.value;
+                    const passwordConfirm = passwordConfirmInput.value;
+
+                    if (password || !userId) {
+                        const passwordResult = ValidationUtils.validatePassword(password, passwordConfirm);
+                        if (!passwordResult.valid) {
+                            ValidationUtils.showError(passwordInput, passwordResult.errors[0]);
+                            hasErrors = true;
+                        }
+                    }
+
+                    if (hasErrors) {
+                        const firstError = userForm.querySelector('.border-red-500');
+                        if (firstError) firstError.focus();
+                        return;
+                    }
+
+                    // Check rate limiting (3 attempts allowed, blocked on 4th)
+                    const rateCheck = ValidationUtils.rateLimiter.canSubmit('user-form', 3, 60000);
+                    if (!rateCheck.allowed) {
+                        ValidationUtils.showToast(rateCheck.message, 'warning');
                         return;
                     }
 
                     const formData = {
-                        name: document.getElementById('userName').value,
-                        email: document.getElementById('userEmail').value,
+                        name: nameResult.sanitized,
+                        email: emailResult.sanitized,
                         role: document.getElementById('userRole').value
                     };
 

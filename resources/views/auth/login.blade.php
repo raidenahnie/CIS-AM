@@ -435,6 +435,9 @@
         </div>
     </div>
 
+    {{-- Validation Utility - Load synchronously without defer to ensure it's ready --}}
+    <script src="{{ asset('js/validation-utils.js') }}"></script>
+
     {{-- Modal Control Script (from login.blade.php) --}}
     <script>
         // Privacy Modal Alpine Store (shared across all components)
@@ -496,6 +499,215 @@
             if (e.target === this) {
                 closeForgotPasswordModal();
             }
+        });
+
+        // ====== LOGIN FORM VALIDATION ======
+        // Ensure everything is ready before attaching validation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if ValidationUtils loaded
+            if (typeof ValidationUtils === 'undefined') {
+                console.error('❌ ValidationUtils not loaded! Check if validation-utils.js is accessible.');
+                return;
+            }
+
+            console.log('✅ ValidationUtils loaded successfully');
+
+            const loginForm = document.querySelector('form[action="{{ route('login.submit') }}"]');
+            if (!loginForm) {
+                console.error('❌ Login form not found!');
+                return;
+            }
+
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+
+            if (!emailInput || !passwordInput || !submitButton) {
+                console.error('❌ Form inputs not found!');
+                return;
+            }
+
+            console.log('🔒 Login validation initialized successfully');
+
+            // Real-time email validation
+            emailInput.addEventListener('blur', function() {
+                const result = ValidationUtils.validateEmail(this.value);
+                if (!result.valid) {
+                    ValidationUtils.showError(this, result.errors[0]);
+                } else {
+                    ValidationUtils.clearError(this);
+                }
+            });
+
+            // Clear error on input
+            emailInput.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    ValidationUtils.clearError(this);
+                }
+            });
+
+            passwordInput.addEventListener('input', function() {
+                ValidationUtils.clearError(this);
+            });
+
+            // Form submission with validation and rate limiting
+            loginForm.addEventListener('submit', function(e) {
+                // ALWAYS prevent default first
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                console.log('🔒 Login form submitted - validating...');
+                
+                // Clear all previous errors
+                ValidationUtils.clearError(emailInput);
+                ValidationUtils.clearError(passwordInput);
+
+                let hasErrors = false;
+
+                // Check rate limiting FIRST (3 attempts allowed, blocked on 4th)
+                const rateCheck = ValidationUtils.rateLimiter.canSubmit('login-form', 3, 60000);
+                console.log('⏱️ Rate limit check:', rateCheck);
+                if (!rateCheck.allowed) {
+                    console.log('🚫 RATE LIMITED - Blocking submission');
+                    ValidationUtils.showToast(rateCheck.message, 'warning');
+                    
+                    // Show visual feedback on form
+                    const warningDiv = document.createElement('div');
+                    warningDiv.className = 'mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm';
+                    warningDiv.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>' + rateCheck.message;
+                    
+                    // Remove any existing warning
+                    const existingWarning = loginForm.querySelector('.bg-yellow-50');
+                    if (existingWarning) existingWarning.remove();
+                    
+                    // Insert warning before submit button
+                    submitButton.parentElement.insertBefore(warningDiv, submitButton);
+                    
+                    // Remove warning after 5 seconds
+                    setTimeout(() => warningDiv.remove(), 5000);
+                    
+                    return false;
+                }
+
+                console.log('✅ Rate limit OK - proceeding with validation');
+
+                // Validate email
+                const emailResult = ValidationUtils.validateEmail(emailInput.value);
+                if (!emailResult.valid) {
+                    ValidationUtils.showError(emailInput, emailResult.errors[0]);
+                    hasErrors = true;
+                }
+
+                // Validate password (basic check)
+                if (!passwordInput.value || passwordInput.value.trim() === '') {
+                    ValidationUtils.showError(passwordInput, 'Password is required');
+                    hasErrors = true;
+                } else if (passwordInput.value.length < 8) {
+                    ValidationUtils.showError(passwordInput, 'Password must be at least 8 characters');
+                    hasErrors = true;
+                }
+
+                if (hasErrors) {
+                    console.log('❌ Validation failed - not submitting');
+                    // Scroll to first error
+                    const firstError = loginForm.querySelector('.border-red-500');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                    return false;
+                }
+
+                // If no errors, submit via AJAX
+                console.log('✅ Validation passed - submitting via AJAX');
+                
+                // Disable submit button
+                submitButton.disabled = true;
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
+                
+                // Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                              || document.querySelector('input[name="_token"]')?.value;
+                
+                // Prepare form data
+                const formData = {
+                    email: emailResult.sanitized,
+                    password: passwordInput.value,
+                    remember: document.querySelector('input[name="remember"]')?.checked || false,
+                    _token: csrfToken
+                };
+
+                // Submit via AJAX
+                fetch('{{ route('login.submit') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    // Check if response is JSON or redirect
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(data => ({ status: response.status, data }));
+                    } else {
+                        // If not JSON, it's likely a redirect (successful login)
+                        if (response.ok || response.redirected) {
+                            window.location.href = response.url || '{{ route('dashboard') }}';
+                            return null;
+                        }
+                        throw new Error('Login failed');
+                    }
+                })
+                .then(result => {
+                    if (!result) return; // Already redirected
+                    
+                    const { status, data } = result;
+                    
+                    if (status === 200 && data.success) {
+                        // Success - redirect
+                        console.log('✅ Login successful - redirecting...');
+                        ValidationUtils.rateLimiter.reset('login-form');
+                        window.location.href = data.redirect || '{{ route('dashboard') }}';
+                    } else {
+                        // Login failed - show error
+                        console.log('❌ Login failed:', data.message);
+                        
+                        // Re-enable button
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalButtonText;
+                        
+                        // Show error message
+                        if (data.errors) {
+                            if (data.errors.email) {
+                                ValidationUtils.showError(emailInput, data.errors.email[0]);
+                            }
+                            if (data.errors.password) {
+                                ValidationUtils.showError(passwordInput, data.errors.password[0]);
+                            }
+                        } else {
+                            ValidationUtils.showToast(data.message || 'Invalid credentials', 'error');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Login error:', error);
+                    
+                    // Re-enable button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                    
+                    // Show error
+                    ValidationUtils.showToast('An error occurred. Please try again.', 'error');
+                });
+                
+                return false;
+            }, true); // Use capture phase to ensure we intercept first
         });
 
         // Close modal with ESC key

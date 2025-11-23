@@ -12,7 +12,7 @@ Route::get('/', function () {
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLogin'])->middleware('guest')->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.submit'); // 5 attempts per minute
 
 // Registration disabled - users are created by admin only
 // Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -23,7 +23,7 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
 
 // Password reset routes
 Route::get('/password/reset/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-Route::post('/password/reset', [PasswordResetController::class, 'resetPassword'])->name('password.update');
+Route::post('/password/reset', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:3,5')->name('password.update'); // 3 attempts per 5 min
 
 // API routes for dashboard - Protected by authentication and user authorization
 Route::prefix('api')->middleware(['auth', 'authorize.user'])->group(function () {
@@ -35,16 +35,16 @@ Route::prefix('api')->middleware(['auth', 'authorize.user'])->group(function () 
     Route::get('/all-workplaces', [DashboardController::class, 'getAllWorkplaces']);
     Route::get('/user/workplaces', [DashboardController::class, 'getCurrentUserWorkplaces']);
     Route::get('/current-status/{userId}', [DashboardController::class, 'getCurrentStatus']);
-    Route::post('/checkin', [DashboardController::class, 'checkIn']);
-    Route::post('/perform-action', [DashboardController::class, 'performAction']);
-    Route::post('/save-workplace', [DashboardController::class, 'saveWorkplace']);
-    Route::post('/set-primary-workplace', [DashboardController::class, 'setPrimaryWorkplace']);
+    Route::post('/checkin', [DashboardController::class, 'checkIn'])->middleware('throttle:30,1'); // 30 per minute
+    Route::post('/perform-action', [DashboardController::class, 'performAction'])->middleware('throttle:30,1');
+    Route::post('/save-workplace', [DashboardController::class, 'saveWorkplace'])->middleware('throttle:10,1');
+    Route::post('/set-primary-workplace', [DashboardController::class, 'setPrimaryWorkplace'])->middleware('throttle:10,1');
     Route::get('/manual-entry-code', function() {
         $code = \App\Models\SystemSetting::get('manual_entry_code', 'DEPED2025');
         return response()->json(['code' => $code]);
     });
     Route::get('/special-checkin-logs/{userId}', [DashboardController::class, 'getSpecialCheckinLogs']);
-    Route::post('/special-checkin', [DashboardController::class, 'specialCheckin']);
+    Route::post('/special-checkin', [DashboardController::class, 'specialCheckin'])->middleware('throttle:10,1');
     Route::get('/today-checkin-type/{userId}', [DashboardController::class, 'getTodayCheckinType']);
     
     // Absence records endpoints
@@ -54,12 +54,12 @@ Route::prefix('api')->middleware(['auth', 'authorize.user'])->group(function () 
     
     // Absence request endpoints
     Route::get('/absence-requests', [AbsenceRequestController::class, 'index']);
-    Route::post('/absence-requests', [AbsenceRequestController::class, 'store']);
-    Route::delete('/absence-requests/{id}', [AbsenceRequestController::class, 'destroy']);
+    Route::post('/absence-requests', [AbsenceRequestController::class, 'store'])->middleware('throttle:5,10'); // 5 per 10 minutes
+    Route::delete('/absence-requests/{id}', [AbsenceRequestController::class, 'destroy'])->middleware('throttle:10,1');
     Route::get('/absence-requests/pending-count', [AbsenceRequestController::class, 'getPendingCount']);
     
     // Profile update endpoint
-    Route::post('/update-profile', [DashboardController::class, 'updateProfile']);
+    Route::post('/update-profile', [DashboardController::class, 'updateProfile'])->middleware('throttle:5,5'); // 5 per 5 minutes
 });
 
 // Protected
@@ -81,15 +81,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Workplace CRUD
     Route::get('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'getWorkplace']);
-    Route::post('/workplaces', [App\Http\Controllers\AdminController::class, 'storeWorkplace']);
-    Route::put('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'updateWorkplace']);
-    Route::delete('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'deleteWorkplace']);
+    Route::post('/workplaces', [App\Http\Controllers\AdminController::class, 'storeWorkplace'])->middleware('throttle:10,1');
+    Route::put('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'updateWorkplace'])->middleware('throttle:20,1');
+    Route::delete('/workplaces/{workplace}', [App\Http\Controllers\AdminController::class, 'deleteWorkplace'])->middleware('throttle:10,1');
     
     // User CRUD
     Route::get('/users/{user}', [App\Http\Controllers\AdminController::class, 'getUser']);
-    Route::post('/users', [App\Http\Controllers\AdminController::class, 'storeUser']);
-    Route::put('/users/{user}', [App\Http\Controllers\AdminController::class, 'updateUser']);
-    Route::delete('/users/{user}', [App\Http\Controllers\AdminController::class, 'deleteUser']);
+    Route::post('/users', [App\Http\Controllers\AdminController::class, 'storeUser'])->middleware('throttle:10,1');
+    Route::put('/users/{user}', [App\Http\Controllers\AdminController::class, 'updateUser'])->middleware('throttle:20,1');
+    Route::delete('/users/{user}', [App\Http\Controllers\AdminController::class, 'deleteUser'])->middleware('throttle:10,1');
     
     // User-Workplace assignments
     Route::post('/assign-workplace', [App\Http\Controllers\AdminController::class, 'assignWorkplace']);

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'authorize.user' => \App\Http\Middleware\AuthorizeUserAccess::class,
+            'throttle' => \App\Http\Middleware\ThrottleRequests::class,
         ]);
         
         // Apply security headers, user activity tracking and session validation to all web routes

@@ -247,6 +247,9 @@
 
     </div>
 
+    {{-- Validation Utility - Load synchronously --}}
+    <script src="{{ asset('js/validation-utils.js') }}"></script>
+
     {{-- Combined scripts from both files --}}
     <script>
         // Password visibility toggle (from login.blade.php, modified for two fields)
@@ -265,23 +268,116 @@
             }
         }
 
-        // Client-side password validation (from reset-password.blade.php)
+        // ====== PASSWORD RESET FORM VALIDATION ======
         document.addEventListener('DOMContentLoaded', function() {
-            const password = document.getElementById('password');
-            const passwordConfirm = document.getElementById('password_confirmation');
-            
-            function validatePasswordMatch() {
-                if (passwordConfirm.value && password.value !== passwordConfirm.value) {
-                    passwordConfirm.setCustomValidity('Passwords do not match');
+            const resetForm = document.querySelector('form[action="{{ route('password.update') }}"]');
+            const passwordInput = document.getElementById('password');
+            const passwordConfirmInput = document.getElementById('password_confirmation');
+            const submitButton = resetForm.querySelector('button[type="submit"]');
+
+            // Password strength indicator
+            function updatePasswordStrength() {
+                const password = passwordInput.value;
+                if (password.length === 0) return;
+
+                const result = ValidationUtils.validatePassword(password);
+                const strength = result.strength;
+                
+                // Visual feedback for password strength
+                let strengthText = '';
+                let strengthColor = '';
+                
+                if (strength <= 2) {
+                    strengthText = 'Weak password';
+                    strengthColor = 'text-red-600';
+                } else if (strength === 3) {
+                    strengthText = 'Good password';
+                    strengthColor = 'text-yellow-600';
                 } else {
-                    passwordConfirm.setCustomValidity('');
+                    strengthText = 'Strong password';
+                    strengthColor = 'text-green-600';
+                }
+
+                // Show/update strength indicator
+                let strengthIndicator = passwordInput.parentNode.querySelector('.password-strength');
+                if (!strengthIndicator) {
+                    strengthIndicator = document.createElement('p');
+                    strengthIndicator.className = 'password-strength text-xs mt-1';
+                    passwordInput.parentNode.appendChild(strengthIndicator);
+                }
+                strengthIndicator.className = `password-strength text-xs mt-1 ${strengthColor}`;
+                strengthIndicator.textContent = strengthText;
+            }
+
+            // Real-time password validation
+            passwordInput.addEventListener('input', function() {
+                ValidationUtils.clearError(this);
+                updatePasswordStrength();
+                
+                // Check confirmation match if it has value
+                if (passwordConfirmInput.value) {
+                    validatePasswordMatch();
+                }
+            });
+
+            function validatePasswordMatch() {
+                ValidationUtils.clearError(passwordConfirmInput);
+                
+                if (passwordConfirmInput.value && passwordInput.value !== passwordConfirmInput.value) {
+                    ValidationUtils.showError(passwordConfirmInput, 'Passwords do not match');
+                } else if (passwordConfirmInput.value) {
+                    ValidationUtils.showSuccess(passwordConfirmInput);
                 }
             }
-            
-            if (password && passwordConfirm) {
-                password.addEventListener('input', validatePasswordMatch);
-                passwordConfirm.addEventListener('input', validatePasswordMatch);
-            }
+
+            passwordConfirmInput.addEventListener('input', validatePasswordMatch);
+
+            // Form submission with comprehensive validation
+            resetForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Clear all errors
+                ValidationUtils.clearError(passwordInput);
+                ValidationUtils.clearError(passwordConfirmInput);
+
+                let hasErrors = false;
+
+                // Validate password
+                const passwordResult = ValidationUtils.validatePassword(
+                    passwordInput.value, 
+                    passwordConfirmInput.value
+                );
+
+                if (!passwordResult.valid) {
+                    ValidationUtils.showError(passwordInput, passwordResult.errors[0]);
+                    hasErrors = true;
+                }
+
+                // Additional confirmation check
+                if (!passwordConfirmInput.value || passwordConfirmInput.value.trim() === '') {
+                    ValidationUtils.showError(passwordConfirmInput, 'Please confirm your password');
+                    hasErrors = true;
+                } else if (passwordInput.value !== passwordConfirmInput.value) {
+                    ValidationUtils.showError(passwordConfirmInput, 'Passwords do not match');
+                    hasErrors = true;
+                }
+
+                if (!hasErrors) {
+                    // Disable submit button
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Resetting Password...';
+                    
+                    // Submit form
+                    this.submit();
+                } else {
+                    // Focus first error
+                    const firstError = resetForm.querySelector('.border-red-500');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                }
+            });
         });
     </script>
 

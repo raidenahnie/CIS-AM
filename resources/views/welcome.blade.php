@@ -253,16 +253,12 @@
                                         </div>
                                     </div>
 
-                                    <h3 class="text-base sm:text-lg font-bold text-zinc-900">Welcome to CIS-AM
-                                        Attendance Monitoring
-                                        System</h3>
+                                    <h3 class="text-base sm:text-lg font-bold text-zinc-900">Welcome to <br> Curriculum Implementation System - Attendance Monitoring</h3>
 
                                     <p class="leading-relaxed text-sm sm:text-base">
-                                        As part of your employment, you must use this system. By accessing and using it,
-                                        you
-                                        <strong class="text-zinc-900">acknowledge</strong>
-                                        that you have been notified of the collection,
-                                        processing, and storage of your work identification data in accordance with the
+                                        To streamline our operations and ensure a smooth workflow, this system is made available for your use. By accessing this platform, 
+                                        you <strong class="text-zinc-900">acknowledge</strong> that you have been notified regarding the collection, processing, and storage of your work identification data in 
+                                        compliance with the
                                         <a href="https://www.officialgazette.gov.ph/2012/08/15/republic-act-no-10173/"
                                             target="_blank" class="text-green-600 font-semibold hover:underline">
                                             Data Privacy Act of 2012 (Republic Act No. 10173)
@@ -280,7 +276,7 @@
                                             Data We Collect
                                         </h4>
                                         <ul class="list-disc list-inside space-y-1 text-xs sm:text-sm ml-6 sm:ml-7">
-                                            <li>Work identification information (name & email)</li>
+                                            <li>Work identification information (name, email, and mobile number)</li>
                                             <!-- THIS IS THE REVISED GPS LINE -->
                                             <li>GPS location data, used <strong class="text-zinc-800">only at the
                                                     moment of check-in and check-out</strong>
@@ -307,6 +303,8 @@
                                             <li>Accurate attendance tracking and monitoring</li>
                                             <li>Workplace compliance and verification</li>
                                             <li>Generation of attendance reports</li>
+                                            <li>Sending system notifications and alerts via email and SMS</li>
+                                            <li>Password reset and account recovery via email</li>
                                             <li>System security and audit purposes</li>
                                             <li>Administrative and operational requirements</li>
                                         </ul>
@@ -330,6 +328,12 @@
                                             <li>Right to data portability</li>
                                             <li>Right to file a complaint with the National Privacy Commission</li>
                                         </ul>
+                                    </div>
+
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                                        <p class="text-xs sm:text-sm text-zinc-700">
+                                            <strong class="text-blue-800">Contact Information Usage:</strong> Your email address and mobile number are used <strong class="text-zinc-800">solely for sending system notifications, attendance alerts, and password reset links</strong>. These contact details will not be shared with third parties or used for marketing purposes.
+                                        </p>
                                     </div>
 
                                     <div class="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">

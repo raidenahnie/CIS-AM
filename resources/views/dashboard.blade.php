@@ -28,6 +28,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'; this.onload=null;">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     
+    <!-- Validation Utilities - Load synchronously -->
+    <script src="{{ asset('js/validation-utils.js') }}"></script>
+    
     <style>
         /* Inline critical font import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -9452,18 +9455,129 @@
             }
         });
 
-        // Submit absence request
+        // Submit absence request with comprehensive validation
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('absence-request-form-element');
             if (form) {
+                const startDateInput = document.getElementById('absence-start-date');
+                const endDateInput = document.getElementById('absence-end-date');
+                const reasonInput = document.getElementById('absence-reason');
+
+                // Real-time character count
+                if (reasonInput) {
+                    reasonInput.addEventListener('input', function() {
+                        const charCount = document.getElementById('reason-char-count');
+                        if (charCount) {
+                            charCount.textContent = this.value.length;
+                        }
+                        ValidationUtils.clearError(this);
+                    });
+
+                    // Validate on blur
+                    reasonInput.addEventListener('blur', function() {
+                        if (this.value.trim()) {
+                            const result = ValidationUtils.validateTextArea(
+                                this.value, 
+                                ValidationUtils.lengths.reason.min, 
+                                ValidationUtils.lengths.reason.max,
+                                'Reason'
+                            );
+                            if (!result.valid) {
+                                ValidationUtils.showError(this, result.errors[0]);
+                            }
+                        }
+                    });
+                }
+
                 form.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
+                    // Clear all errors
+                    ValidationUtils.clearError(startDateInput);
+                    ValidationUtils.clearError(endDateInput);
+                    ValidationUtils.clearError(reasonInput);
+
+                    let hasErrors = false;
+                    const startDate = startDateInput.value;
+                    const endDate = endDateInput.value;
+                    const reason = reasonInput.value;
+
+                    // Validate dates
+                    if (!startDate) {
+                        ValidationUtils.showError(startDateInput, 'Start date is required');
+                        hasErrors = true;
+                    }
+
+                    if (!endDate) {
+                        ValidationUtils.showError(endDateInput, 'End date is required');
+                        hasErrors = true;
+                    }
+
+                    // Validate date range
+                    if (startDate && endDate) {
+                        const start = new Date(startDate);
+                        const end = new Date(endDate);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        if (start < today) {
+                            ValidationUtils.showError(startDateInput, 'Start date cannot be in the past');
+                            hasErrors = true;
+                        }
+
+                        if (end < start) {
+                            ValidationUtils.showError(endDateInput, 'End date must be after start date');
+                            hasErrors = true;
+                        }
+
+                        // Check for excessive date range (e.g., more than 30 days)
+                        const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                        if (daysDiff > 30) {
+                            ValidationUtils.showError(endDateInput, 'Leave request cannot exceed 30 days. Please contact admin for longer periods.');
+                            hasErrors = true;
+                        }
+                    }
+
+                    // Validate reason
+                    const reasonResult = ValidationUtils.validateTextArea(
+                        reason,
+                        ValidationUtils.lengths.reason.min,
+                        ValidationUtils.lengths.reason.max,
+                        'Reason for leave'
+                    );
+
+                    if (!reasonResult.valid) {
+                        ValidationUtils.showError(reasonInput, reasonResult.errors[0]);
+                        hasErrors = true;
+                    }
+
+                    if (hasErrors) {
+                        const firstError = form.querySelector('.border-red-500');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            firstError.focus();
+                        }
+                        return;
+                    }
+
+                    // Check rate limiting
+                    const rateCheck = ValidationUtils.rateLimiter.canSubmit('absence-request-form', 3, 300000); // 3 requests per 5 minutes
+                    if (!rateCheck.allowed) {
+                        ValidationUtils.showToast(rateCheck.message, 'warning');
+                        return;
+                    }
+
                     const formData = {
-                        start_date: document.getElementById('absence-start-date').value,
-                        end_date: document.getElementById('absence-end-date').value,
-                        reason: document.getElementById('absence-reason').value
+                        start_date: startDate,
+                        end_date: endDate,
+                        reason: reasonResult.sanitized
                     };
+
+                    // Disable submit button
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    const originalHTML = submitButton.innerHTML;
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
 
                     try {
                         const response = await fetch('/api/absence-requests', {
@@ -9480,8 +9594,11 @@
 
                         if (data.success) {
                             showSimpleNotification(data.message, 'success');
+                            ValidationUtils.rateLimiter.reset('absence-request-form');
                             toggleAbsenceRequestForm();
                             fetchAbsenceRequests();
+                            form.reset();
+                            document.getElementById('reason-char-count').textContent = '0';
                         } else {
                             if (data.errors) {
                                 const errorMessages = Object.values(data.errors).flat().join(', ');
@@ -9494,6 +9611,9 @@
                     } catch (error) {
                         console.error('Error submitting absence request:', error);
                         showSimpleNotification('An error occurred. Please try again.', 'error');
+                    } finally {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalHTML;
                     }
                 });
             }
@@ -9782,40 +9902,125 @@
             console.error("Geolocation not supported by this browser.");
         }
 
-        // Profile Settings Form Handler
+        // Profile Settings Form Handler with Enhanced Validation
         const profileForm = document.getElementById('profile-form');
         if (profileForm) {
+            const nameInput = document.getElementById('profile-name');
+            const phoneInput = document.getElementById('profile-phone');
+            const passwordInput = document.getElementById('profile-password');
+
+            // Real-time validation for name
+            nameInput.addEventListener('blur', function() {
+                const result = ValidationUtils.validateName(this.value, 'Full Name');
+                if (!result.valid) {
+                    ValidationUtils.showError(this, result.errors[0]);
+                } else {
+                    ValidationUtils.clearError(this);
+                }
+            });
+
+            nameInput.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    ValidationUtils.clearError(this);
+                }
+            });
+
+            // Real-time validation for phone
+            phoneInput.addEventListener('blur', function() {
+                if (this.value.trim() !== '') {
+                    const result = ValidationUtils.validatePhone(this.value, false);
+                    if (!result.valid) {
+                        ValidationUtils.showError(this, result.errors[0]);
+                    } else {
+                        ValidationUtils.clearError(this);
+                    }
+                }
+            });
+
+            phoneInput.addEventListener('input', function() {
+                ValidationUtils.clearError(this);
+            });
+
+            // Real-time validation for password
+            passwordInput.addEventListener('input', function() {
+                ValidationUtils.clearError(this);
+                
+                if (this.value.length > 0 && this.value.length < ValidationUtils.lengths.password.min) {
+                    ValidationUtils.showError(this, `Password must be at least ${ValidationUtils.lengths.password.min} characters`);
+                } else {
+                    ValidationUtils.clearError(this);
+                }
+            });
+
             profileForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                const name = document.getElementById('profile-name').value.trim();
-                const phone = document.getElementById('profile-phone').value.trim();
-                const password = document.getElementById('profile-password').value;
-                
-                if (!name) {
-                    showNotification('Please enter your name', 'error');
+                // Clear all errors
+                ValidationUtils.clearError(nameInput);
+                ValidationUtils.clearError(phoneInput);
+                ValidationUtils.clearError(passwordInput);
+
+                let hasErrors = false;
+                const name = nameInput.value.trim();
+                const phone = phoneInput.value.trim();
+                const password = passwordInput.value;
+
+                // Validate name
+                const nameResult = ValidationUtils.validateName(name, 'Full Name');
+                if (!nameResult.valid) {
+                    ValidationUtils.showError(nameInput, nameResult.errors[0]);
+                    hasErrors = true;
+                }
+
+                // Validate phone if provided
+                if (phone) {
+                    const phoneResult = ValidationUtils.validatePhone(phone, false);
+                    if (!phoneResult.valid) {
+                        ValidationUtils.showError(phoneInput, phoneResult.errors[0]);
+                        hasErrors = true;
+                    }
+                }
+
+                // Validate password if provided
+                if (password) {
+                    const passwordResult = ValidationUtils.validatePassword(password);
+                    if (!passwordResult.valid) {
+                        ValidationUtils.showError(passwordInput, passwordResult.errors[0]);
+                        hasErrors = true;
+                    }
+                }
+
+                if (hasErrors) {
+                    const firstError = profileForm.querySelector('.border-red-500');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
                     return;
                 }
-                
-                // Validate phone format if provided
-                if (phone && !phone.match(/^\+?[0-9]{10,15}$/)) {
-                    showNotification('Please enter a valid phone number (e.g., +639171234567)', 'error');
+
+                // Check rate limiting (3 attempts allowed, blocked on 4th)
+                const rateCheck = ValidationUtils.rateLimiter.canSubmit('profile-form', 3, 120000);
+                if (!rateCheck.allowed) {
+                    ValidationUtils.showToast(rateCheck.message, 'warning');
                     return;
                 }
-                
+
+                // Prepare data with sanitized values
                 const data = {
-                    name: name,
-                    phone_number: phone
+                    name: nameResult.sanitized,
+                    phone_number: phone ? ValidationUtils.sanitize(phone) : ''
                 };
                 
                 if (password) {
-                    if (password.length < 6) {
-                        showNotification('Password must be at least 6 characters', 'error');
-                        return;
-                    }
                     data.password = password;
                 }
                 
+                // Disable form during submission
+                const submitButton = profileForm.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
                 fetch('/api/update-profile', {
                     method: 'POST',
                     headers: {
@@ -9826,14 +10031,18 @@
                 })
                 .then(response => response.json())
                 .then(result => {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+
                     if (result.success) {
                         showNotification('Profile updated successfully!', 'success');
-                        document.getElementById('profile-password').value = '';
+                        ValidationUtils.rateLimiter.reset('profile-form');
+                        passwordInput.value = '';
                         
                         // Update the header name if changed
                         const headerName = document.querySelector('.text-2xl.font-bold.text-gray-900');
                         if (headerName) {
-                            headerName.textContent = 'Welcome, ' + name;
+                            headerName.textContent = 'Welcome, ' + nameResult.sanitized;
                         }
                     } else {
                         showNotification(result.message || 'Failed to update profile', 'error');
@@ -9841,6 +10050,8 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
                     showNotification('An error occurred while updating profile', 'error');
                 });
             });
