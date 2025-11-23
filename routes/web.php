@@ -57,6 +57,9 @@ Route::prefix('api')->middleware(['auth', 'authorize.user'])->group(function () 
     Route::post('/absence-requests', [AbsenceRequestController::class, 'store']);
     Route::delete('/absence-requests/{id}', [AbsenceRequestController::class, 'destroy']);
     Route::get('/absence-requests/pending-count', [AbsenceRequestController::class, 'getPendingCount']);
+    
+    // Profile update endpoint
+    Route::post('/update-profile', [DashboardController::class, 'updateProfile']);
 });
 
 // Protected
@@ -115,6 +118,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings', [App\Http\Controllers\AdminController::class, 'getSettings']);
     Route::post('/settings', [App\Http\Controllers\AdminController::class, 'updateSetting']);
     Route::post('/update-manual-entry-code', [App\Http\Controllers\AdminController::class, 'updateManualEntryCode']);
+    
+    // Notification settings for auto check-out and reminders
+    Route::get('/notification-settings', [App\Http\Controllers\AdminController::class, 'getNotificationSettings']);
+    Route::post('/notification-settings', [App\Http\Controllers\AdminController::class, 'saveNotificationSettings']);
+    Route::post('/test-notification', [App\Http\Controllers\AdminController::class, 'testNotification']);
     
     // Attendance monitoring
     Route::get('/attendance-stats', [App\Http\Controllers\AdminController::class, 'getAttendanceStats']);

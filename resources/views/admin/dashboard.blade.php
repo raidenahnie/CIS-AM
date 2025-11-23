@@ -5,14 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CISAM | Admin Dashboard</title>
+    
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Critical CSS -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="icon" type="image/x-icon" href="/img/favicon.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Critical CSS for layout - load synchronously to prevent FOUC -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Defer non-critical CSS and scripts for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'; this.onload=null;">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    
     <style>
+        /* Inline critical font import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         * {
@@ -2495,6 +2510,100 @@
                                 <i class="fas fa-edit mr-2"></i>Update Access Code
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Auto Check-Out & Notification Settings -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">Auto Check-Out & Notifications</h3>
+                    <div class="card-modern rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 gradient-success rounded-lg flex items-center justify-center shadow-md mr-3">
+                                <i class="fas fa-bell text-white text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-base font-bold text-gray-900">Notification Settings</h3>
+                                <p class="text-xs text-gray-600 mt-1">Configure auto check-out reminders and notification methods</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                                <div class="text-xs text-blue-700">
+                                    <strong>Auto Check-Out:</strong> System automatically checks out users at 6:00 PM. Reminders are sent at 4:30 PM.
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="notificationSettingsForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-paper-plane mr-1 text-indigo-600"></i>
+                                    Notification Method
+                                </label>
+                                <select id="notificationType" 
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                                    <option value="email">Email Only</option>
+                                    <option value="sms">SMS Only</option>
+                                    <option value="both">Both Email & SMS</option>
+                                    <option value="none">None (Disable Notifications)</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Choose how users will receive check-out reminders</p>
+                            </div>
+
+                            <div id="smsApiUrlField">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-link mr-1 text-green-600"></i>
+                                    SMS API URL
+                                </label>
+                                <input type="url" id="smsApiUrl" 
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="https://sms.example.com/api/send">
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Must be a complete URL starting with http:// or https://
+                                    <br>
+                                    Example: <code class="text-green-600 bg-green-50 px-1 rounded">https://sms.cisdepedcavite.org/send-sms.php</code>
+                                </p>
+                            </div>
+
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-2">
+                                    <i class="fas fa-clock mr-1"></i>Schedule Information
+                                </h4>
+                                <div class="space-y-2 text-xs text-gray-700">
+                                    <div class="flex items-center justify-between">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-bell text-yellow-500 mr-2"></i>Reminder Time:
+                                        </span>
+                                        <span class="font-semibold">4:30 PM</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-sign-out-alt text-red-500 mr-2"></i>Auto Check-Out:
+                                        </span>
+                                        <span class="font-semibold">6:00 PM</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-sync-alt text-blue-500 mr-2"></i>Cron Frequency:
+                                        </span>
+                                        <span class="font-semibold">Every 15 minutes</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3 pt-2">
+                                <button type="button" onclick="saveNotificationSettings()"
+                                    class="flex-1 gradient-success text-white py-2.5 px-4 rounded-lg hover:shadow-md transition-all text-sm font-semibold btn-modern">
+                                    <i class="fas fa-save mr-2"></i>Save Settings
+                                </button>
+                                <button type="button" onclick="testNotification()"
+                                    class="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-semibold">
+                                    <i class="fas fa-vial mr-2"></i>Test
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -6202,6 +6311,147 @@
         });
 
         // Admin Account Modal Functions
+        // Notification Settings Functions
+        function loadNotificationSettings() {
+            fetch('/admin/notification-settings', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('notificationType').value = data.notification_type || 'email';
+                    document.getElementById('smsApiUrl').value = data.sms_api_url || '';
+                    toggleSmsApiField();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notification settings:', error);
+                showNotification('Failed to load notification settings', 'error');
+            });
+        }
+
+        function saveNotificationSettings() {
+            const notificationType = document.getElementById('notificationType').value;
+            const smsApiUrl = document.getElementById('smsApiUrl').value.trim();
+
+            // Validate SMS API URL if SMS is enabled
+            if ((notificationType === 'sms' || notificationType === 'both')) {
+                if (!smsApiUrl) {
+                    showNotification('SMS API URL is required when SMS notifications are enabled', 'error');
+                    return;
+                }
+                
+                // Validate URL format
+                if (!smsApiUrl.startsWith('http://') && !smsApiUrl.startsWith('https://')) {
+                    showNotification('SMS API URL must start with http:// or https://', 'error');
+                    document.getElementById('smsApiUrl').focus();
+                    return;
+                }
+
+                // Additional URL validation
+                try {
+                    new URL(smsApiUrl);
+                } catch (e) {
+                    showNotification('Please enter a valid URL (e.g., https://sms.example.com/send)', 'error');
+                    document.getElementById('smsApiUrl').focus();
+                    return;
+                }
+            }
+
+            const data = {
+                notification_type: notificationType,
+                sms_api_url: smsApiUrl || null
+            };
+
+            fetch('/admin/notification-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Notification settings saved successfully!', 'success');
+                } else {
+                    showNotification(data.message || 'Failed to save settings', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving notification settings:', error);
+                showNotification('An error occurred while saving settings', 'error');
+            });
+        }
+
+        function testNotification() {
+            const notificationType = document.getElementById('notificationType').value;
+            
+            if (notificationType === 'none') {
+                showNotification('Notifications are disabled. Please select a notification method first.', 'warning');
+                return;
+            }
+
+            if (!confirm('This will send a test notification to your account. Continue?')) {
+                return;
+            }
+
+            fetch('/admin/test-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    notification_type: notificationType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Test notification sent successfully! Check your email/SMS.', 'success');
+                } else {
+                    showNotification(data.message || 'Failed to send test notification', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error sending test notification:', error);
+                showNotification('An error occurred while sending test notification', 'error');
+            });
+        }
+
+        function toggleSmsApiField() {
+            const notificationType = document.getElementById('notificationType').value;
+            const smsApiUrlField = document.getElementById('smsApiUrlField');
+            
+            if (notificationType === 'sms' || notificationType === 'both') {
+                smsApiUrlField.style.display = 'block';
+            } else {
+                smsApiUrlField.style.display = 'none';
+            }
+        }
+
+        // Listen for notification type changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationTypeSelect = document.getElementById('notificationType');
+            if (notificationTypeSelect) {
+                notificationTypeSelect.addEventListener('change', toggleSmsApiField);
+                
+                // Load settings when settings section is opened
+                const settingsNavLink = document.querySelector('[data-section="settings"]');
+                if (settingsNavLink) {
+                    settingsNavLink.addEventListener('click', function() {
+                        setTimeout(loadNotificationSettings, 100);
+                    });
+                }
+            }
+        });
+
         function openAdminAccountModal() {
             document.getElementById('adminAccountForm').reset();
             // Pre-fill current values

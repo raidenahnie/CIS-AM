@@ -8,14 +8,28 @@
     <meta name="user-id" content="{{ Auth::user()->id ?? '' }}">
     <meta http-equiv="Permissions-Policy" content="geolocation=(self)">
     <title>CISAM | Dashboard</title>
+    
+    <!-- Preconnect to external resources for faster DNS resolution -->
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Critical CSS first -->
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashboard.js'])
     <link rel="icon" type="image/x-icon" href="/img/favicon.png">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Critical CSS for layout - load synchronously to prevent FOUC -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Defer non-critical CSS and scripts for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'; this.onload=null;">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    
     <style>
+        /* Inline critical font import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         * {
@@ -389,6 +403,10 @@
             <a href="javascript:void(0)" class="sidebar-link" data-section="absence-history">
                 <i class="fas fa-calendar-times w-5"></i>
                 <span class="ml-3">Absence Records</span>
+            </a>
+            <a href="javascript:void(0)" class="sidebar-link" data-section="profile">
+                <i class="fas fa-user-cog w-5"></i>
+                <span class="ml-3">Profile</span>
             </a>
         </nav>
 
@@ -1732,6 +1750,80 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Profile Section -->
+            <div id="profile-section" class="section-content hidden">
+                <div class="card-modern rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+                        <h3 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-user-cog mr-3"></i>
+                            Profile Settings
+                        </h3>
+                        <p class="text-purple-100 text-sm mt-1">Update your account information and preferences</p>
+                    </div>
+
+                    <div class="p-6">
+                        <form id="profile-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Name -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-user text-indigo-600 mr-2"></i>Full Name
+                                    </label>
+                                    <input type="text" id="profile-name" value="{{ Auth::user()->name }}"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        placeholder="Enter your full name">
+                                </div>
+
+                                <!-- Email (Read-only) -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-envelope text-indigo-600 mr-2"></i>Email Address
+                                    </label>
+                                    <input type="email" value="{{ Auth::user()->email }}"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                                        readonly disabled>
+                                    <p class="text-xs text-gray-500 mt-1">Email cannot be changed. Contact admin if needed.</p>
+                                </div>
+
+                                <!-- Phone Number -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-phone text-green-600 mr-2"></i>Phone Number
+                                    </label>
+                                    <input type="tel" id="profile-phone" value="{{ Auth::user()->phone_number ?? '' }}"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                        placeholder="+639171234567">
+                                    <p class="text-xs text-gray-500 mt-1">Required for SMS notifications. Format: +639XXXXXXXXX</p>
+                                </div>
+
+                                <!-- Password (Optional) -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-lock text-red-600 mr-2"></i>New Password
+                                    </label>
+                                    <input type="password" id="profile-password"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                        placeholder="Leave blank to keep current password">
+                                    <p class="text-xs text-gray-500 mt-1">Only fill if you want to change your password</p>
+                                </div>
+                            </div>
+
+                            <!-- Save Button -->
+                            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                                <button type="button" onclick="resetProfileForm()"
+                                    class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all">
+                                    <i class="fas fa-undo mr-2"></i>Reset
+                                </button>
+                                <button type="submit"
+                                    class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl">
+                                    <i class="fas fa-save mr-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -1936,7 +2028,8 @@
                 'gps-checkin': ['Check In/Out', 'GPS location verification for attendance tracking'],
                 'special-checkin': ['Special Check In', 'Up to 4 check-ins/outs per day at assigned locations'],
                 'attendance-history': ['History', 'View your detailed attendance records and summaries'],
-                'absence-history': ['Absence Records', 'View your absence history and attendance statistics']
+                'absence-history': ['Absence Records', 'View your absence history and attendance statistics'],
+                'profile': ['Profile', 'Manage your account settings and preferences']
             };
 
             if (titles[sectionName]) {
@@ -2256,14 +2349,14 @@
                     specialCheckinMap = null;
                 }
 
-                // Initialize Leaflet map
+                // Initialize Leaflet map - Always center on user location
                 specialCheckinMap = L.map('special-checkin-map', {
                     zoomControl: true,
                     attributionControl: false,
                     maxZoom: 18,
                     minZoom: 10,
                     preferCanvas: true
-                }).setView([lat, lng], hasUserLocation ? 16 : 12);
+                }).setView([lat, lng], hasUserLocation ? 17 : 12);
 
                 // Add tile layer
                 const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -2298,18 +2391,29 @@
         function addSpecialCheckinMapMarkers(lat, lng, hasUserLocation) {
             if (!specialCheckinMap) return;
 
-            // Add user location marker if available
+            // Add user location marker if available - make it prominent with pin shape
             if (hasUserLocation && userLocation) {
                 specialUserMarker = L.marker([lat, lng], {
                     icon: L.divIcon({
                         className: 'user-location-marker',
-                        html: '<div style="background: #f59e0b; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10]
-                    })
+                        html: `<div style="position: relative; width: 30px; height: 40px;">
+                            <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15 0C8.373 0 3 5.373 3 12c0 9 12 28 12 28s12-19 12-28c0-6.627-5.373-12-12-12z" 
+                                    fill="#3b82f6" stroke="#ffffff" stroke-width="2"/>
+                                <circle cx="15" cy="12" r="5" fill="#ffffff"/>
+                            </svg>
+                        </div>`,
+                        iconSize: [30, 40],
+                        iconAnchor: [15, 40],
+                        popupAnchor: [0, -40]
+                    }),
+                    zIndexOffset: 1000
                 }).addTo(specialCheckinMap);
 
-                specialUserMarker.bindPopup('Your Current Location');
+                specialUserMarker.bindPopup('<b>Your Current Location</b>');
+                
+                // Start by centering on user location at close zoom
+                specialCheckinMap.setView([lat, lng], 18);
             }
 
             // Fetch and add all assigned special locations
@@ -2411,10 +2515,35 @@
                         }
                     });
 
-                    // Fit bounds to show all locations if multiple
-                    if (data.workplaces.length > 1 && specialCheckinMap) {
-                        const group = L.featureGroup(specialWorkplaceMarkers);
-                        specialCheckinMap.fitBounds(group.getBounds().pad(0.1));
+                    // Show user location first, then fit bounds to show all locations
+                    // This gives user context of their position, then shows full picture
+                    if (data.workplaces.length > 0 && specialCheckinMap) {
+                        if (specialUserMarker) {
+                            // User location is already centered from addSpecialCheckinMapMarkers
+                            // After a brief moment, adjust to show all workplaces
+                            setTimeout(() => {
+                                if (data.workplaces.length > 1) {
+                                    const group = L.featureGroup([specialUserMarker, ...specialWorkplaceMarkers]);
+                                    specialCheckinMap.fitBounds(group.getBounds().pad(0.2), {
+                                        maxZoom: 16,
+                                        animate: true,
+                                        duration: 0.8
+                                    });
+                                } else if (data.workplaces.length === 1 && userLocation) {
+                                    // For single workplace, show both user and workplace nicely
+                                    const group = L.featureGroup([specialUserMarker, specialWorkplaceMarkers[0]]);
+                                    specialCheckinMap.fitBounds(group.getBounds().pad(0.3), {
+                                        maxZoom: 17,
+                                        animate: true,
+                                        duration: 0.8
+                                    });
+                                }
+                            }, 1500); // 1.5 second delay to let user see their location first
+                        } else if (data.workplaces.length > 1) {
+                            // No user location, just show workplaces
+                            const group = L.featureGroup(specialWorkplaceMarkers);
+                            specialCheckinMap.fitBounds(group.getBounds().pad(0.1));
+                        }
                     }
 
                 } else {
@@ -5485,13 +5614,19 @@
 
             // Load saved workplace data and fetch from API
             loadWorkplaceData();
-            fetchUserWorkplace(); // New: Fetch from database
-            fetchUserStats(); // New: Fetch real stats
-            fetchAttendanceHistory(); // New: Fetch real history
-            fetchTodaysActivity(); // New: Fetch today's activity
-            fetchTodaysSchedule(); // New: Fetch today's schedule
-            fetchCurrentStatus(); // New: Fetch current work status
             updateWorkplaceDisplay();
+            
+            // ⚡ PARALLEL LOADING: Fetch all data at once instead of sequentially
+            Promise.all([
+                fetchUserWorkplace(),
+                fetchUserStats(),
+                fetchAttendanceHistory(),
+                fetchTodaysActivity(),
+                fetchTodaysSchedule(),
+                fetchCurrentStatus()
+            ]).catch(error => {
+                console.error('Error loading dashboard data:', error);
+            });
 
             // Initialize location with smart approach
             initializeSmartLocation();
@@ -5867,8 +6002,8 @@
 
             // Try multiple approaches for getting location
             const options = {
-                enableHighAccuracy: false, // Start with lower accuracy for speed
-                timeout: 10000, // 10 seconds timeout
+                enableHighAccuracy: true, // High accuracy for attendance tracking
+                timeout: 15000, // 15 seconds timeout for GPS
                 maximumAge: 0 // Don't accept cached positions
             };
 
@@ -6027,9 +6162,9 @@
             }
 
             const options = {
-                enableHighAccuracy: false,
-                timeout: 15000,
-                maximumAge: 60000
+                enableHighAccuracy: true, // High accuracy for attendance tracking
+                timeout: 15000, // 15 seconds for GPS lock
+                maximumAge: 0 // Get fresh location
             };
 
             navigator.geolocation.getCurrentPosition(
@@ -7198,9 +7333,9 @@
                     function(error) {
                         reject(error);
                     }, {
-                        enableHighAccuracy: false, // Start with low accuracy for speed
-                        timeout: 5000, // Quick 5-second timeout
-                        maximumAge: 300000 // Accept 5-minute old location for speed
+                        enableHighAccuracy: true, // High accuracy for attendance tracking
+                        timeout: 10000, // 10-second timeout for GPS lock
+                        maximumAge: 60000 // Accept 1-minute old location only
                     }
                 );
             });
@@ -7445,9 +7580,9 @@
                     }
                     // For other errors, keep using cached location and try again later
                 }, {
-                    enableHighAccuracy: false, // Use lower accuracy for continuous tracking (faster)
+                    enableHighAccuracy: true, // High accuracy for attendance validation
                     timeout: 20000, // 20-second timeout for watch
-                    maximumAge: 180000 // Accept 3-minute old locations for watch
+                    maximumAge: 60000 // Accept 1-minute old locations only
                 }
             );
 
@@ -9367,7 +9502,7 @@
         // Fetch user's absence requests
         async function fetchAbsenceRequests() {
             try {
-                const response = await fetch('/api/absence-requests', {
+                const response = await fetch('/api/absence-requests?my_requests_only=true', {
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
                             'content')
@@ -9645,6 +9780,76 @@
             );
         } else {
             console.error("Geolocation not supported by this browser.");
+        }
+
+        // Profile Settings Form Handler
+        const profileForm = document.getElementById('profile-form');
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('profile-name').value.trim();
+                const phone = document.getElementById('profile-phone').value.trim();
+                const password = document.getElementById('profile-password').value;
+                
+                if (!name) {
+                    showNotification('Please enter your name', 'error');
+                    return;
+                }
+                
+                // Validate phone format if provided
+                if (phone && !phone.match(/^\+?[0-9]{10,15}$/)) {
+                    showNotification('Please enter a valid phone number (e.g., +639171234567)', 'error');
+                    return;
+                }
+                
+                const data = {
+                    name: name,
+                    phone_number: phone
+                };
+                
+                if (password) {
+                    if (password.length < 6) {
+                        showNotification('Password must be at least 6 characters', 'error');
+                        return;
+                    }
+                    data.password = password;
+                }
+                
+                fetch('/api/update-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showNotification('Profile updated successfully!', 'success');
+                        document.getElementById('profile-password').value = '';
+                        
+                        // Update the header name if changed
+                        const headerName = document.querySelector('.text-2xl.font-bold.text-gray-900');
+                        if (headerName) {
+                            headerName.textContent = 'Welcome, ' + name;
+                        }
+                    } else {
+                        showNotification(result.message || 'Failed to update profile', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while updating profile', 'error');
+                });
+            });
+        }
+        
+        function resetProfileForm() {
+            document.getElementById('profile-name').value = '{{ Auth::user()->name }}';
+            document.getElementById('profile-phone').value = '{{ Auth::user()->phone_number ?? '' }}';
+            document.getElementById('profile-password').value = '';
         }
     </script>
 

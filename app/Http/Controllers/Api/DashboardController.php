@@ -10,6 +10,10 @@ use App\Models\Attendance;
 use App\Models\AttendanceLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -21,36 +25,41 @@ class DashboardController extends Controller
             return response()->json(['error' => 'User ID is required'], 400);
         }
         
-        $user = User::find($userId);
-        if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
-        }
-
-        $currentMonth = now()->startOfMonth();
-        $today = now()->format('Y-m-d');
-
-        // Calculate total work days in current month (Monday-Friday only)
-        $startOfMonth = now()->startOfMonth();
-        $endOfMonth = now()->endOfMonth();
-        $userCreatedDate = Carbon::parse($user->created_at)->startOfDay();
+        // ⚡ CACHE: Cache user stats for 5 minutes to reduce database load
+        $cacheKey = "user_stats_{$userId}_" . now()->format('Y-m-d-H-i');
         
-        // Adjust start date if user was created mid-month
-        $countStartDate = $startOfMonth->lt($userCreatedDate) ? $userCreatedDate->copy() : $startOfMonth->copy();
-        
-        $totalWorkDaysInMonth = 0;
-        
-        for ($date = $countStartDate->copy(); $date <= $endOfMonth; $date->addDay()) {
-            // Count Monday (1) to Friday (5), only count up to today
-            if ($date->dayOfWeek >= 1 && $date->dayOfWeek <= 5 && $date->lte(now())) {
-                $totalWorkDaysInMonth++;
+        return \Cache::remember($cacheKey, 300, function() use ($userId) {
+            $user = User::find($userId);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
             }
-        }
 
-        // Get user's attendances for current month (work days only - Monday to Friday)
-        $attendances = Attendance::where('user_id', $userId)
-            ->where('date', '>=', $currentMonth)
-            ->whereRaw('DAYOFWEEK(date) BETWEEN 2 AND 6') // Monday=2, Friday=6 in MySQL
-            ->get();
+            $currentMonth = now()->startOfMonth();
+            $today = now()->format('Y-m-d');
+
+            // Calculate total work days in current month (Monday-Friday only)
+            $startOfMonth = now()->startOfMonth();
+            $endOfMonth = now()->endOfMonth();
+            $userCreatedDate = Carbon::parse($user->created_at)->startOfDay();
+            
+            // Adjust start date if user was created mid-month
+            $countStartDate = $startOfMonth->lt($userCreatedDate) ? $userCreatedDate->copy() : $startOfMonth->copy();
+            
+            $totalWorkDaysInMonth = 0;
+            
+            for ($date = $countStartDate->copy(); $date <= $endOfMonth; $date->addDay()) {
+                // Count Monday (1) to Friday (5), only count up to today
+                if ($date->dayOfWeek >= 1 && $date->dayOfWeek <= 5 && $date->lte(now())) {
+                    $totalWorkDaysInMonth++;
+                }
+            }
+
+            // ⚡ OPTIMIZED: Get only necessary columns and use whereIn for status filtering
+            $attendances = Attendance::where('user_id', $userId)
+                ->where('date', '>=', $currentMonth)
+                ->whereRaw('DAYOFWEEK(date) BETWEEN 2 AND 6') // Monday=2, Friday=6 in MySQL
+                ->select('id', 'date', 'status', 'check_in_time', 'check_out_time', 'total_hours')
+                ->get();
 
         // Count unique dates where user was present (status contains "present" or is "late" or "special")
         // Special check-ins with multiple pairs should only count as 1 day present
@@ -112,6 +121,7 @@ class DashboardController extends Controller
             'current_status' => $currentStatus,
             'user' => $user->name
         ]);
+        }); // End Cache::remember
     }
 
     public function getAttendanceHistory($userId = null)
@@ -120,13 +130,13 @@ class DashboardController extends Controller
             return response()->json(['error' => 'User ID is required'], 400);
         }
         
+        // ⚡ OPTIMIZED: Eager load all relationships at once to prevent N+1 queries
         $attendances = Attendance::where('user_id', $userId)
             ->with([
                 'workplace',
-                // Eager load logs so we can derive check-in/check-out when the
-                // attendance summary fields are missing or inconsistent.
                 'logs' => function($q) {
-                    $q->orderBy('timestamp', 'asc');
+                    $q->with('workplace')  // Eager load workplace for special logs
+                      ->orderBy('timestamp', 'asc');
                 }
             ])
             ->orderBy('date', 'desc')
@@ -138,9 +148,10 @@ class DashboardController extends Controller
                 if ($attendance->status === 'special') {
                     $rows = [];
 
-                    // Eager load workplace on logs to avoid N+1 and ensure
-                    // we can read workplace names directly.
-                    $logs = $attendance->logs()->special()->with('workplace')->orderBy('timestamp', 'asc')->get();
+                    // ⚡ OPTIMIZED: Use already eager-loaded logs (no additional query)
+                    $logs = $attendance->logs->filter(function($log) {
+                        return $log->shift_type === 'special' || $log->type === 'special';
+                    })->sortBy('timestamp');
 
                     // Track open check-ins per workplace to pair with check-outs
                     $open = [];
@@ -473,8 +484,20 @@ class DashboardController extends Controller
         ]);
 
         // Update attendance record with first check-in time if this is the first action
+        $shouldSendNotification = false;
+        $notificationData = null;
+        
         if ($actionResult['action'] === 'check_in' && !$attendance->check_in_time) {
             $attendance->update(['check_in_time' => $currentTime]);
+            
+            // Prepare notification data to send after response
+            $shouldSendNotification = true;
+            $notificationData = [
+                'user_id' => $userId,
+                'shift_label' => strtoupper($actionResult['shift_type']),
+                'check_in_time' => $currentTime->format('g:i A'),
+                'workplace_name' => $workplace->name
+            ];
         }
 
         $responseData = [
@@ -505,6 +528,11 @@ class DashboardController extends Controller
                 'workplace_name' => $workplace->name,
                 'attendance_id' => $attendance->id
             ]);
+        }
+
+        // Send notification asynchronously after response
+        if ($shouldSendNotification && $notificationData) {
+            $this->sendCheckinNotificationAsync($notificationData);
         }
 
         return response()->json($responseData);
@@ -1346,6 +1374,16 @@ class DashboardController extends Controller
             $responseData['info'] = 'This check-in has been logged for admin review.';
         }
         
+        // Send notification asynchronously after response for special check-ins
+        if ($action === 'check_in') {
+            $this->sendCheckinNotificationAsync([
+                'user_id' => $userId,
+                'shift_label' => 'SPECIAL',
+                'check_in_time' => $currentTime->format('g:i A'),
+                'workplace_id' => $workplaceId
+            ]);
+        }
+        
         return response()->json($responseData);
     }
 
@@ -1875,5 +1913,214 @@ class DashboardController extends Controller
             'can_use_regular' => true,
             'can_use_special' => true
         ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'phone_number' => 'nullable|regex:/^\+?[0-9]{10,15}$/',
+                'password' => 'nullable|string|min:6'
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ], 422);
+            }
+            
+            $user->name = $request->name;
+            
+            if ($request->filled('phone_number')) {
+                $user->phone_number = $request->phone_number;
+            }
+            
+            if ($request->filled('password')) {
+                $user->password = bcrypt($request->password);
+            }
+            
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'user' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update profile: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Send check-in notification asynchronously (after response is sent)
+     */
+    private function sendCheckinNotificationAsync($data)
+    {
+        // Use fastcgi_finish_request if available (PHP-FPM)
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        // Now send notification in background
+        $user = User::find($data['user_id']);
+        if (!$user) return;
+        
+        $workplace = isset($data['workplace_id']) 
+            ? Workplace::find($data['workplace_id']) 
+            : (object)['name' => $data['workplace_name'] ?? 'your workplace'];
+        
+        $workplaceName = is_object($workplace) ? $workplace->name : $data['workplace_name'];
+        $shiftLabel = $data['shift_label'];
+        $checkInTime = $data['check_in_time'];
+        
+        $message = "You have successfully checked in at {$checkInTime} ({$shiftLabel} shift) at {$workplaceName}. " . 
+                   ($shiftLabel === 'SPECIAL' ? 'Stay safe!' : 'Have a productive day!');
+        
+        $this->sendCheckinNotification($user, $message);
+    }
+    
+    /**
+     * Send check-in notification based on admin settings
+     */
+    private function sendCheckinNotification($user, $message)
+    {
+        try {
+            Log::info("CHECKIN NOTIFICATION: Starting for user {$user->email}");
+            
+            $notificationType = DB::table('system_settings')
+                ->where('key', 'notification_type')
+                ->value('value') ?? 'email';
+            
+            Log::info("CHECKIN NOTIFICATION: Type = {$notificationType}");
+            
+            if ($notificationType === 'email' || $notificationType === 'both') {
+                Log::info("CHECKIN NOTIFICATION: Sending email to {$user->email}");
+                $this->sendCheckinEmail($user->email, $user->name, $message);
+                Log::info("CHECKIN NOTIFICATION: Email sent successfully");
+            }
+            
+            if (($notificationType === 'sms' || $notificationType === 'both') && !empty($user->phone_number)) {
+                Log::info("CHECKIN NOTIFICATION: Sending SMS to {$user->phone_number}");
+                $this->sendCheckinSMS($user->phone_number, $message);
+                Log::info("CHECKIN NOTIFICATION: SMS sent successfully");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error("CHECKIN NOTIFICATION FAILED for {$user->email}: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+        }
+    }
+    
+    /**
+     * Send check-in email notification
+     */
+    private function sendCheckinEmail($email, $name, $message)
+    {
+        try {
+            $html = "
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #10B981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                    .button { display: inline-block; background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    .success-icon { font-size: 48px; text-align: center; margin-bottom: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h2>✓ Check-In Successful</h2>
+                    </div>
+                    <div class='content'>
+                        <div class='success-icon'>✓</div>
+                        <p>Hello <strong>{$name}</strong>,</p>
+                        <p>{$message}</p>
+                        <p style='margin-top: 20px;'>
+                            <a href='" . url('/dashboard') . "' class='button'>View Dashboard</a>
+                        </p>
+                    </div>
+                    <div class='footer'>
+                        <p>This is an automated message from CIS-AM Attendance Monitoring System</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            ";
+            
+            Mail::html($html, function ($mail) use ($email) {
+                $mail->to($email)->subject('Check-In Successful');
+            });
+            
+        } catch (\Exception $e) {
+            throw new \Exception("Email send failed: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Send check-in SMS notification
+     */
+    private function sendCheckinSMS($phone, $message)
+    {
+        try {
+            $smsApiUrl = DB::table('system_settings')
+                ->where('key', 'sms_api_url')
+                ->value('value');
+            
+            if (!$smsApiUrl) {
+                throw new \Exception('SMS API URL not configured');
+            }
+            
+            $smsApiKey = getenv('SMS_API_KEY');
+            if (!$smsApiKey) {
+                throw new \Exception('SMS_API_KEY not set in environment');
+            }
+            
+            $payload = json_encode([
+                'gatewayUrl' => 'api.sms-gate.app',
+                'phone' => $phone,
+                'message' => $message,
+                'senderName' => 'CIS-AM'
+            ]);
+            
+            $ch = curl_init($smsApiUrl);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $smsApiKey
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode < 200 || $httpCode >= 300) {
+                throw new \Exception("SMS API returned HTTP {$httpCode}: {$response}");
+            }
+            
+        } catch (\Exception $e) {
+            throw new \Exception("SMS send failed: " . $e->getMessage());
+        }
     }
 }

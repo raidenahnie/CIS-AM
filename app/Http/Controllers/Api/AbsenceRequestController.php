@@ -21,8 +21,12 @@ class AbsenceRequestController extends Controller
         try {
             $user = Auth::user();
             
-            // Admin can see all requests or filter by user
-            if ($user->isAdmin()) {
+            // Check if viewing from user dashboard (my_requests_only parameter)
+            // This ensures admins see only their own requests in user dashboard
+            $myRequestsOnly = $request->has('my_requests_only') && $request->my_requests_only === 'true';
+            
+            // Admin can see all requests ONLY when not in user dashboard view
+            if ($user->isAdmin() && !$myRequestsOnly) {
                 $query = AbsenceRequest::with(['user', 'admin']);
                 
                 // Filter by status if provided
@@ -37,7 +41,7 @@ class AbsenceRequestController extends Controller
                 
                 $requests = $query->orderBy('created_at', 'desc')->get();
             } else {
-                // Regular users only see their own requests
+                // Regular users and admins viewing user dashboard only see their own requests
                 $requests = AbsenceRequest::with(['admin'])
                     ->where('user_id', $user->id)
                     ->orderBy('created_at', 'desc')

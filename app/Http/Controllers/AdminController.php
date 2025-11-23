@@ -1463,6 +1463,160 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Save notification settings for auto check-out and reminders
+     */
+    public function saveNotificationSettings(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'notification_type' => 'required|in:email,sms,both,none',
+            'sms_api_url' => 'nullable|url'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed: ' . $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Update notification type
+        SystemSetting::set('notification_type', $request->notification_type);
+
+        // Update SMS API URL if provided
+        if ($request->has('sms_api_url') && !empty($request->sms_api_url)) {
+            SystemSetting::set('sms_api_url', $request->sms_api_url);
+        }
+
+        // Log activity
+        $this->logActivity(
+            'update_notification_settings',
+            "Updated notification settings: type={$request->notification_type}",
+            'SystemSetting',
+            null,
+            [
+                'notification_type' => $request->notification_type,
+                'sms_api_url' => $request->sms_api_url
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification settings saved successfully'
+        ]);
+    }
+
+    /**
+     * Get notification settings
+     */
+    public function getNotificationSettings()
+    {
+        $notificationType = SystemSetting::get('notification_type', 'email');
+        $smsApiUrl = SystemSetting::get('sms_api_url', 'https://sms.cisdepedcavite.org/api/send');
+        $autoCheckoutTime = SystemSetting::get('auto_checkout_time', '18:00');
+        $reminderTime = SystemSetting::get('reminder_time', '16:30');
+
+        return response()->json([
+            'success' => true,
+            'notification_type' => $notificationType,
+            'sms_api_url' => $smsApiUrl,
+            'auto_checkout_time' => $autoCheckoutTime,
+            'reminder_time' => $reminderTime
+        ]);
+    }
+
+    /**
+     * Test notification (send test email/SMS to admin)
+     */
+    public function testNotification(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $notificationType = $request->input('notification_type', SystemSetting::get('notification_type', 'email'));
+            
+            $message = "This is a test notification from CIS-AM Auto Check-Out System. If you received this, your notification settings are working correctly!";
+            $subject = "Test Notification - CIS-AM";
+
+            $success = false;
+            $details = [];
+
+            // Send Email
+            if ($notificationType === 'email' || $notificationType === 'both') {
+                try {
+                    \Mail::raw($message, function($mail) use ($user, $subject) {
+                        $mail->to($user->email)
+                             ->subject($subject);
+                    });
+                    $success = true;
+                    $details[] = 'Email sent to ' . $user->email;
+                } catch (\Exception $e) {
+                    $details[] = 'Email failed: ' . $e->getMessage();
+                }
+            }
+
+            // Send SMS
+            if ($notificationType === 'sms' || $notificationType === 'both') {
+                $smsApiUrl = SystemSetting::get('sms_api_url', env('SMS_API_URL'));
+                $smsApiKey = env('SMS_API_KEY');
+                
+                // Use user's phone number or fallback to test phone from env
+                $phoneNumber = $user->phone_number ?: env('SMS_TEST_PHONE');
+                
+                if ($phoneNumber) {
+                    try {
+                        // Send SMS with Bearer token authentication
+                        $response = \Http::withOptions([
+                            'verify' => false
+                        ])->withHeaders([
+                            'Authorization' => 'Bearer ' . $smsApiKey
+                        ])->post($smsApiUrl, [
+                            'gatewayUrl' => 'api.sms-gate.app',
+                            'phone' => $phoneNumber,
+                            'message' => $message,
+                            'senderName' => 'CIS-AM System'
+                        ]);
+                        
+                        if ($response->successful()) {
+                            $success = true;
+                            $details[] = 'SMS sent to ' . $phoneNumber . ($user->phone_number ? '' : ' (test number)');
+                        } else {
+                            $details[] = 'SMS failed: ' . $response->body();
+                        }
+                    } catch (\Exception $e) {
+                        $details[] = 'SMS failed: ' . $e->getMessage();
+                    }
+                } else {
+                    $details[] = 'SMS skipped: No phone number in profile and no SMS_TEST_PHONE in .env';
+                }
+            }
+
+            // Log activity
+            $this->logActivity(
+                'test_notification',
+                "Tested notification system with type: {$notificationType}",
+                'SystemSetting',
+                null,
+                ['notification_type' => $notificationType, 'details' => $details]
+            );
+
+            return response()->json([
+                'success' => $success,
+                'message' => $success ? 'Test notification sent successfully!' : 'Failed to send test notification',
+                'details' => $details
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Test notification error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
+
 
 

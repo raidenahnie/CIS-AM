@@ -31,4 +31,10 @@ return [
         ],
     ],
 
+    'sms' => [
+        'enabled' => env('SMS_ENABLED', false),
+        'api_url' => env('SMS_API_URL', 'https://sms.cisdepedcavite.org/api/send'),
+        'api_key' => env('SMS_API_KEY'),
+    ],
+
 ];
