@@ -323,8 +323,17 @@ const ValidationUtils = {
         errorDiv.className = 'text-sm text-red-600 mt-1 validation-error';
         errorDiv.textContent = message;
 
-        // Insert after the input element
-        element.parentNode.insertBefore(errorDiv, element.nextSibling);
+        // Insert after the input's parent container (not directly after input)
+        // This prevents the error from affecting absolute positioned elements
+        const container = element.closest('.relative') || element.parentNode;
+        const outerContainer = container.parentNode;
+        
+        // Find the next sibling of the relative container, or append to outer container
+        if (container.nextSibling) {
+            outerContainer.insertBefore(errorDiv, container.nextSibling);
+        } else {
+            outerContainer.appendChild(errorDiv);
+        }
     },
 
     /**
@@ -335,8 +344,10 @@ const ValidationUtils = {
         element.classList.remove('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
         element.classList.add('border-gray-300', 'focus:ring-indigo-500', 'focus:border-indigo-500');
 
-        // Remove error message
-        const errorMsg = element.parentNode.querySelector('.validation-error');
+        // Remove error message - check both locations
+        const container = element.closest('.relative') || element.parentNode;
+        const outerContainer = container.parentNode;
+        const errorMsg = outerContainer.querySelector('.validation-error');
         if (errorMsg) {
             errorMsg.remove();
         }

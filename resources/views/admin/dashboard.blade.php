@@ -1743,22 +1743,14 @@
                                                 <button onclick="editUser({{ $user->id }})" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button id="more-btn-{{ $user->id }}" onclick="toggleMoreActions({{ $user->id }})" class="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" title="More">
-                                                    <i class="fas fa-ellipsis-h"></i>
+                                                <button onclick="resetUserPassword({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Reset Password">
+                                                    <i class="fas fa-key"></i>
                                                 </button>
-                                                <div id="more-actions-{{ $user->id }}" style="display: none;" class="flex items-center gap-1.5">
-                                                    <button onclick="resetUserPassword({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Reset Password">
-                                                        <i class="fas fa-key"></i>
+                                                @if ($user->id !== auth()->id())
+                                                    <button onclick="deleteUser({{ $user->id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                                        <i class="fas fa-trash-alt"></i>
                                                     </button>
-                                                    @if ($user->id !== auth()->id())
-                                                        <button onclick="deleteUser({{ $user->id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    @endif
-                                                    <button onclick="toggleMoreActions({{ $user->id }})" class="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" title="Close">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -1818,21 +1810,14 @@
                                                 class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-lg hover:bg-indigo-200 transition-colors">
                                                 <i class="fas fa-edit"></i><span>Edit</span>
                                             </button>
-                                            <button id="more-btn-mobile-{{ $user->id }}" onclick="toggleMoreActionsMobile({{ $user->id }})" 
-                                                class="inline-flex items-center justify-center p-1.5 bg-gray-100 text-gray-700 text-xs rounded-lg hover:bg-gray-200 transition-colors">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                        </div>
-
-                                        <div id="more-actions-mobile-{{ $user->id }}" style="display: none;" class="flex items-center gap-1.5 mt-2">
                                             <button onclick="resetUserPassword({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')" 
                                                 class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-lg hover:bg-orange-200 transition-colors">
                                                 <i class="fas fa-key"></i><span>Reset</span>
                                             </button>
                                             @if ($user->id !== auth()->id())
                                                 <button onclick="deleteUser({{ $user->id }})" 
-                                                    class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-lg hover:bg-red-200 transition-colors">
-                                                    <i class="fas fa-trash"></i><span>Delete</span>
+                                                    class="inline-flex items-center justify-center p-1.5 bg-red-100 text-red-700 text-xs rounded-lg hover:bg-red-200 transition-colors" title="Delete">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             @endif
                                         </div>

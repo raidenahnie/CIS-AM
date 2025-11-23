@@ -22,6 +22,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
 
 // Password reset routes
+// User-initiated forgot password (heavily rate limited for security)
+Route::post('/password/forgot', [PasswordResetController::class, 'requestReset'])
+    ->middleware('throttle:3,10') // Only 3 attempts per 10 minutes
+    ->name('password.forgot');
+
+// Reset password form and submission
 Route::get('/password/reset/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
 Route::post('/password/reset', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:3,5')->name('password.update'); // 3 attempts per 5 min
 

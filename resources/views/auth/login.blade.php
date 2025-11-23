@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>CIS-AM | Login</title> {{-- Changed title from original login.blade --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Using the CDN for live preview --}}
@@ -391,46 +392,107 @@
     </div>
 
 
-    {{-- Forgot Password Modal (from login.blade.php) --}}
+    {{-- Forgot Password Modal --}}
     <div id="forgotPasswordModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 p-4">
         <div class="relative top-4 sm:top-20 mx-auto p-0 border-0 w-full max-w-md shadow-lg rounded-2xl">
             <div class="relative bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-2xl border border-white border-opacity-30 shadow-xl">
                 <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                     <div class="flex justify-between items-center">
-                        <h3 class="text-base sm:text-lg font-semibold text-gray-800">Forgot Password?</h3>
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-800">Reset Your Password</h3>
                         <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-gray-600 text-2xl sm:text-xl">
                             &times;
                         </button>
                     </div>
                 </div>
-                <div class="px-4 sm:px-6 py-3 sm:py-4">
-                    <div class="text-center">
-                        <div class="mx-auto flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-indigo-100 mb-3 sm:mb-4">
-                            <svg class="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                            </svg>
-                        </div>
-                        <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">Password Reset Required</h3>
-                        <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 px-2">
-                            For security reasons, password resets must be handled by your system administrator.
-                        </p>
-                        <div class="bg-indigo-50 p-3 sm:p-4 rounded-lg border border-indigo-200">
-                            <p class="text-xs sm:text-sm text-indigo-800 font-medium mb-2">Contact Information:</p>
-                            <p class="text-xs sm:text-sm text-indigo-700">
-                                📧 Email: admin@cisdepedcavite.org<br>
-                                    <span class="font-bold text-zinc-800">CIS Administrator</span>
+                <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
+                    <div class="px-4 sm:px-6 py-3 sm:py-4">
+                        <div class="text-center mb-4">
+                            <div class="mx-auto flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-indigo-100 mb-3 sm:mb-4">
+                                <svg class="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                </svg>
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 px-2">
+                                Enter your email address and we'll send you a link to reset your password.
                             </p>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2 sm:mt-3 px-2">
-                            Please include your name and email address when contacting the administrator.
-                        </p>
+
+                        <!-- Email Input -->
+                        <div class="mb-4">
+                            <label for="reset_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <div class="relative">
+                                <input type="email" 
+                                       id="reset_email" 
+                                       name="email" 
+                                       required 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                       placeholder="your.email@example.com">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p id="reset_email_error" class="text-xs text-red-600 mt-1 hidden"></p>
+                        </div>
+
+                        <!-- Security Notice -->
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded mb-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-xs text-blue-700">
+                                        <strong>Security Notice:</strong> The reset link will expire in 60 minutes. Check your spam folder if you don't see the email.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rate Limit Warning -->
+                        <div id="rateLimitWarning" class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded mb-4 hidden">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-xs text-yellow-700" id="rateLimitMessage"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div id="resetSuccessMessage" class="bg-green-50 border-l-4 border-green-400 p-3 rounded mb-4 hidden">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-xs text-green-700" id="successText"></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 flex justify-center">
-                    <button onclick="closeForgotPasswordModal()" class="px-4 sm:px-6 py-2 bg-indigo-600 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                        Understood
-                    </button>
-                </div>
+                    <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 flex justify-end gap-2">
+                        <button type="button" onclick="closeForgotPasswordModal()" class="px-4 sm:px-6 py-2 bg-gray-100 text-gray-700 text-sm sm:text-base font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" id="resetSubmitBtn" class="px-4 sm:px-6 py-2 bg-indigo-600 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                            <span>Send Reset Link</span>
+                            <svg class="hidden animate-spin h-4 w-4 text-white" id="resetSpinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -472,11 +534,99 @@
         });
 
         function showForgotPasswordModal() {
+            // Reset form and messages
+            document.getElementById('forgotPasswordForm').reset();
+            document.getElementById('reset_email_error').classList.add('hidden');
+            document.getElementById('rateLimitWarning').classList.add('hidden');
+            document.getElementById('resetSuccessMessage').classList.add('hidden');
+            document.getElementById('resetSubmitBtn').disabled = false;
             document.getElementById('forgotPasswordModal').classList.remove('hidden');
         }
 
         function closeForgotPasswordModal() {
             document.getElementById('forgotPasswordModal').classList.add('hidden');
+        }
+
+        // Handle forgot password form submission
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const email = form.email.value.trim();
+            const submitBtn = document.getElementById('resetSubmitBtn');
+            const spinner = document.getElementById('resetSpinner');
+            const errorDiv = document.getElementById('reset_email_error');
+            const warningDiv = document.getElementById('rateLimitWarning');
+            const successDiv = document.getElementById('resetSuccessMessage');
+            
+            // Hide previous messages
+            errorDiv.classList.add('hidden');
+            warningDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            
+            // Basic email validation
+            if (!email) {
+                errorDiv.textContent = 'Please enter your email address';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errorDiv.textContent = 'Please enter a valid email address';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Disable submit button and show spinner
+            submitBtn.disabled = true;
+            spinner.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('{{ route("password.forgot") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 429) {
+                    // Rate limit exceeded
+                    const retryAfter = data.retry_after || 10;
+                    document.getElementById('rateLimitMessage').textContent = 
+                        `Too many password reset attempts. Please try again in ${retryAfter} minute${retryAfter !== 1 ? 's' : ''}.`;
+                    warningDiv.classList.remove('hidden');
+                } else if (data.success) {
+                    // Success - show message
+                    document.getElementById('successText').textContent = data.message;
+                    successDiv.classList.remove('hidden');
+                    
+                    // Clear form
+                    form.reset();
+                    
+                    // Close modal after 5 seconds
+                    setTimeout(() => {
+                        closeForgotPasswordModal();
+                    }, 5000);
+                } else {
+                    // Error
+                    errorDiv.textContent = data.message || 'An error occurred. Please try again.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Password reset error:', error);
+                errorDiv.textContent = 'Network error. Please check your connection and try again.';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                // Re-enable submit button and hide spinner
+                submitBtn.disabled = false;
+                spinner.classList.add('hidden');
+            }
         }
 
         function togglePasswordVisibility() {

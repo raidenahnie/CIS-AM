@@ -179,33 +179,37 @@
 
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">New Password</label>
-                        <div class="relative">
-                            <input type="password" id="password" name="password" required
-                                   class="mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('password') border-red-300 @else border-gray-300 @enderror"
-                                   minlength="8">
-                            <button type="button" onclick="togglePasswordVisibility('password', 'togglePassword')"
-                                    class="absolute inset-y-0 right-0 mt-1 pr-3 flex items-center text-gray-600 cursor-pointer hover:text-gray-800">
-                                <i class="fas fa-eye" id="togglePassword"></i>
-                            </button>
+                        <div class="mt-1">
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required
+                                       class="block w-full px-4 py-2 pr-10 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('password') border-red-300 @else border-gray-300 @enderror"
+                                       minlength="8">
+                                <button type="button" onclick="togglePasswordVisibility('password', 'togglePassword')" tabindex="-1"
+                                        class="absolute top-1/2 -translate-y-1/2 right-3 flex items-center text-gray-600 cursor-pointer hover:text-gray-800">
+                                    <i class="fas fa-eye" id="togglePassword"></i>
+                                </button>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Minimum 8 characters required.</p>
+                            @error('password')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
-                        <p class="mt-1 text-xs text-gray-500">Minimum 8 characters required.</p>
-                        @error('password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <div>
                         <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                        <div class="relative">
-                            <input type="password" id="password_confirmation" name="password_confirmation" required
-                                   class="mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300"
-                                   minlength="8">
-                            <button type="button" onclick="togglePasswordVisibility('password_confirmation', 'togglePasswordConfirm')"
-                                    class="absolute inset-y-0 right-0 mt-1 pr-3 flex items-center text-gray-600 cursor-pointer hover:text-gray-800">
-                                <i class="fas fa-eye" id="togglePasswordConfirm"></i>
-                            </button>
+                        <div class="mt-1">
+                            <div class="relative">
+                                <input type="password" id="password_confirmation" name="password_confirmation" required
+                                       class="block w-full px-4 py-2 pr-10 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300"
+                                       minlength="8">
+                                <button type="button" onclick="togglePasswordVisibility('password_confirmation', 'togglePasswordConfirm')" tabindex="-1"
+                                        class="absolute top-1/2 -translate-y-1/2 right-3 flex items-center text-gray-600 cursor-pointer hover:text-gray-800">
+                                    <i class="fas fa-eye" id="togglePasswordConfirm"></i>
+                                </button>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Re-enter your new password.</p>
                         </div>
-                        <p class="mt-1 text-xs text-gray-500">Re-enter your new password.</p>
                     </div>
 
                     <div class="bg-gray-50 p-3 sm:p-4 rounded-lg">
@@ -298,12 +302,13 @@
                     strengthColor = 'text-green-600';
                 }
 
-                // Show/update strength indicator
-                let strengthIndicator = passwordInput.parentNode.querySelector('.password-strength');
+                // Show/update strength indicator (add to outer wrapper, not the relative container)
+                const outerWrapper = passwordInput.closest('div').parentNode; // Get the mt-1 wrapper
+                let strengthIndicator = outerWrapper.querySelector('.password-strength');
                 if (!strengthIndicator) {
                     strengthIndicator = document.createElement('p');
                     strengthIndicator.className = 'password-strength text-xs mt-1';
-                    passwordInput.parentNode.appendChild(strengthIndicator);
+                    outerWrapper.appendChild(strengthIndicator);
                 }
                 strengthIndicator.className = `password-strength text-xs mt-1 ${strengthColor}`;
                 strengthIndicator.textContent = strengthText;
