@@ -2083,7 +2083,7 @@
                 </div>
 
                 <!-- Filters Section -->
-                <div class="card-modern rounded-2xl shadow-sm overflow-hidden mb-6">
+                <div class="card-modern rounded-2xl shadow-sm mb-6">
                     <div class="p-3 sm:p-4 lg:p-5 border-b border-gray-200">
                         <h3 class="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
                             <i class="fas fa-filter mr-2 text-purple-600"></i>Report Filters

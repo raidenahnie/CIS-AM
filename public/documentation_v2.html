@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CISAM — Interactive Manual</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/white.min.css" id="theme">
+
+  <style>
+    /* Custom Overrides to match CISAM Brand */
+    :root {
+      --r-main-font: 'Inter', sans-serif;
+      --r-heading-font: 'Inter', sans-serif;
+      --r-main-color: #334155;
+      --r-heading-color: #0f172a;
+      --r-link-color: #2563eb;
+      --primary: #2563eb;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 { font-weight: 800; letter-spacing: -0.02em; text-transform: none; }
+    .reveal h1 { font-size: 2.5em; color: var(--primary); }
+    .reveal h2 { font-size: 1.6em; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+    .reveal p, .reveal li { font-size: 0.8em; line-height: 1.6; }
+    
+    /* Code styling */
+    .reveal code { 
+      font-family: 'JetBrains Mono', monospace; 
+      background: #f1f5f9; 
+      color: #ec4899; 
+      padding: 4px 8px; 
+      border-radius: 4px;
+    }
+
+    /* Card styling for slides */
+    .slide-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: left;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .row { display: flex; gap: 20px; }
+    .col { flex: 1; }
+    
+    /* Custom utility */
+    .text-sm { font-size: 0.6em !important; color: #64748b; }
+    .highlight { color: var(--primary); font-weight: bold; }
+  </style>
+</head>
+
+<body>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <section>
+        <h1>CISAM</h1>
+        <h3>User & Admin Manual</h3>
+        <p style="color: #64748b; margin-top: 2rem;">Interactive Documentation v2</p>
+        <p class="text-sm">Press <strong>SPACE</strong> or <strong>Arrow Keys</strong> to navigate</p>
+      </section>
+
+      <section>
+        <h2>Agenda</h2>
+        <ul>
+          <li class="fragment"><strong>Employee Guide:</strong> Daily Usage & Check-ins</li>
+          <li class="fragment"><strong>Admin Panel:</strong> Management & Config</li>
+          <li class="fragment"><strong>Troubleshooting:</strong> Common Issues</li>
+          <li class="fragment"><strong>Developer Ref:</strong> Source Files</li>
+        </ul>
+      </section>
+
+      <section>
+        <section>
+          <h2>User Guide</h2>
+          <p>Swipe down (or press Down Arrow) for details.</p>
+          <div class="slide-card">
+            <h3>Overview</h3>
+            <ul>
+              <li>Single-device Login enforcement</li>
+              <li>GPS-based Attendance</li>
+              <li>Leave Request Management</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h3>1. The Check-in Flow</h3>
+          <p>The system enforces a strict sequence:</p>
+          <ol>
+            <li class="fragment fade-up"><b>Check In</b> (Validates GPS radius)</li>
+            <li class="fragment fade-up"><b>Break Start</b> (To start luch break time)</li>
+            <li class="fragment fade-up"><b>Break End</b> (Must happen before checkout)</li>
+            <li class="fragment fade-up"><b>Check Out</b> (Ends the daily session)</li>
+          </ol>
+          <br>
+          <p class="fragment text-sm">Note: Frequent requests may be rate-limited.</p>
+        </section>
+
+        <section>
+          <h3>2. Manual & Special Entry</h3>
+          <div class="row">
+            <div class="col slide-card">
+              <h4>Manual Entry</h4>
+              <p class="text-sm">Used when GPS fails.</p>
+              <p>Requires a <code>Manual Entry Code</code> provided by admin.</p>
+            </div>
+            <div class="col slide-card">
+              <h4>Special Check-in</h4>
+              <p class="text-sm">Off-site work.</p>
+              <p>Mutually exclusive with regular attendance for that day.</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section>
+        <section>
+          <h2>Admin Guide</h2>
+          <p>Press Down for management tools.</p>
+        </section>
+
+        <section>
+          <h3>User Management</h3>
+          <ul>
+            <li class="fragment"><strong>Create:</strong> Assign Role (User/Admin) immediately.</li>
+            <li class="fragment"><strong>Primary Workplace:</strong> Must be assigned for GPS validation.</li>
+            <li class="fragment"><strong>Bulk Ops:</strong> Reset passwords or delete users in bulk.</li>
+            <li class="fragment"><strong>Security:</strong> Password resets use <code>PasswordResetController</code> logic.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Workplaces & Locations</h3>
+          <div class="slide-card">
+            <p><strong>Required Fields:</strong></p>
+            <code>Name, Address, Lat, Long, Radius</code>
+            <br><br>
+            <p><strong>Tip:</strong> Use the built-in map tool in the admin view to verify the geofence before setting the workplace to <strong>Active</strong>.</p>
+          </div>
+        </section>
+
+        <section>
+          <h3>Reports & Settings</h3>
+          <ul>
+            <li><strong>Exports:</strong> Generate CSV/Excel via <code>AdminReportController</code>.</li>
+            <li><strong>Notifications:</strong> Configure Mail/SMS drivers in Settings.</li>
+            <li><strong>Testing:</strong> Use the "Test Notification" button to verify env variables.</li>
+          </ul>
+        </section>
+      </section>
+
+      <section>
+        <h2>Troubleshooting</h2>
+        <div class="slide-card" style="font-size: 0.9em;">
+          <p><span class="highlight">GPS Issues:</span> Check browser permissions. Use Manual Entry code if hardware fails.</p>
+          <hr>
+          <p><span class="highlight">Login Loop:</span> You likely have an active session on another device. Ask Admin to force logout.</p>
+          <hr>
+          <p><span class="highlight">No Emails:</span> Check <code>.env</code> variables for SMTP settings.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Source Reference</h2>
+        <p>Key controllers governing this logic:</p>
+        <pre><code data-trim data-noescape>
+// Check-in & GPS Logic
+app/Http/Controllers/Api/DashboardController.php
+
+// Absence Workflow
+app/Http/Controllers/Api/AbsenceRequestController.php
+
+// Reporting Engine
+app/Http/Controllers/AdminReportController.php
+        </code></pre>
+        <p class="text-sm">View <code>routes/web.php</code> for middleware throttling rules.</p>
+      </section>
+
+      <section>
+        <h1>End of Manual</h1>
+        <p>Press <strong>ESC</strong> to view slide map.</p>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+  <script>
+    // Initialize the presentation
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: true,
+      hash: true,
+      transition: 'slide', // none/fade/slide/convex/concave/zoom
+    });
+  </script>
+</body>
+</html>

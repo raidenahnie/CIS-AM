@@ -1464,6 +1464,101 @@ MAIL_FROM_NAME=<span class="code-string">"DepEd Cavite - CIS-AM"</span>
                 </div>
             </section>
 
+            <!-- Developer Guide -->
+            <section id="developer-guide">
+                <h2>Developer Guide</h2>
+
+                <h3>Overview</h3>
+                <p>This section helps developers set up, run, and extend the CIS-AM application. It was generated from the current source files (controllers, models, routes and console commands) — do not rely on the older docs or markdown files found elsewhere in the repository.</p>
+
+                <h3>Local setup (Windows / XAMPP)</h3>
+                <ol>
+                    <li>Install PHP 8.2+, Composer, Node.js (18+), and XAMPP (Apache + MySQL).</li>
+                    <li>Copy <code>.env.example</code> to <code>.env</code> and update database and mail settings.</li>
+                    <li>Install PHP dependencies: <code>composer install</code>.</li>
+                    <li>Install JS dependencies and build assets: <code>npm install</code> then <code>npm run dev</code> (or <code>npm run build</code> for production).</li>
+                    <li>Create database and run migrations: <code>php artisan migrate</code> and (optionally) <code>php artisan db:seed</code>.</li>
+                    <li>Create session table if using DB sessions: <code>php artisan session:table</code> then <code>php artisan migrate</code>.</li>
+                    <li>Run the local server: <code>php artisan serve</code> or use XAMPP virtual host pointing to the project <code>public/</code> folder.</li>
+                </ol>
+
+                <h3>Important environment variables</h3>
+                <ul>
+                    <li><code>APP_URL</code>, <code>APP_ENV</code>, <code>APP_DEBUG</code></li>
+                    <li><code>DB_CONNECTION</code>, <code>DB_HOST</code>, <code>DB_DATABASE</code>, <code>DB_USERNAME</code>, <code>DB_PASSWORD</code></li>
+                    <li><code>MAIL_MAILER</code>, <code>MAIL_HOST</code>, <code>MAIL_PORT</code>, <code>MAIL_USERNAME</code>, <code>MAIL_PASSWORD</code></li>
+                    <li><code>SESSION_DRIVER=database</code> recommended for single-device enforcement</li>
+                    <li>SMS integration: <code>SMS_API_URL</code>, <code>SMS_API_KEY</code>, <code>SMS_TEST_PHONE</code></li>
+                    <li>Manual entry / admin keys: stored via the <code>SystemSetting</code> model (see <code>app/Models/SystemSetting.php</code>).</li>
+                </ul>
+
+                <h3>Database</h3>
+                <p>Key models (see <code>app/Models</code>):</p>
+                <ul>
+                    <li><code>User</code> — accounts and roles</li>
+                    <li><code>Workplace</code>, <code>UserWorkplace</code> — locations and assignments</li>
+                    <li><code>Attendance</code>, <code>AttendanceLog</code> — per-day summaries and per-action logs</li>
+                    <li><code>AbsenceRequest</code> — user leave requests</li>
+                    <li><code>AdminActivityLog</code> — admin auditing</li>
+                    <li><code>PasswordReset</code>, <code>SystemSetting</code> — auxiliary systems</li>
+                </ul>
+
+                <h3>Console commands</h3>
+                <p>Two custom Artisan commands are included in <code>app/Console/Commands</code>:</p>
+                <ul>
+                    <li><code>php artisan check:attendance-data</code> — prints today's attendance logs for debugging.</li>
+                    <li><code>php artisan setup:pm-user {userId}</code> — sets up a PM test check-in for the specified user (default userId=1).</li>
+                </ul>
+
+                <h3>Run tests and quality checks</h3>
+                <ul>
+                    <li>PHPUnit tests: <code>vendor/bin/phpunit</code> or <code>php artisan test</code> (project includes <code>phpunit.xml</code>).</li>
+                    <li>Static analysis / linters: add <code>phpstan</code> / <code>phpcs</code> as desired.</li>
+                </ul>
+
+                <h3>API notes & rate limits</h3>
+                <p>Routes are defined in <code>routes/web.php</code>. Important API endpoints and the applied throttling (from route middleware) are:</p>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>Endpoint</th><th>Method</th><th>Notes / Rate Limit</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/login</code></td><td>POST</td><td>Login; throttled on submission (<code>throttle:5,1</code> on POST)</td></tr>
+                            <tr><td><code>/password/forgot</code></td><td>POST</td><td>Forgot password; <code>throttle:3,10</code></td></tr>
+                            <tr><td><code>/password/reset</code></td><td>POST</td><td>Reset submission; <code>throttle:3,5</code></td></tr>
+                            <tr><td><code>/api/checkin</code></td><td>POST</td><td>Checkin actions; <code>throttle:30,1</code> or specific limits per-route</td></tr>
+                            <tr><td><code>/api/special-checkin</code></td><td>POST</td><td><code>throttle:10,1</code></td></tr>
+                            <tr><td><code>/api/absence-requests</code></td><td>POST</td><td><code>throttle:5,10</code> (requests)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Key classes & extension points</h3>
+                <ul>
+                    <li><code>app/Http/Controllers/Api/DashboardController.php</code> — most employee-facing APIs and check-in logic live here (distance calculation, special vs regular flows, summary update).</li>
+                    <li><code>app/Http/Controllers/AdminController.php</code> — admin CRUD, settings, bulk operations and notification settings.</li>
+                    <li><code>app/Models/AttendanceLog.php</code> and <code>Attendance.php</code> — core domain models; most reporting logic reads these.</li>
+                    <li><code>app/Http/Controllers/AdminReportController.php</code> — reports, exports and helpers to expand attendance rows for export.</li>
+                </ul>
+
+                <h3>Common developer tasks</h3>
+                <ul>
+                    <li>Rebuild assets: <code>npm run dev</code> or <code>npm run build</code>.</li>
+                    <li>Run migrations: <code>php artisan migrate</code>.</li>
+                    <li>Seed demo data: check <code>database/seeders</code> and run <code>php artisan db:seed</code>.</li>
+                    <li>Start the local server: <code>php artisan serve</code>.</li>
+                    <li>Clear caches: <code>php artisan config:clear</code>, <code>php artisan cache:clear</code>, <code>php artisan route:clear</code>.</li>
+                </ul>
+
+                <h3>Security & production notes</h3>
+                <ul>
+                    <li>Use secure values for <code>APP_KEY</code>, <code>MAIL</code> and <code>SMS</code> keys in production.</li>
+                    <li>Session driver should be <code>database</code> for single-device login enforcement used by the app.</li>
+                    <li>Ensure cron/scheduler runs for scheduled tasks if any: <code>php artisan schedule:run</code> (set up in server cron).</li>
+                </ul>
+            </section>
+
             <!-- Support -->
             <section id="support">
                 <h2>Support & Contact</h2>

@@ -10040,10 +10040,10 @@
                         passwordInput.value = '';
                         
                         // Update the header name if changed
-                        const headerName = document.querySelector('.text-2xl.font-bold.text-gray-900');
-                        if (headerName) {
-                            headerName.textContent = 'Welcome, ' + nameResult.sanitized;
-                        }
+                        //const headerName = document.querySelector('.text-2xl.font-bold.text-gray-900');
+                        //if (headerName) {
+                        //    headerName.textContent = 'Welcome, ' + nameResult.sanitized;
+                        //}
                     } else {
                         showNotification(result.message || 'Failed to update profile', 'error');
                     }

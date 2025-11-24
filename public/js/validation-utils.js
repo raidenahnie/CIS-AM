@@ -320,19 +320,20 @@ const ValidationUtils = {
 
         // Create error message element
         const errorDiv = document.createElement('p');
-        errorDiv.className = 'text-sm text-red-600 mt-1 validation-error';
+        // Use mt-1 for spacing, matching the Blade error styling
+        errorDiv.className = 'mt-1 text-sm text-red-600 validation-error'; 
         errorDiv.textContent = message;
 
-        // Insert after the input's parent container (not directly after input)
-        // This prevents the error from affecting absolute positioned elements
-        const container = element.closest('.relative') || element.parentNode;
-        const outerContainer = container.parentNode;
+        // Find the main container div that wraps the input (and potentially the label)
+        // For your login form, this is the parent <div> of the element.
+        const mainContainer = element.closest('div'); 
         
-        // Find the next sibling of the relative container, or append to outer container
-        if (container.nextSibling) {
-            outerContainer.insertBefore(errorDiv, container.nextSibling);
+        if (mainContainer) {
+             // Insert the error message right after the main container div
+            mainContainer.parentNode.insertBefore(errorDiv, mainContainer.nextSibling);
         } else {
-            outerContainer.appendChild(errorDiv);
+            // Fallback: insert right after the element itself
+            element.parentNode.insertBefore(errorDiv, element.nextSibling);
         }
     },
 
